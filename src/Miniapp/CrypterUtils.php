@@ -1,0 +1,45 @@
+<?php
+
+declare(strict_types=1);
+
+namespace Siganushka\ApiClient\Wechat\Miniapp;
+
+class CrypterUtils
+{
+    /**
+     * 解密微信已加密信息.
+     *
+     * @see https://developers.weixin.qq.com/miniprogram/dev/framework/open-ability/signature.html#%E5%8A%A0%E5%AF%86%E6%95%B0%E6%8D%AE%E8%A7%A3%E5%AF%86%E7%AE%97%E6%B3%95
+     *
+     * @param string $sessionKey    会话密钥
+     * @param string $encryptedData 包括敏感数据在内的完整用户信息的加密数据
+     * @param string $iv            加密算法的初始向量
+     *
+     * @throws \RuntimeException 解密失败
+     *
+     * @return array 已解密的用户数据
+     */
+    public static function decrypt(string $sessionKey, string $encryptedData, string $iv): array
+    {
+        $aesKey = base64_decode($sessionKey);
+        $aesCipher = base64_decode($encryptedData);
+        $aesIV = base64_decode($iv);
+
+        try {
+            $result = openssl_decrypt($aesCipher, 'AES-128-CBC', $aesKey, 1, $aesIV);
+        } catch (\Throwable $th) {
+            throw new \RuntimeException('Unable to decrypt value.');
+        }
+
+        if (false === $result) {
+            throw new \RuntimeException('Unable to decrypt value.');
+        }
+
+        $data = json_decode($result, true);
+        if (\JSON_ERROR_NONE !== json_last_error()) {
+            throw new \RuntimeException('Unable to decrypt value.');
+        }
+
+        return $data;
+    }
+}

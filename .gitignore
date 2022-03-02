@@ -1,0 +1,7 @@
+/vendor/
+/example/_config.php
+/composer.lock
+/.phpunit.result.cache
+/.php-cs-fixer.php
+/.php-cs-fixer.cache
+/phpunit.xml

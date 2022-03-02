@@ -1,0 +1,18 @@
+<?php
+
+declare(strict_types=1);
+
+require __DIR__.'/../vendor/autoload.php';
+
+# 公众号或小程序 appid
+const WECHAT_APPID = 'your_wechat_appid';
+# 公众号或小程序 secret
+const WECHAT_APPSECRET = 'your_wechat_appsecret';
+# 微信支付商户 mchid
+const WECHAT_MCHID = 'your_wechat_mchid';
+# 微信支付密钥 key
+const WECHAT_MCHKEY = 'your_wechat_mchkey';
+# 微信支付商户证书 cert
+const WECHAT_CLIENT_CERT = 'your_wechat_client_cert';
+# 微信支付商户证书 key
+const WECHAT_CLIENT_KEY = 'your_wechat_client_key';

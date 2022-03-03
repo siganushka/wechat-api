@@ -11,7 +11,7 @@
     ],
     "require": {
         "php": ">=7.4",
-        "siganushka/api-client": "@dev",
+        "siganushka/api-client": "dev-main",
         "symfony/serializer": "^5.4|^6.0"
     },
     "require-dev": {
@@ -28,11 +28,5 @@
             "Siganushka\\ApiClient\\Wechat\\Tests\\": "tests/"
         }
     },
-    "repositories": [
-        {
-            "type": "path",
-            "url": "../api-client"
-        }
-    ],
     "minimum-stability": "dev"
 }

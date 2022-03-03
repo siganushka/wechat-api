@@ -17,7 +17,7 @@ class CrypterUtils
      *
      * @throws \RuntimeException 解密失败
      *
-     * @return array 已解密的用户数据
+     * @return array<string, mixed> 已解密的用户数据
      */
     public static function decrypt(string $sessionKey, string $encryptedData, string $iv): array
     {
@@ -35,6 +35,7 @@ class CrypterUtils
             throw new \RuntimeException('Unable to decrypt value.');
         }
 
+        /** @var array<string, mixed> */
         $data = json_decode($result, true);
         if (\JSON_ERROR_NONE !== json_last_error()) {
             throw new \RuntimeException('Unable to decrypt value.');

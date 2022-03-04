@@ -5,6 +5,7 @@ declare(strict_types=1);
 namespace Siganushka\ApiClient\Wechat\Miniapp\Request;
 
 use Siganushka\ApiClient\AbstractRequest;
+use Siganushka\ApiClient\CacheableResponseInterface;
 use Siganushka\ApiClient\Exception\ParseResponseException;
 use Siganushka\ApiClient\Wechat\Configuration;
 use Symfony\Component\OptionsResolver\OptionsResolver;
@@ -13,7 +14,7 @@ use Symfony\Contracts\HttpClient\ResponseInterface;
 /**
  * @see https://developers.weixin.qq.com/miniprogram/dev/api-backend/open-api/login/auth.code2Session.html
  */
-class SessionKeyRequest extends AbstractRequest
+class SessionKeyRequest extends AbstractRequest implements CacheableResponseInterface
 {
     public const URL = 'https://api.weixin.qq.com/sns/jscode2session';
 
@@ -72,5 +73,10 @@ class SessionKeyRequest extends AbstractRequest
         }
 
         throw new ParseResponseException($response, $errmsg, $errcode);
+    }
+
+    public function getCacheTtl(): int
+    {
+        return 300;
     }
 }

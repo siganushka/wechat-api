@@ -10,6 +10,7 @@ use Siganushka\ApiClient\Wechat\Core\Request\ServerIpRequest;
 use Siganushka\ApiClient\Wechat\Miniapp\Request\SessionKeyRequest;
 use Siganushka\ApiClient\Wechat\Payment\Request\TransferRequest;
 use Siganushka\ApiClient\Wechat\Payment\Request\UnifiedorderRequest;
+use Symfony\Component\Cache\Adapter\FilesystemAdapter;
 use Symfony\Component\ErrorHandler\Debug;
 use Symfony\Component\HttpClient\HttpClient;
 use Symfony\Component\Serializer\Encoder\XmlEncoder;
@@ -36,6 +37,9 @@ $xmlEncoder = new XmlEncoder();
 $httpClient = HttpClient::create();
 // dd($httpClient);
 
+$cachePool = new FilesystemAdapter();
+// dd($cachePool);
+
 $configuration = new Configuration([
     'appid' => WECHAT_APPID,
     'appsecret' => WECHAT_APPSECRET,
@@ -57,5 +61,5 @@ $requests = [
 $registry = new RequestRegistry($requests);
 // dd($registry);
 
-$client = new RequestClient($httpClient, $registry);
+$client = new RequestClient($httpClient, $cachePool, $registry);
 // dd($client);

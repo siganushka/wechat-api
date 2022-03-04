@@ -5,6 +5,7 @@ declare(strict_types=1);
 namespace Siganushka\ApiClient\Wechat\Core\Request;
 
 use Siganushka\ApiClient\AbstractRequest;
+use Siganushka\ApiClient\CacheableResponseInterface;
 use Siganushka\ApiClient\Exception\ParseResponseException;
 use Siganushka\ApiClient\Wechat\Configuration;
 use Symfony\Component\OptionsResolver\OptionsResolver;
@@ -13,7 +14,7 @@ use Symfony\Contracts\HttpClient\ResponseInterface;
 /**
  * @see https://developers.weixin.qq.com/doc/offiaccount/Basic_Information/Get_access_token.html
  */
-class AccessTokenRequest extends AbstractRequest
+class AccessTokenRequest extends AbstractRequest implements CacheableResponseInterface
 {
     public const URL = 'https://api.weixin.qq.com/cgi-bin/token';
 
@@ -68,5 +69,10 @@ class AccessTokenRequest extends AbstractRequest
         }
 
         throw new ParseResponseException($response, $errmsg, $errcode);
+    }
+
+    public function getCacheTtl(): int
+    {
+        return 7200;
     }
 }

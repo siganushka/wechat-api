@@ -36,6 +36,7 @@ class ParameterUtilsTest extends TestCase
         $signatureUtils = new SignatureUtils($configuration);
         static::assertTrue($signatureUtils->checkParameters($jsapiParameters));
 
+        /** @var string */
         $sign = $jsapiParameters['sign'];
         unset($jsapiParameters['sign']);
 

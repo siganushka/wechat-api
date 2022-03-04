@@ -17,4 +17,4 @@ $options = [
 ];
 
 $wrappedResponse = $client->send(UnifiedorderRequest::class, $options);
-dd($wrappedResponse->getParsedBody());
+dd($wrappedResponse->getParsedResponse());

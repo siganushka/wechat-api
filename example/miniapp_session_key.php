@@ -11,4 +11,4 @@ $options = [
 ];
 
 $wrappedResponse = $client->send(SessionKeyRequest::class, $options);
-dd($wrappedResponse->getParsedBody());
+dd($wrappedResponse->getParsedResponse());

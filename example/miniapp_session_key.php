@@ -10,5 +10,5 @@ $options = [
     'js_code' => '00373VFa1G2nJC0t2iHa1MkYlo173VFK',
 ];
 
-$wrappedResponse = $client->send(SessionKeyRequest::class, $options);
-dd($wrappedResponse->getParsedResponse());
+$result = $client->send(SessionKeyRequest::class, $options);
+dd($result);

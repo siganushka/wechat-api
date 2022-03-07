@@ -7,12 +7,10 @@ use Siganushka\ApiClient\Wechat\Core\Request\ServerIpRequest;
 
 require __DIR__.'/_autoload.php';
 
-$wrappedResponse = $client->send(AccessTokenRequest::class);
-$parsedResponse = $wrappedResponse->getParsedResponse();
-
+$result = $client->send(AccessTokenRequest::class);
 $options = [
-    'access_token' => $parsedResponse['access_token'],
+    'access_token' => $result['access_token'],
 ];
 
-$wrappedResponse = $client->send(ServerIpRequest::class, $options);
-dd($wrappedResponse->getParsedResponse());
+$result = $client->send(ServerIpRequest::class, $options);
+dd($result);

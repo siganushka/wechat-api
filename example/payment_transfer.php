@@ -15,5 +15,5 @@ $options = [
     're_user_name' => 'foo',
 ];
 
-$wrappedResponse = $client->send(TransferRequest::class, $options);
-dd($wrappedResponse->getParsedResponse());
+$result = $client->send(TransferRequest::class, $options);
+dd($result);

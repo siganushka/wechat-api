@@ -7,6 +7,11 @@ namespace Siganushka\ApiClient\Wechat\Payment;
 use Siganushka\ApiClient\Wechat\Configuration;
 use Symfony\Component\OptionsResolver\Exception\NoConfigurationException;
 
+/**
+ * Wechat payment signature utils class.
+ *
+ * @see https://pay.weixin.qq.com/wiki/doc/api/jsapi.php?chapter=4_3
+ */
 class SignatureUtils
 {
     private Configuration $configuration;

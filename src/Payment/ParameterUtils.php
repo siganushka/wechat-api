@@ -6,6 +6,11 @@ namespace Siganushka\ApiClient\Wechat\Payment;
 
 use Siganushka\ApiClient\Wechat\Configuration;
 
+/**
+ * Wechat payment parameter utils class.
+ *
+ * @see https://pay.weixin.qq.com/wiki/doc/api/jsapi.php?chapter=7_7&index=6
+ */
 class ParameterUtils
 {
     private Configuration $configuration;

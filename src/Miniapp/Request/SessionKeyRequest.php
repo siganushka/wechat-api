@@ -30,7 +30,7 @@ class SessionKeyRequest extends AbstractRequest implements CacheableResponseInte
         $query = [
             'appid' => $this->configuration['appid'],
             'secret' => $this->configuration['appsecret'],
-            'grant_type' => $options['grant_type'],
+            'grant_type' => 'authorization_code',
             'js_code' => $options['js_code'],
         ];
 
@@ -44,10 +44,7 @@ class SessionKeyRequest extends AbstractRequest implements CacheableResponseInte
     public function configureOptions(OptionsResolver $resolver): void
     {
         $resolver->setRequired('js_code');
-        $resolver->setDefault('grant_type', 'authorization_code');
-
         $resolver->setAllowedTypes('js_code', 'string');
-        $resolver->setAllowedTypes('grant_type', 'string');
     }
 
     /**

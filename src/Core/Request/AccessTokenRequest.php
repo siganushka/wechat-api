@@ -19,6 +19,7 @@ class AccessTokenRequest extends AbstractRequest implements CacheableResponseInt
     public const URL = 'https://api.weixin.qq.com/cgi-bin/token';
 
     private Configuration $configuration;
+    private int $cacheTtl = 7200;
 
     public function __construct(Configuration $configuration)
     {
@@ -30,7 +31,7 @@ class AccessTokenRequest extends AbstractRequest implements CacheableResponseInt
         $query = [
             'appid' => $this->configuration['appid'],
             'secret' => $this->configuration['appsecret'],
-            'grant_type' => $options['grant_type'],
+            'grant_type' => 'client_credential',
         ];
 
         $this
@@ -42,8 +43,6 @@ class AccessTokenRequest extends AbstractRequest implements CacheableResponseInt
 
     public function configureOptions(OptionsResolver $resolver): void
     {
-        $resolver->setDefault('grant_type', 'client_credential');
-        $resolver->setAllowedTypes('grant_type', 'string');
     }
 
     /**
@@ -65,6 +64,8 @@ class AccessTokenRequest extends AbstractRequest implements CacheableResponseInt
         $errmsg = (string) ($result['errmsg'] ?? '');
 
         if (0 === $errcode) {
+            $this->cacheTtl = (int) $result['expires_in'];
+
             return $result;
         }
 
@@ -73,6 +74,6 @@ class AccessTokenRequest extends AbstractRequest implements CacheableResponseInt
 
     public function getCacheTtl(): int
     {
-        return 7200;
+        return $this->cacheTtl;
     }
 }

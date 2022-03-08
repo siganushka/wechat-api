@@ -15,12 +15,21 @@ class CrypterUtils
      * @param string $encryptedData 包括敏感数据在内的完整用户信息的加密数据
      * @param string $iv            加密算法的初始向量
      *
-     * @throws \RuntimeException 解密失败
+     * @throws \InvalidArgumentException 输入参数无效
+     * @throws \RuntimeException         数据解密失败
      *
      * @return array<string, mixed> 已解密的用户数据
      */
     public static function decrypt(string $sessionKey, string $encryptedData, string $iv): array
     {
+        if (24 !== mb_strlen($sessionKey)) {
+            throw new \InvalidArgumentException('The argument "session_key" is invalid.');
+        }
+
+        if (24 !== mb_strlen($iv)) {
+            throw new \InvalidArgumentException('The argument "iv" is invalid.');
+        }
+
         $aesKey = base64_decode($sessionKey);
         $aesCipher = base64_decode($encryptedData);
         $aesIV = base64_decode($iv);

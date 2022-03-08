@@ -7,10 +7,12 @@ namespace Siganushka\ApiClient\Wechat\Tests\Payment\Request;
 use PHPUnit\Framework\TestCase;
 use Siganushka\ApiClient\Exception\ParseResponseException;
 use Siganushka\ApiClient\Response\ResponseFactory;
+use Siganushka\ApiClient\Wechat\Configuration;
 use Siganushka\ApiClient\Wechat\Payment\Request\UnifiedorderRequest;
 use Siganushka\ApiClient\Wechat\Tests\ConfigurationTest;
 use Symfony\Component\OptionsResolver\Exception\InvalidOptionsException;
 use Symfony\Component\OptionsResolver\Exception\MissingOptionsException;
+use Symfony\Component\OptionsResolver\Exception\NoConfigurationException;
 
 class UnifiedorderRequestTest extends TestCase
 {
@@ -259,6 +261,51 @@ class UnifiedorderRequestTest extends TestCase
             'notify_url' => 'test_notify_url',
             'out_trade_no' => 'test_out_trade_no',
             'total_fee' => 'test_total_fee',
+            'trade_type' => 'JSAPI',
+            'openid' => 'test_openid',
+        ]);
+    }
+
+    public function testMchidNoConfigurationException(): void
+    {
+        $this->expectException(NoConfigurationException::class);
+        $this->expectExceptionMessage('No configured value for "mchid" option');
+
+        $configuration = new Configuration([
+            'appid' => 'test_appid',
+            'appsecret' => 'test_appsecret',
+        ]);
+
+        $encoder = ConfigurationTest::createXmlEncoder();
+        $request = new UnifiedorderRequest($configuration, $encoder);
+        $request->build([
+            'body' => 'test_body',
+            'notify_url' => 'test_notify_url',
+            'out_trade_no' => 'test_out_trade_no',
+            'total_fee' => 1,
+            'trade_type' => 'JSAPI',
+            'openid' => 'test_openid',
+        ]);
+    }
+
+    public function testMchkeyNoConfigurationException(): void
+    {
+        $this->expectException(NoConfigurationException::class);
+        $this->expectExceptionMessage('No configured value for "mchkey" option');
+
+        $configuration = new Configuration([
+            'appid' => 'test_appid',
+            'appsecret' => 'test_appsecret',
+            'mchid' => 'test_mchid',
+        ]);
+
+        $encoder = ConfigurationTest::createXmlEncoder();
+        $request = new UnifiedorderRequest($configuration, $encoder);
+        $request->build([
+            'body' => 'test_body',
+            'notify_url' => 'test_notify_url',
+            'out_trade_no' => 'test_out_trade_no',
+            'total_fee' => 1,
             'trade_type' => 'JSAPI',
             'openid' => 'test_openid',
         ]);

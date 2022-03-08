@@ -7,6 +7,7 @@ namespace Siganushka\ApiClient\Wechat\Tests\Payment;
 use PHPUnit\Framework\TestCase;
 use Siganushka\ApiClient\Wechat\Configuration;
 use Siganushka\ApiClient\Wechat\Payment\SignatureUtils;
+use Symfony\Component\OptionsResolver\Exception\NoConfigurationException;
 
 class SignatureUtilsTest extends TestCase
 {
@@ -27,6 +28,20 @@ class SignatureUtilsTest extends TestCase
         $signatureUtils = new SignatureUtils($configuration);
         static::assertSame($sign, $signatureUtils->generate($parameters));
         static::assertTrue($signatureUtils->check($parameters, $sign));
+    }
+
+    public function testMchkeyNoConfigurationException(): void
+    {
+        $this->expectException(NoConfigurationException::class);
+        $this->expectExceptionMessage('No configured value for "mchkey" option');
+
+        $configuration = new Configuration([
+            'appid' => 'test_appid',
+            'appsecret' => 'test_appsecret',
+        ]);
+
+        $signatureUtils = new SignatureUtils($configuration);
+        $signatureUtils->generate(['foo' => 'bar']);
     }
 
     /**

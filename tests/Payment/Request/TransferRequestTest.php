@@ -7,10 +7,12 @@ namespace Siganushka\ApiClient\Wechat\Tests\Payment\Request;
 use PHPUnit\Framework\TestCase;
 use Siganushka\ApiClient\Exception\ParseResponseException;
 use Siganushka\ApiClient\Response\ResponseFactory;
+use Siganushka\ApiClient\Wechat\Configuration;
 use Siganushka\ApiClient\Wechat\Payment\Request\TransferRequest;
 use Siganushka\ApiClient\Wechat\Tests\ConfigurationTest;
 use Symfony\Component\OptionsResolver\Exception\InvalidOptionsException;
 use Symfony\Component\OptionsResolver\Exception\MissingOptionsException;
+use Symfony\Component\OptionsResolver\Exception\NoConfigurationException;
 
 class TransferRequestTest extends TestCase
 {
@@ -159,6 +161,92 @@ class TransferRequestTest extends TestCase
             'partner_trade_no' => 'test_partner_trade_no',
             'openid' => 'test_openid',
             'amount' => 'test_amount',
+            'desc' => 'test_desc',
+        ]);
+    }
+
+    public function testMchidNoConfigurationException(): void
+    {
+        $this->expectException(NoConfigurationException::class);
+        $this->expectExceptionMessage('No configured value for "mchid" option');
+
+        $configuration = new Configuration([
+            'appid' => 'test_appid',
+            'appsecret' => 'test_appsecret',
+        ]);
+
+        $encoder = ConfigurationTest::createXmlEncoder();
+        $request = new TransferRequest($configuration, $encoder);
+        $request->build([
+            'partner_trade_no' => 'test_partner_trade_no',
+            'openid' => 'test_openid',
+            'amount' => 1,
+            'desc' => 'test_desc',
+        ]);
+    }
+
+    public function testMchkeyNoConfigurationException(): void
+    {
+        $this->expectException(NoConfigurationException::class);
+        $this->expectExceptionMessage('No configured value for "mchkey" option');
+
+        $configuration = new Configuration([
+            'appid' => 'test_appid',
+            'appsecret' => 'test_appsecret',
+            'mchid' => 'test_mchid',
+        ]);
+
+        $encoder = ConfigurationTest::createXmlEncoder();
+        $request = new TransferRequest($configuration, $encoder);
+        $request->build([
+            'partner_trade_no' => 'test_partner_trade_no',
+            'openid' => 'test_openid',
+            'amount' => 1,
+            'desc' => 'test_desc',
+        ]);
+    }
+
+    public function testClientCertFileNoConfigurationException(): void
+    {
+        $this->expectException(NoConfigurationException::class);
+        $this->expectExceptionMessage('No configured value for "client_cert_file" option');
+
+        $configuration = new Configuration([
+            'appid' => 'test_appid',
+            'appsecret' => 'test_appsecret',
+            'mchid' => 'test_mchid',
+            'mchkey' => 'test_mchkey',
+        ]);
+
+        $encoder = ConfigurationTest::createXmlEncoder();
+        $request = new TransferRequest($configuration, $encoder);
+        $request->build([
+            'partner_trade_no' => 'test_partner_trade_no',
+            'openid' => 'test_openid',
+            'amount' => 1,
+            'desc' => 'test_desc',
+        ]);
+    }
+
+    public function testClientKeyFileNoConfigurationException(): void
+    {
+        $this->expectException(NoConfigurationException::class);
+        $this->expectExceptionMessage('No configured value for "client_key_file" option');
+
+        $configuration = new Configuration([
+            'appid' => 'test_appid',
+            'appsecret' => 'test_appsecret',
+            'mchid' => 'test_mchid',
+            'mchkey' => 'test_mchkey',
+            'client_cert_file' => __DIR__.'/../../Mock/cert.pem',
+        ]);
+
+        $encoder = ConfigurationTest::createXmlEncoder();
+        $request = new TransferRequest($configuration, $encoder);
+        $request->build([
+            'partner_trade_no' => 'test_partner_trade_no',
+            'openid' => 'test_openid',
+            'amount' => 1,
             'desc' => 'test_desc',
         ]);
     }

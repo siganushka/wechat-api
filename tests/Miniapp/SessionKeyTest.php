@@ -7,8 +7,8 @@ namespace Siganushka\ApiClient\Wechat\Tests\Miniapp;
 use PHPUnit\Framework\TestCase;
 use Siganushka\ApiClient\Exception\ParseResponseException;
 use Siganushka\ApiClient\Response\ResponseFactory;
-use Siganushka\ApiClient\Wechat\Configuration;
 use Siganushka\ApiClient\Wechat\Miniapp\SessionKey;
+use Siganushka\ApiClient\Wechat\Tests\ConfigurationTest;
 use Symfony\Component\OptionsResolver\Exception\InvalidOptionsException;
 use Symfony\Component\OptionsResolver\Exception\MissingOptionsException;
 
@@ -91,14 +91,8 @@ class SessionKeyTest extends TestCase
 
     public static function createRequest(): SessionKey
     {
-        $options = [
-            'appid' => 'test_appid',
-            'appsecret' => 'test_appsecret',
-        ];
+        $configuration = ConfigurationTest::createConfiguration();
 
-        $configuration = new Configuration($options);
-        $request = new SessionKey($configuration);
-
-        return $request;
+        return new SessionKey($configuration);
     }
 }

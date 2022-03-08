@@ -86,8 +86,6 @@ class ServerIpTest extends TestCase
 
     public static function createRequest(): ServerIp
     {
-        $request = new ServerIp();
-
-        return $request;
+        return new ServerIp();
     }
 }

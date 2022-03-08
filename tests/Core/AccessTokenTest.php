@@ -7,8 +7,8 @@ namespace Siganushka\ApiClient\Wechat\Tests\Core;
 use PHPUnit\Framework\TestCase;
 use Siganushka\ApiClient\Exception\ParseResponseException;
 use Siganushka\ApiClient\Response\ResponseFactory;
-use Siganushka\ApiClient\Wechat\Configuration;
 use Siganushka\ApiClient\Wechat\Core\AccessToken;
+use Siganushka\ApiClient\Wechat\Tests\ConfigurationTest;
 
 class AccessTokenTest extends TestCase
 {
@@ -72,14 +72,8 @@ class AccessTokenTest extends TestCase
 
     public static function createRequest(): AccessToken
     {
-        $options = [
-            'appid' => 'test_appid',
-            'appsecret' => 'test_appsecret',
-        ];
+        $configuration = ConfigurationTest::createConfiguration();
 
-        $configuration = new Configuration($options);
-        $request = new AccessToken($configuration);
-
-        return $request;
+        return new AccessToken($configuration);
     }
 }

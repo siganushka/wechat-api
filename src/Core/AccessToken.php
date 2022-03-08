@@ -2,7 +2,7 @@
 
 declare(strict_types=1);
 
-namespace Siganushka\ApiClient\Wechat\Core\Request;
+namespace Siganushka\ApiClient\Wechat\Core;
 
 use Siganushka\ApiClient\AbstractRequest;
 use Siganushka\ApiClient\CacheableResponseInterface;
@@ -14,7 +14,7 @@ use Symfony\Contracts\HttpClient\ResponseInterface;
 /**
  * @see https://developers.weixin.qq.com/doc/offiaccount/Basic_Information/Get_access_token.html
  */
-class AccessTokenRequest extends AbstractRequest implements CacheableResponseInterface
+class AccessToken extends AbstractRequest implements CacheableResponseInterface
 {
     public const URL = 'https://api.weixin.qq.com/cgi-bin/token';
 

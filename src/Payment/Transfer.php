@@ -2,12 +2,11 @@
 
 declare(strict_types=1);
 
-namespace Siganushka\ApiClient\Wechat\Payment\Request;
+namespace Siganushka\ApiClient\Wechat\Payment;
 
 use Siganushka\ApiClient\AbstractRequest;
 use Siganushka\ApiClient\Exception\ParseResponseException;
 use Siganushka\ApiClient\Wechat\Configuration;
-use Siganushka\ApiClient\Wechat\Payment\SignatureUtils;
 use Symfony\Component\OptionsResolver\Exception\MissingOptionsException;
 use Symfony\Component\OptionsResolver\Exception\NoConfigurationException;
 use Symfony\Component\OptionsResolver\Options;
@@ -18,7 +17,7 @@ use Symfony\Contracts\HttpClient\ResponseInterface;
 /**
  * @see https://pay.weixin.qq.com/wiki/doc/api/tools/mch_pay.php?chapter=14_2
  */
-class TransferRequest extends AbstractRequest
+class Transfer extends AbstractRequest
 {
     public const URL = 'https://api.mch.weixin.qq.com/mmpaymkttransfers/promotion/transfers';
 

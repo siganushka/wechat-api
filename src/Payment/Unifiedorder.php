@@ -2,12 +2,11 @@
 
 declare(strict_types=1);
 
-namespace Siganushka\ApiClient\Wechat\Payment\Request;
+namespace Siganushka\ApiClient\Wechat\Payment;
 
 use Siganushka\ApiClient\AbstractRequest;
 use Siganushka\ApiClient\Exception\ParseResponseException;
 use Siganushka\ApiClient\Wechat\Configuration;
-use Siganushka\ApiClient\Wechat\Payment\SignatureUtils;
 use Symfony\Component\OptionsResolver\Exception\MissingOptionsException;
 use Symfony\Component\OptionsResolver\Exception\NoConfigurationException;
 use Symfony\Component\OptionsResolver\Options;
@@ -18,7 +17,7 @@ use Symfony\Contracts\HttpClient\ResponseInterface;
 /**
  * @see https://pay.weixin.qq.com/wiki/doc/api/jsapi.php?chapter=9_1
  */
-class UnifiedorderRequest extends AbstractRequest
+class Unifiedorder extends AbstractRequest
 {
     public const URL = 'https://api.mch.weixin.qq.com/pay/unifiedorder';
     public const URL2 = 'https://api2.mch.weixin.qq.com/pay/unifiedorder';

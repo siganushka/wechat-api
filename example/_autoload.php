@@ -5,11 +5,11 @@ declare(strict_types=1);
 use Siganushka\ApiClient\RequestClient;
 use Siganushka\ApiClient\RequestRegistry;
 use Siganushka\ApiClient\Wechat\Configuration;
-use Siganushka\ApiClient\Wechat\Core\Request\AccessTokenRequest;
-use Siganushka\ApiClient\Wechat\Core\Request\ServerIpRequest;
-use Siganushka\ApiClient\Wechat\Miniapp\Request\SessionKeyRequest;
-use Siganushka\ApiClient\Wechat\Payment\Request\TransferRequest;
-use Siganushka\ApiClient\Wechat\Payment\Request\UnifiedorderRequest;
+use Siganushka\ApiClient\Wechat\Core\AccessToken;
+use Siganushka\ApiClient\Wechat\Core\ServerIp;
+use Siganushka\ApiClient\Wechat\Miniapp\SessionKey;
+use Siganushka\ApiClient\Wechat\Payment\Transfer;
+use Siganushka\ApiClient\Wechat\Payment\Unifiedorder;
 use Symfony\Component\Cache\Adapter\FilesystemAdapter;
 use Symfony\Component\ErrorHandler\Debug;
 use Symfony\Component\HttpClient\HttpClient;
@@ -51,11 +51,11 @@ $configuration = new Configuration([
 // dd($configuration);
 
 $requests = [
-    new AccessTokenRequest($configuration),
-    new ServerIpRequest($configuration),
-    new SessionKeyRequest($configuration),
-    new TransferRequest($configuration, $xmlEncoder),
-    new UnifiedorderRequest($configuration, $xmlEncoder),
+    new AccessToken($configuration),
+    new ServerIp($configuration),
+    new SessionKey($configuration),
+    new Transfer($configuration, $xmlEncoder),
+    new Unifiedorder($configuration, $xmlEncoder),
 ];
 
 $registry = new RequestRegistry($requests);

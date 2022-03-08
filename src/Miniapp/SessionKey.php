@@ -2,7 +2,7 @@
 
 declare(strict_types=1);
 
-namespace Siganushka\ApiClient\Wechat\Miniapp\Request;
+namespace Siganushka\ApiClient\Wechat\Miniapp;
 
 use Siganushka\ApiClient\AbstractRequest;
 use Siganushka\ApiClient\CacheableResponseInterface;
@@ -14,7 +14,7 @@ use Symfony\Contracts\HttpClient\ResponseInterface;
 /**
  * @see https://developers.weixin.qq.com/miniprogram/dev/api-backend/open-api/login/auth.code2Session.html
  */
-class SessionKeyRequest extends AbstractRequest implements CacheableResponseInterface
+class SessionKey extends AbstractRequest implements CacheableResponseInterface
 {
     public const URL = 'https://api.weixin.qq.com/sns/jscode2session';
 

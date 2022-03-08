@@ -2,19 +2,19 @@
 
 declare(strict_types=1);
 
-namespace Siganushka\ApiClient\Wechat\Tests\Payment\Request;
+namespace Siganushka\ApiClient\Wechat\Tests\Payment;
 
 use PHPUnit\Framework\TestCase;
 use Siganushka\ApiClient\Exception\ParseResponseException;
 use Siganushka\ApiClient\Response\ResponseFactory;
 use Siganushka\ApiClient\Wechat\Configuration;
-use Siganushka\ApiClient\Wechat\Payment\Request\TransferRequest;
+use Siganushka\ApiClient\Wechat\Payment\Transfer;
 use Siganushka\ApiClient\Wechat\Tests\ConfigurationTest;
 use Symfony\Component\OptionsResolver\Exception\InvalidOptionsException;
 use Symfony\Component\OptionsResolver\Exception\MissingOptionsException;
 use Symfony\Component\OptionsResolver\Exception\NoConfigurationException;
 
-class TransferRequestTest extends TestCase
+class TransferTest extends TestCase
 {
     public function testAll(): void
     {
@@ -32,7 +32,7 @@ class TransferRequestTest extends TestCase
 
         $request->build($options);
         static::assertEquals('POST', $request->getMethod());
-        static::assertEquals(TransferRequest::URL, $request->getUrl());
+        static::assertEquals(Transfer::URL, $request->getUrl());
 
         /**
          * @var array{ body: string, local_cert: string, local_pk: string }
@@ -176,7 +176,7 @@ class TransferRequestTest extends TestCase
         ]);
 
         $encoder = ConfigurationTest::createXmlEncoder();
-        $request = new TransferRequest($configuration, $encoder);
+        $request = new Transfer($configuration, $encoder);
         $request->build([
             'partner_trade_no' => 'test_partner_trade_no',
             'openid' => 'test_openid',
@@ -197,7 +197,7 @@ class TransferRequestTest extends TestCase
         ]);
 
         $encoder = ConfigurationTest::createXmlEncoder();
-        $request = new TransferRequest($configuration, $encoder);
+        $request = new Transfer($configuration, $encoder);
         $request->build([
             'partner_trade_no' => 'test_partner_trade_no',
             'openid' => 'test_openid',
@@ -219,7 +219,7 @@ class TransferRequestTest extends TestCase
         ]);
 
         $encoder = ConfigurationTest::createXmlEncoder();
-        $request = new TransferRequest($configuration, $encoder);
+        $request = new Transfer($configuration, $encoder);
         $request->build([
             'partner_trade_no' => 'test_partner_trade_no',
             'openid' => 'test_openid',
@@ -238,11 +238,11 @@ class TransferRequestTest extends TestCase
             'appsecret' => 'test_appsecret',
             'mchid' => 'test_mchid',
             'mchkey' => 'test_mchkey',
-            'client_cert_file' => __DIR__.'/../../Mock/cert.pem',
+            'client_cert_file' => __DIR__.'/../Mock/cert.pem',
         ]);
 
         $encoder = ConfigurationTest::createXmlEncoder();
-        $request = new TransferRequest($configuration, $encoder);
+        $request = new Transfer($configuration, $encoder);
         $request->build([
             'partner_trade_no' => 'test_partner_trade_no',
             'openid' => 'test_openid',
@@ -307,11 +307,11 @@ class TransferRequestTest extends TestCase
         $request->parseResponse($response);
     }
 
-    public static function createRequest(): TransferRequest
+    public static function createRequest(): Transfer
     {
         $configuration = ConfigurationTest::createConfiguration();
         $encoder = ConfigurationTest::createXmlEncoder();
 
-        return new TransferRequest($configuration, $encoder);
+        return new Transfer($configuration, $encoder);
     }
 }

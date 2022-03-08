@@ -2,7 +2,7 @@
 
 declare(strict_types=1);
 
-use Siganushka\ApiClient\Wechat\Payment\Request\UnifiedorderRequest;
+use Siganushka\ApiClient\Wechat\Payment\Unifiedorder;
 
 require __DIR__.'/_autoload.php';
 
@@ -16,5 +16,5 @@ $options = [
     // 'sign_type' => 'HMAC-SHA256',
 ];
 
-$result = $client->send(UnifiedorderRequest::class, $options);
+$result = $client->send(Unifiedorder::class, $options);
 dd($result);

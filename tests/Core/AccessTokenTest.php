@@ -2,15 +2,15 @@
 
 declare(strict_types=1);
 
-namespace Siganushka\ApiClient\Wechat\Tests\Core\Request;
+namespace Siganushka\ApiClient\Wechat\Tests\Core;
 
 use PHPUnit\Framework\TestCase;
 use Siganushka\ApiClient\Exception\ParseResponseException;
 use Siganushka\ApiClient\Response\ResponseFactory;
 use Siganushka\ApiClient\Wechat\Configuration;
-use Siganushka\ApiClient\Wechat\Core\Request\AccessTokenRequest;
+use Siganushka\ApiClient\Wechat\Core\AccessToken;
 
-class AccessTokenRequestTest extends TestCase
+class AccessTokenTest extends TestCase
 {
     public function testAll(): void
     {
@@ -21,7 +21,7 @@ class AccessTokenRequestTest extends TestCase
 
         $request->build();
         static::assertSame('GET', $request->getMethod());
-        static::assertSame(AccessTokenRequest::URL, $request->getUrl());
+        static::assertSame(AccessToken::URL, $request->getUrl());
 
         /**
          * @var array{
@@ -70,7 +70,7 @@ class AccessTokenRequestTest extends TestCase
         $request->parseResponse($response);
     }
 
-    public static function createRequest(): AccessTokenRequest
+    public static function createRequest(): AccessToken
     {
         $options = [
             'appid' => 'test_appid',
@@ -78,7 +78,7 @@ class AccessTokenRequestTest extends TestCase
         ];
 
         $configuration = new Configuration($options);
-        $request = new AccessTokenRequest($configuration);
+        $request = new AccessToken($configuration);
 
         return $request;
     }

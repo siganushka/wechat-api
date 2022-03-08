@@ -2,7 +2,7 @@
 
 declare(strict_types=1);
 
-namespace Siganushka\ApiClient\Wechat\Core\Request;
+namespace Siganushka\ApiClient\Wechat\Core;
 
 use Siganushka\ApiClient\AbstractRequest;
 use Siganushka\ApiClient\Exception\ParseResponseException;
@@ -12,7 +12,7 @@ use Symfony\Contracts\HttpClient\ResponseInterface;
 /**
  * @see https://developers.weixin.qq.com/doc/offiaccount/Basic_Information/Get_the_WeChat_server_IP_address.html
  */
-class ServerIpRequest extends AbstractRequest
+class ServerIp extends AbstractRequest
 {
     public const URL = 'https://api.weixin.qq.com/cgi-bin/get_api_domain_ip';
 

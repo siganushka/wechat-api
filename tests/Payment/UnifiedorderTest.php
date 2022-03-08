@@ -2,19 +2,19 @@
 
 declare(strict_types=1);
 
-namespace Siganushka\ApiClient\Wechat\Tests\Payment\Request;
+namespace Siganushka\ApiClient\Wechat\Tests\Payment;
 
 use PHPUnit\Framework\TestCase;
 use Siganushka\ApiClient\Exception\ParseResponseException;
 use Siganushka\ApiClient\Response\ResponseFactory;
 use Siganushka\ApiClient\Wechat\Configuration;
-use Siganushka\ApiClient\Wechat\Payment\Request\UnifiedorderRequest;
+use Siganushka\ApiClient\Wechat\Payment\Unifiedorder;
 use Siganushka\ApiClient\Wechat\Tests\ConfigurationTest;
 use Symfony\Component\OptionsResolver\Exception\InvalidOptionsException;
 use Symfony\Component\OptionsResolver\Exception\MissingOptionsException;
 use Symfony\Component\OptionsResolver\Exception\NoConfigurationException;
 
-class UnifiedorderRequestTest extends TestCase
+class UnifiedorderTest extends TestCase
 {
     public function testAll(): void
     {
@@ -34,7 +34,7 @@ class UnifiedorderRequestTest extends TestCase
 
         $request->build($options);
         static::assertEquals('POST', $request->getMethod());
-        static::assertEquals(UnifiedorderRequest::URL, $request->getUrl());
+        static::assertEquals(Unifiedorder::URL, $request->getUrl());
 
         /**
          * @var array{ body: string }
@@ -95,7 +95,7 @@ class UnifiedorderRequestTest extends TestCase
 
         $request = static::createRequest();
         $request->build($options);
-        static::assertEquals(UnifiedorderRequest::URL2, $request->getUrl());
+        static::assertEquals(Unifiedorder::URL2, $request->getUrl());
 
         /**
          * @var array{ body: string }
@@ -277,7 +277,7 @@ class UnifiedorderRequestTest extends TestCase
         ]);
 
         $encoder = ConfigurationTest::createXmlEncoder();
-        $request = new UnifiedorderRequest($configuration, $encoder);
+        $request = new Unifiedorder($configuration, $encoder);
         $request->build([
             'body' => 'test_body',
             'notify_url' => 'test_notify_url',
@@ -300,7 +300,7 @@ class UnifiedorderRequestTest extends TestCase
         ]);
 
         $encoder = ConfigurationTest::createXmlEncoder();
-        $request = new UnifiedorderRequest($configuration, $encoder);
+        $request = new Unifiedorder($configuration, $encoder);
         $request->build([
             'body' => 'test_body',
             'notify_url' => 'test_notify_url',
@@ -365,11 +365,11 @@ class UnifiedorderRequestTest extends TestCase
         $request->parseResponse($response);
     }
 
-    public static function createRequest(): UnifiedorderRequest
+    public static function createRequest(): Unifiedorder
     {
         $configuration = ConfigurationTest::createConfiguration();
         $encoder = ConfigurationTest::createXmlEncoder();
 
-        return new UnifiedorderRequest($configuration, $encoder);
+        return new Unifiedorder($configuration, $encoder);
     }
 }

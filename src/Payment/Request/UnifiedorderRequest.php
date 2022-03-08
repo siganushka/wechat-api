@@ -51,6 +51,7 @@ class UnifiedorderRequest extends AbstractRequest
             'receipt' => null,
             'profit_sharing' => null,
             'scene_info' => null,
+            'using_slave_api' => false,
         ];
     }
 
@@ -73,8 +74,9 @@ class UnifiedorderRequest extends AbstractRequest
             'notify_url' => $options['notify_url'],
         ];
 
+        $ignoreOptions = ['using_slave_api'];
         foreach (array_keys($this->defaultOptions) as $optionName) {
-            if (null !== $options[$optionName]) {
+            if (null !== $options[$optionName] && !\in_array($optionName, $ignoreOptions)) {
                 $body[$optionName] = $options[$optionName];
             }
         }
@@ -83,10 +85,11 @@ class UnifiedorderRequest extends AbstractRequest
         $body['sign'] = $signatureUtils->generate($body);
 
         $xmlBody = $this->xmlEncoder->encode($body, 'xml');
+        $apiURL = $options['using_slave_api'] ? static::URL2 : static::URL;
 
         $this
             ->setMethod('POST')
-            ->setUrl(static::URL)
+            ->setUrl($apiURL)
             ->setBody($xmlBody)
         ;
     }
@@ -96,6 +99,7 @@ class UnifiedorderRequest extends AbstractRequest
         $resolver->setDefaults($this->defaultOptions);
         $resolver->setRequired(['body', 'out_trade_no', 'total_fee', 'trade_type', 'notify_url']);
         $resolver->setAllowedTypes('total_fee', 'int');
+        $resolver->setAllowedTypes('using_slave_api', 'bool');
 
         $resolver->setAllowedValues('fee_type', [null, 'CNY']);
         $resolver->setAllowedValues('trade_type', [null, 'JSAPI', 'NATIVE', 'APP', 'MWEB']);

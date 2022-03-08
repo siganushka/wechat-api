@@ -8,6 +8,7 @@ use PHPUnit\Framework\TestCase;
 use Siganushka\ApiClient\Wechat\Configuration;
 use Symfony\Component\OptionsResolver\Exception\InvalidOptionsException;
 use Symfony\Component\OptionsResolver\Exception\MissingOptionsException;
+use Symfony\Component\Serializer\Encoder\XmlEncoder;
 
 class ConfigurationTest extends TestCase
 {
@@ -30,24 +31,14 @@ class ConfigurationTest extends TestCase
 
     public function testCustomOptions(): void
     {
-        $options = [
-            'appid' => 'test_appid',
-            'appsecret' => 'test_appsecret',
-            'mchid' => 'test_mchid',
-            'mchkey' => 'test_mchkey',
-            'client_cert_file' => __DIR__.'/Mock/cert.pem',
-            'client_key_file' => __DIR__.'/Mock/key.pem',
-            'sign_type' => 'HMAC-SHA256',
-        ];
-
-        $configuration = new Configuration($options);
-        static::assertSame($options['appid'], $configuration['appid']);
-        static::assertSame($options['appsecret'], $configuration['appsecret']);
-        static::assertSame($options['mchid'], $configuration['mchid']);
-        static::assertSame($options['mchkey'], $configuration['mchkey']);
-        static::assertSame($options['client_cert_file'], $configuration['client_cert_file']);
-        static::assertSame($options['client_key_file'], $configuration['client_key_file']);
-        static::assertSame($options['sign_type'], $configuration['sign_type']);
+        $configuration = static::createConfiguration();
+        static::assertSame('test_appid', $configuration['appid']);
+        static::assertSame('test_appsecret', $configuration['appsecret']);
+        static::assertSame('test_mchid', $configuration['mchid']);
+        static::assertSame('test_mchkey', $configuration['mchkey']);
+        static::assertSame(__DIR__.'/Mock/cert.pem', $configuration['client_cert_file']);
+        static::assertSame(__DIR__.'/Mock/key.pem', $configuration['client_key_file']);
+        static::assertSame('HMAC-SHA256', $configuration['sign_type']);
     }
 
     public function testAppidMissingOptionsException(): void
@@ -100,5 +91,30 @@ class ConfigurationTest extends TestCase
             'appsecret' => 'test_appsecret',
             'sign_type' => 'invalid_sign_type',
         ]);
+    }
+
+    public static function createConfiguration(): Configuration
+    {
+        $options = [
+            'appid' => 'test_appid',
+            'appsecret' => 'test_appsecret',
+            'mchid' => 'test_mchid',
+            'mchkey' => 'test_mchkey',
+            'client_cert_file' => __DIR__.'/Mock/cert.pem',
+            'client_key_file' => __DIR__.'/Mock/key.pem',
+            'sign_type' => 'HMAC-SHA256',
+        ];
+
+        return new Configuration($options);
+    }
+
+    public static function createXmlEncoder(): XmlEncoder
+    {
+        $context = [
+            XmlEncoder::ENCODING => 'UTF-8',
+            XmlEncoder::FORMAT_OUTPUT => true,
+        ];
+
+        return new XmlEncoder($context);
     }
 }

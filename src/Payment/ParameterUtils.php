@@ -34,7 +34,7 @@ class ParameterUtils
         ];
 
         $signatureUtils = new SignatureUtils($this->configuration);
-        $parameters['sign'] = $signatureUtils->generate($parameters);
+        $parameters['paySign'] = $signatureUtils->generate($parameters);
 
         return $parameters;
     }

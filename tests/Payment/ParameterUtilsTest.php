@@ -28,7 +28,7 @@ class ParameterUtilsTest extends TestCase
         static::assertArrayHasKey('timeStamp', $jsapiParameters);
         static::assertArrayHasKey('nonceStr', $jsapiParameters);
         static::assertArrayHasKey('package', $jsapiParameters);
-        static::assertArrayHasKey('sign', $jsapiParameters);
+        static::assertArrayHasKey('paySign', $jsapiParameters);
         static::assertSame($configuration['appid'], $jsapiParameters['appId']);
         static::assertSame($configuration['sign_type'], $jsapiParameters['signType']);
         static::assertSame('prepay_id=test_prepay_id', $jsapiParameters['package']);
@@ -37,8 +37,8 @@ class ParameterUtilsTest extends TestCase
         static::assertTrue($signatureUtils->checkParameters($jsapiParameters));
 
         /** @var string */
-        $sign = $jsapiParameters['sign'];
-        unset($jsapiParameters['sign']);
+        $sign = $jsapiParameters['paySign'];
+        unset($jsapiParameters['paySign']);
 
         static::assertTrue($signatureUtils->check($jsapiParameters, $sign));
     }

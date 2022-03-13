@@ -34,7 +34,7 @@ class ParameterUtilsTest extends TestCase
         static::assertSame('prepay_id=test_prepay_id', $jsapiParameters['package']);
 
         $signatureUtils = new SignatureUtils($configuration);
-        static::assertTrue($signatureUtils->checkParameters($jsapiParameters));
+        static::assertTrue($signatureUtils->checkParameters($jsapiParameters, 'paySign'));
 
         /** @var string */
         $sign = $jsapiParameters['paySign'];

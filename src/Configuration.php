@@ -20,6 +20,8 @@ class Configuration extends AbstractConfiguration
         $resolver->setRequired('appsecret');
 
         $resolver->setDefaults([
+            'open_appid' => null,
+            'open_appsecret' => null,
             'mchid' => null,
             'mchkey' => null,
             'client_cert_file' => null,
@@ -29,6 +31,8 @@ class Configuration extends AbstractConfiguration
 
         $resolver->setAllowedTypes('appid', 'string');
         $resolver->setAllowedTypes('appsecret', 'string');
+        $resolver->setAllowedTypes('open_appid', ['null', 'string']);
+        $resolver->setAllowedTypes('open_appsecret', ['null', 'string']);
         $resolver->setAllowedTypes('mchid', ['null', 'string']);
         $resolver->setAllowedTypes('mchkey', ['null', 'string']);
         $resolver->setAllowedTypes('client_cert_file', ['null', 'string']);

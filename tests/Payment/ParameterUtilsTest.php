@@ -15,7 +15,7 @@ class ParameterUtilsTest extends TestCase
     {
         $options = [
             'appid' => 'test_appid',
-            'appsecret' => 'test_appsecret',
+            'secret' => 'test_secret',
             'mchkey' => 'test_mchkey',
         ];
 

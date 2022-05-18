@@ -32,7 +32,7 @@ class SessionKeyTest extends TestCase
          */
         $options = $request->getOptions();
         static::assertSame('test_appid', $options['query']['appid']);
-        static::assertSame('test_appsecret', $options['query']['secret']);
+        static::assertSame('test_secret', $options['query']['secret']);
         static::assertSame('authorization_code', $options['query']['grant_type']);
         static::assertSame('123', $options['query']['js_code']);
     }

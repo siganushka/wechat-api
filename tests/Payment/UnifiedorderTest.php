@@ -273,7 +273,7 @@ class UnifiedorderTest extends TestCase
 
         $configuration = new Configuration([
             'appid' => 'test_appid',
-            'appsecret' => 'test_appsecret',
+            'secret' => 'test_secret',
         ]);
 
         $encoder = ConfigurationTest::createXmlEncoder();
@@ -295,7 +295,7 @@ class UnifiedorderTest extends TestCase
 
         $configuration = new Configuration([
             'appid' => 'test_appid',
-            'appsecret' => 'test_appsecret',
+            'secret' => 'test_secret',
             'mchid' => 'test_mchid',
         ]);
 

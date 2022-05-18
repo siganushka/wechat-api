@@ -42,7 +42,9 @@ $cachePool = new FilesystemAdapter();
 
 $configuration = new Configuration([
     'appid' => WECHAT_APPID,
-    'appsecret' => WECHAT_APPSECRET,
+    'secret' => WECHAT_SECRET,
+    'open_appid' => WECHAT_OPEN_APPID,
+    'open_secret' => WECHAT_OPEN_SECRET,
     'mchid' => WECHAT_MCHID,
     'mchkey' => WECHAT_MCHKEY,
     'client_cert_file' => WECHAT_CLIENT_CERT,

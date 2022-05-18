@@ -20,7 +20,7 @@ class SignatureUtilsTest extends TestCase
     {
         $configuration = new Configuration([
             'appid' => 'aaa',
-            'appsecret' => 'bbb',
+            'secret' => 'bbb',
             'mchkey' => $key,
             'sign_type' => $signType,
         ]);
@@ -37,7 +37,7 @@ class SignatureUtilsTest extends TestCase
 
         $configuration = new Configuration([
             'appid' => 'test_appid',
-            'appsecret' => 'test_appsecret',
+            'secret' => 'test_secret',
         ]);
 
         $signatureUtils = new SignatureUtils($configuration);

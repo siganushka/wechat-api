@@ -30,7 +30,7 @@ class AccessTokenTest extends TestCase
          */
         $options = $request->getOptions();
         static::assertSame('test_appid', $options['query']['appid']);
-        static::assertSame('test_appsecret', $options['query']['secret']);
+        static::assertSame('test_secret', $options['query']['secret']);
         static::assertSame('client_credential', $options['query']['grant_type']);
     }
 

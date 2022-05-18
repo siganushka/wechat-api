@@ -17,11 +17,11 @@ class Configuration extends AbstractConfiguration
     public function configureOptions(OptionsResolver $resolver): void
     {
         $resolver->setRequired('appid');
-        $resolver->setRequired('appsecret');
+        $resolver->setRequired('secret');
 
         $resolver->setDefaults([
             'open_appid' => null,
-            'open_appsecret' => null,
+            'open_secret' => null,
             'mchid' => null,
             'mchkey' => null,
             'client_cert_file' => null,
@@ -30,9 +30,9 @@ class Configuration extends AbstractConfiguration
         ]);
 
         $resolver->setAllowedTypes('appid', 'string');
-        $resolver->setAllowedTypes('appsecret', 'string');
+        $resolver->setAllowedTypes('secret', 'string');
         $resolver->setAllowedTypes('open_appid', ['null', 'string']);
-        $resolver->setAllowedTypes('open_appsecret', ['null', 'string']);
+        $resolver->setAllowedTypes('open_secret', ['null', 'string']);
         $resolver->setAllowedTypes('mchid', ['null', 'string']);
         $resolver->setAllowedTypes('mchkey', ['null', 'string']);
         $resolver->setAllowedTypes('client_cert_file', ['null', 'string']);
@@ -40,7 +40,7 @@ class Configuration extends AbstractConfiguration
         $resolver->setAllowedValues('sign_type', ['MD5', 'HMAC-SHA256']);
 
         $resolver->setNormalizer('client_cert_file', function (Options $options, ?string $clientCertFile) {
-            if ($clientCertFile && !is_file($clientCertFile)) {
+            if (null !== $clientCertFile && !is_file($clientCertFile)) {
                 throw new InvalidOptionsException('The option "client_cert_file" file does not exists.');
             }
 
@@ -48,7 +48,7 @@ class Configuration extends AbstractConfiguration
         });
 
         $resolver->setNormalizer('client_key_file', function (Options $options, ?string $clientKeyFile) {
-            if ($clientKeyFile && !is_file($clientKeyFile)) {
+            if (null !== $clientKeyFile && !is_file($clientKeyFile)) {
                 throw new InvalidOptionsException('The option "client_key_file" file does not exists.');
             }
 

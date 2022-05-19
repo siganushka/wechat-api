@@ -20,9 +20,8 @@ class Send extends AbstractRequest
      * @param array{
      *  access_token: string,
      *  touser: string,
-     *  template_id: string,
-     *  template_data: Data,
-     *  url: string,
+     *  template: Template,
+     *  url?: string,
      *  miniprogram: array{ appid: string, pagepath: string }
      * } $options
      */
@@ -34,8 +33,8 @@ class Send extends AbstractRequest
 
         $body = [
             'touser' => $options['touser'],
-            'template_id' => $options['template_id'],
-            'data' => $options['template_data']->toArray(),
+            'template_id' => $options['template']->getId(),
+            'data' => $options['template']->getData(),
         ];
 
         foreach (['url', 'miniprogram'] as $field) {
@@ -54,16 +53,16 @@ class Send extends AbstractRequest
 
     public function configureOptions(OptionsResolver $resolver): void
     {
-        $resolver->setRequired(['access_token', 'touser', 'template_id', 'template_data']);
-        $resolver->setDefault('url', 'null');
+        $resolver->setRequired(['access_token', 'touser', 'template']);
+        $resolver->setDefault('url', null);
         $resolver->setDefault('miniprogram', function (OptionsResolver $miniprogramResolver) {
             $miniprogramResolver->setDefined(['appid', 'pagepath']);
         });
 
         $resolver->setAllowedTypes('access_token', 'string');
         $resolver->setAllowedTypes('touser', 'string');
-        $resolver->setAllowedTypes('template_id', 'string');
-        $resolver->setAllowedTypes('template_data', 'Data');
+        $resolver->setAllowedTypes('template', Template::class);
+        $resolver->setAllowedTypes('url', ['null', 'string']);
     }
 
     /**

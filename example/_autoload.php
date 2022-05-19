@@ -7,9 +7,15 @@ use Siganushka\ApiClient\RequestRegistry;
 use Siganushka\ApiClient\Wechat\Configuration;
 use Siganushka\ApiClient\Wechat\Core\AccessToken;
 use Siganushka\ApiClient\Wechat\Core\ServerIp;
+use Siganushka\ApiClient\Wechat\Message\Template\Send;
 use Siganushka\ApiClient\Wechat\Miniapp\SessionKey;
+use Siganushka\ApiClient\Wechat\OAuth\AccessToken as OAuthAccessToken;
+use Siganushka\ApiClient\Wechat\OAuth\CheckToken;
+use Siganushka\ApiClient\Wechat\OAuth\RefreshToken;
+use Siganushka\ApiClient\Wechat\OAuth\UserInfo;
 use Siganushka\ApiClient\Wechat\Payment\Transfer;
 use Siganushka\ApiClient\Wechat\Payment\Unifiedorder;
+use Siganushka\ApiClient\Wechat\Ticket\Ticket;
 use Symfony\Component\Cache\Adapter\FilesystemAdapter;
 use Symfony\Component\ErrorHandler\Debug;
 use Symfony\Component\HttpClient\HttpClient;
@@ -58,6 +64,12 @@ $requests = [
     new SessionKey($configuration),
     new Transfer($configuration, $xmlEncoder),
     new Unifiedorder($configuration, $xmlEncoder),
+    new OAuthAccessToken($configuration),
+    new UserInfo(),
+    new RefreshToken($configuration),
+    new Ticket(),
+    new CheckToken(),
+    new Send(),
 ];
 
 $registry = new RequestRegistry($requests);

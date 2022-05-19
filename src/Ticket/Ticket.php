@@ -40,6 +40,8 @@ class Ticket extends AbstractRequest implements CacheableResponseInterface
 
         $resolver->setAllowedTypes('access_token', 'string');
         $resolver->setAllowedTypes('type', 'string');
+
+        $resolver->setAllowedValues('type', ['jsapi', 'wx_card']);
     }
 
     /**

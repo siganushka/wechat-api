@@ -7,6 +7,7 @@ namespace Siganushka\ApiClient\Wechat\Payment;
 use Siganushka\ApiClient\AbstractRequest;
 use Siganushka\ApiClient\Exception\ParseResponseException;
 use Siganushka\ApiClient\Wechat\Configuration;
+use Siganushka\ApiClient\Wechat\HelperSet;
 use Symfony\Component\OptionsResolver\Exception\MissingOptionsException;
 use Symfony\Component\OptionsResolver\Exception\NoConfigurationException;
 use Symfony\Component\OptionsResolver\Options;
@@ -35,8 +36,8 @@ class Unifiedorder extends AbstractRequest
         $this->configuration = $configuration;
         $this->xmlEncoder = $xmlEncoder;
         $this->defaultOptions = [
-            'nonce_str' => bin2hex(random_bytes(16)),
-            'spbill_create_ip' => $_SERVER['HTTP_X_FORWARDED_FOR'] ?? ($_SERVER['REMOTE_ADDR'] ?? '0.0.0.0'),
+            'nonce_str' => HelperSet::getNonceStr(),
+            'spbill_create_ip' => HelperSet::getClientIp(),
             'openid' => null,
             'product_id' => null,
             'device_info' => null,

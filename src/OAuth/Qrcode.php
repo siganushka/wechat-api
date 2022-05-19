@@ -39,7 +39,7 @@ class Qrcode implements ConfigurableOptionsInterface
         }
 
         $resolved = $this->resolveOptions($options);
-        $resolved['appid'] = $this->configuration['open_appid'];
+        $resolved['appid'] = $this->configuration['appid'];
         $resolved['response_type'] = 'code';
 
         ksort($resolved);
@@ -65,8 +65,7 @@ class Qrcode implements ConfigurableOptionsInterface
     {
         $resolver->setRequired('redirect_uri');
         $resolver->setDefault('scope', 'snsapi_login');
-        $resolver->setDefault('lang', 'cn');
-        $resolver->setDefined('state');
+        $resolver->setDefined(['lang', 'state']);
 
         $resolver->setAllowedTypes('redirect_uri', 'string');
         $resolver->setAllowedTypes('scope', 'string');

@@ -12,7 +12,7 @@ use Symfony\Contracts\HttpClient\ResponseInterface;
 /**
  * @see https://developers.weixin.qq.com/doc/offiaccount/OA_Web_Apps/Wechat_webpage_authorization.html#4
  */
-class Auth extends AbstractRequest
+class CheckToken extends AbstractRequest
 {
     public const URL = 'https://api.weixin.qq.com/sns/auth';
 

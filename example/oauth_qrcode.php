@@ -3,19 +3,16 @@
 declare(strict_types=1);
 
 use Siganushka\ApiClient\Wechat\HelperSet;
-use Siganushka\ApiClient\Wechat\OAuth\AccessToken;
-use Siganushka\ApiClient\Wechat\OAuth\Authorize;
+use Siganushka\ApiClient\Wechat\OAuth\Qrcode;
 
 require __DIR__.'/_autoload.php';
 
 if (!isset($_GET['code'])) {
     $options = [
         'redirect_uri' => HelperSet::getCurrentUrl(),
-        'scope' => 'snsapi_userinfo',
-        'state' => 'foo',
     ];
 
-    $authorize = new Authorize($configuration);
+    $authorize = new Qrcode($configuration);
     $authorize->redirect($options);
     // dd($authorize->getAuthorizeUrl($options));
 

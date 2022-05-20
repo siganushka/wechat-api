@@ -2,7 +2,7 @@
 
 declare(strict_types=1);
 
-use Siganushka\ApiClient\Wechat\Payment\ParameterUtils;
+use Siganushka\ApiClient\Wechat\Payment\ConfigUtils;
 
 require __DIR__.'/_autoload.php';
 
@@ -19,5 +19,5 @@ $parameters = [
     'trade_type' => 'JSAPI',
 ];
 
-$parameterUtils = new ParameterUtils($configuration);
-dd($parameterUtils->jsapi($parameters['prepay_id']));
+$configUtils = new ConfigUtils($configuration);
+dd($configUtils->generate($parameters['prepay_id']));

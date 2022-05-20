@@ -2,36 +2,26 @@
 
 declare(strict_types=1);
 
-namespace Siganushka\ApiClient\Wechat\Miniapp;
+namespace Siganushka\ApiClient\Wechat\OAuth;
 
 use Siganushka\ApiClient\AbstractRequest;
-use Siganushka\ApiClient\CacheableResponseInterface;
 use Siganushka\ApiClient\Exception\ParseResponseException;
-use Siganushka\ApiClient\Wechat\Configuration;
 use Symfony\Component\OptionsResolver\OptionsResolver;
 use Symfony\Contracts\HttpClient\ResponseInterface;
 
 /**
- * @see https://developers.weixin.qq.com/miniprogram/dev/api-backend/open-api/login/auth.code2Session.html
+ * @see https://developers.weixin.qq.com/doc/offiaccount/OA_Web_Apps/Wechat_webpage_authorization.html#3
  */
-class SessionKey extends AbstractRequest implements CacheableResponseInterface
+class UserInfo extends AbstractRequest
 {
-    public const URL = 'https://api.weixin.qq.com/sns/jscode2session';
-
-    private Configuration $configuration;
-
-    public function __construct(Configuration $configuration)
-    {
-        $this->configuration = $configuration;
-    }
+    public const URL = 'https://api.weixin.qq.com/sns/userinfo';
 
     protected function configureRequest(array $options): void
     {
         $query = [
-            'appid' => $this->configuration['appid'],
-            'secret' => $this->configuration['secret'],
-            'grant_type' => 'authorization_code',
-            'js_code' => $options['js_code'],
+            'access_token' => $options['access_token'],
+            'openid' => $options['openid'],
+            'lang' => $options['lang'],
         ];
 
         $this
@@ -43,14 +33,25 @@ class SessionKey extends AbstractRequest implements CacheableResponseInterface
 
     public function configureOptions(OptionsResolver $resolver): void
     {
-        $resolver->setRequired('js_code');
-        $resolver->setAllowedTypes('js_code', 'string');
+        $resolver->setRequired('access_token');
+        $resolver->setRequired('openid');
+        $resolver->setDefault('lang', 'zh_CN');
+
+        $resolver->setAllowedTypes('access_token', 'string');
+        $resolver->setAllowedTypes('openid', 'string');
+        $resolver->setAllowedTypes('lang', 'string');
     }
 
     /**
      * @return array{
      *  openid: string,
-     *  session_key: string,
+     *  nickname: string,
+     *  sex: int,
+     *  province: string,
+     *  city: string,
+     *  country: string,
+     *  headimgurl: string,
+     *  unionid: string,
      *  errcode?: int,
      *  errmsg?: string
      * }
@@ -60,7 +61,13 @@ class SessionKey extends AbstractRequest implements CacheableResponseInterface
         /**
          * @var array{
          *  openid: string,
-         *  session_key: string,
+         *  nickname: string,
+         *  sex: int,
+         *  province: string,
+         *  city: string,
+         *  country: string,
+         *  headimgurl: string,
+         *  unionid: string,
          *  errcode?: int,
          *  errmsg?: string
          * }
@@ -75,10 +82,5 @@ class SessionKey extends AbstractRequest implements CacheableResponseInterface
         }
 
         throw new ParseResponseException($response, $errmsg, $errcode);
-    }
-
-    public function getCacheTtl(): int
-    {
-        return 300;
     }
 }

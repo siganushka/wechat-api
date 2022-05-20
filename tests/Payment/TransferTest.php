@@ -172,7 +172,7 @@ class TransferTest extends TestCase
 
         $configuration = new Configuration([
             'appid' => 'test_appid',
-            'appsecret' => 'test_appsecret',
+            'secret' => 'test_secret',
         ]);
 
         $encoder = ConfigurationTest::createXmlEncoder();
@@ -192,7 +192,7 @@ class TransferTest extends TestCase
 
         $configuration = new Configuration([
             'appid' => 'test_appid',
-            'appsecret' => 'test_appsecret',
+            'secret' => 'test_secret',
             'mchid' => 'test_mchid',
         ]);
 
@@ -213,7 +213,7 @@ class TransferTest extends TestCase
 
         $configuration = new Configuration([
             'appid' => 'test_appid',
-            'appsecret' => 'test_appsecret',
+            'secret' => 'test_secret',
             'mchid' => 'test_mchid',
             'mchkey' => 'test_mchkey',
         ]);
@@ -235,7 +235,7 @@ class TransferTest extends TestCase
 
         $configuration = new Configuration([
             'appid' => 'test_appid',
-            'appsecret' => 'test_appsecret',
+            'secret' => 'test_secret',
             'mchid' => 'test_mchid',
             'mchkey' => 'test_mchkey',
             'client_cert_file' => __DIR__.'/../Mock/cert.pem',

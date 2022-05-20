@@ -5,13 +5,14 @@ declare(strict_types=1);
 namespace Siganushka\ApiClient\Wechat\Payment;
 
 use Siganushka\ApiClient\Wechat\Configuration;
+use Siganushka\ApiClient\Wechat\HelperSet;
 
 /**
- * Wechat payment parameter utils class.
+ * Wechat payment config utils class.
  *
  * @see https://pay.weixin.qq.com/wiki/doc/api/jsapi.php?chapter=7_7&index=6
  */
-class ParameterUtils
+class ConfigUtils
 {
     private Configuration $configuration;
 
@@ -21,15 +22,22 @@ class ParameterUtils
     }
 
     /**
-     * @return array<string, mixed>
+     * @return array{
+     *  appId: string,
+     *  signType: string,
+     *  timeStamp: string,
+     *  nonceStr: string,
+     *  package: string,
+     *  paySign: string
+     * }
      */
-    public function jsapi(string $prepayId): array
+    public function generate(string $prepayId): array
     {
         $parameters = [
             'appId' => $this->configuration['appid'],
             'signType' => $this->configuration['sign_type'],
-            'timeStamp' => (string) time(),
-            'nonceStr' => bin2hex(random_bytes(16)),
+            'timeStamp' => HelperSet::getTimestamp(),
+            'nonceStr' => HelperSet::getNonceStr(),
             'package' => sprintf('prepay_id=%s', $prepayId),
         ];
 

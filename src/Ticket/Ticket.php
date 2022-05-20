@@ -2,36 +2,28 @@
 
 declare(strict_types=1);
 
-namespace Siganushka\ApiClient\Wechat\Miniapp;
+namespace Siganushka\ApiClient\Wechat\Ticket;
 
 use Siganushka\ApiClient\AbstractRequest;
 use Siganushka\ApiClient\CacheableResponseInterface;
 use Siganushka\ApiClient\Exception\ParseResponseException;
-use Siganushka\ApiClient\Wechat\Configuration;
 use Symfony\Component\OptionsResolver\OptionsResolver;
 use Symfony\Contracts\HttpClient\ResponseInterface;
 
 /**
- * @see https://developers.weixin.qq.com/miniprogram/dev/api-backend/open-api/login/auth.code2Session.html
+ * @see https://developers.weixin.qq.com/doc/offiaccount/OA_Web_Apps/JS-SDK.html#54
  */
-class SessionKey extends AbstractRequest implements CacheableResponseInterface
+class Ticket extends AbstractRequest implements CacheableResponseInterface
 {
-    public const URL = 'https://api.weixin.qq.com/sns/jscode2session';
+    public const URL = 'https://api.weixin.qq.com/cgi-bin/ticket/getticket';
 
-    private Configuration $configuration;
-
-    public function __construct(Configuration $configuration)
-    {
-        $this->configuration = $configuration;
-    }
+    private int $cacheTtl = 7200;
 
     protected function configureRequest(array $options): void
     {
         $query = [
-            'appid' => $this->configuration['appid'],
-            'secret' => $this->configuration['secret'],
-            'grant_type' => 'authorization_code',
-            'js_code' => $options['js_code'],
+            'access_token' => $options['access_token'],
+            'type' => $options['type'],
         ];
 
         $this
@@ -43,14 +35,19 @@ class SessionKey extends AbstractRequest implements CacheableResponseInterface
 
     public function configureOptions(OptionsResolver $resolver): void
     {
-        $resolver->setRequired('js_code');
-        $resolver->setAllowedTypes('js_code', 'string');
+        $resolver->setRequired('access_token');
+        $resolver->setRequired('type');
+
+        $resolver->setAllowedTypes('access_token', 'string');
+        $resolver->setAllowedTypes('type', 'string');
+
+        $resolver->setAllowedValues('type', ['jsapi', 'wx_card']);
     }
 
     /**
      * @return array{
-     *  openid: string,
-     *  session_key: string,
+     *  ticket: string,
+     *  expires_in: int,
      *  errcode?: int,
      *  errmsg?: string
      * }
@@ -59,8 +56,8 @@ class SessionKey extends AbstractRequest implements CacheableResponseInterface
     {
         /**
          * @var array{
-         *  openid: string,
-         *  session_key: string,
+         *  ticket: string,
+         *  expires_in: int,
          *  errcode?: int,
          *  errmsg?: string
          * }
@@ -71,6 +68,8 @@ class SessionKey extends AbstractRequest implements CacheableResponseInterface
         $errmsg = (string) ($result['errmsg'] ?? '');
 
         if (0 === $errcode) {
+            $this->cacheTtl = (int) $result['expires_in'];
+
             return $result;
         }
 
@@ -79,6 +78,6 @@ class SessionKey extends AbstractRequest implements CacheableResponseInterface
 
     public function getCacheTtl(): int
     {
-        return 300;
+        return $this->cacheTtl;
     }
 }

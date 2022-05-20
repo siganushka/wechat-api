@@ -7,6 +7,7 @@ namespace Siganushka\ApiClient\Wechat\Payment;
 use Siganushka\ApiClient\AbstractRequest;
 use Siganushka\ApiClient\Exception\ParseResponseException;
 use Siganushka\ApiClient\Wechat\Configuration;
+use Siganushka\ApiClient\Wechat\HelperSet;
 use Symfony\Component\OptionsResolver\Exception\MissingOptionsException;
 use Symfony\Component\OptionsResolver\Exception\NoConfigurationException;
 use Symfony\Component\OptionsResolver\Options;
@@ -34,7 +35,7 @@ class Transfer extends AbstractRequest
         $this->configuration = $configuration;
         $this->xmlEncoder = $xmlEncoder;
         $this->defaultOptions = [
-            'nonce_str' => bin2hex(random_bytes(16)),
+            'nonce_str' => HelperSet::getNonceStr(),
             'check_name' => 'NO_CHECK',
             'device_info' => null,
             're_user_name' => null,

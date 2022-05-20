@@ -2,21 +2,20 @@
 
 declare(strict_types=1);
 
-namespace Siganushka\ApiClient\Wechat\Miniapp;
+namespace Siganushka\ApiClient\Wechat\OAuth;
 
 use Siganushka\ApiClient\AbstractRequest;
-use Siganushka\ApiClient\CacheableResponseInterface;
 use Siganushka\ApiClient\Exception\ParseResponseException;
 use Siganushka\ApiClient\Wechat\Configuration;
 use Symfony\Component\OptionsResolver\OptionsResolver;
 use Symfony\Contracts\HttpClient\ResponseInterface;
 
 /**
- * @see https://developers.weixin.qq.com/miniprogram/dev/api-backend/open-api/login/auth.code2Session.html
+ * @see https://developers.weixin.qq.com/doc/offiaccount/OA_Web_Apps/Wechat_webpage_authorization.html#2
  */
-class SessionKey extends AbstractRequest implements CacheableResponseInterface
+class RefreshToken extends AbstractRequest
 {
-    public const URL = 'https://api.weixin.qq.com/sns/jscode2session';
+    public const URL = 'https://api.weixin.qq.com/sns/oauth2/refresh_token';
 
     private Configuration $configuration;
 
@@ -29,9 +28,8 @@ class SessionKey extends AbstractRequest implements CacheableResponseInterface
     {
         $query = [
             'appid' => $this->configuration['appid'],
-            'secret' => $this->configuration['secret'],
-            'grant_type' => 'authorization_code',
-            'js_code' => $options['js_code'],
+            'refresh_token' => $options['refresh_token'],
+            'grant_type' => 'refresh_token',
         ];
 
         $this
@@ -43,14 +41,18 @@ class SessionKey extends AbstractRequest implements CacheableResponseInterface
 
     public function configureOptions(OptionsResolver $resolver): void
     {
-        $resolver->setRequired('js_code');
-        $resolver->setAllowedTypes('js_code', 'string');
+        $resolver->setRequired('refresh_token');
+        $resolver->setAllowedTypes('refresh_token', 'string');
     }
 
     /**
      * @return array{
+     *  access_token: string,
+     *  expires_in: int,
+     *  refresh_token: string,
      *  openid: string,
-     *  session_key: string,
+     *  scope: string,
+     *  unionid?: string,
      *  errcode?: int,
      *  errmsg?: string
      * }
@@ -59,8 +61,12 @@ class SessionKey extends AbstractRequest implements CacheableResponseInterface
     {
         /**
          * @var array{
+         *  access_token: string,
+         *  expires_in: int,
+         *  refresh_token: string,
          *  openid: string,
-         *  session_key: string,
+         *  scope: string,
+         *  unionid?: string,
          *  errcode?: int,
          *  errmsg?: string
          * }
@@ -75,10 +81,5 @@ class SessionKey extends AbstractRequest implements CacheableResponseInterface
         }
 
         throw new ParseResponseException($response, $errmsg, $errcode);
-    }
-
-    public function getCacheTtl(): int
-    {
-        return 300;
     }
 }

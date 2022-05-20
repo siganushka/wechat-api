@@ -16,12 +16,14 @@ class ConfigurationTest extends TestCase
     {
         $options = [
             'appid' => 'test_appid',
-            'appsecret' => 'test_appsecret',
+            'secret' => 'test_secret',
         ];
 
         $configuration = new Configuration($options);
         static::assertSame($options['appid'], $configuration['appid']);
-        static::assertSame($options['appsecret'], $configuration['appsecret']);
+        static::assertSame($options['secret'], $configuration['secret']);
+        static::assertNull($configuration['open_appid']);
+        static::assertNull($configuration['open_secret']);
         static::assertNull($configuration['mchid']);
         static::assertNull($configuration['mchkey']);
         static::assertNull($configuration['client_cert_file']);
@@ -33,7 +35,9 @@ class ConfigurationTest extends TestCase
     {
         $configuration = static::createConfiguration();
         static::assertSame('test_appid', $configuration['appid']);
-        static::assertSame('test_appsecret', $configuration['appsecret']);
+        static::assertSame('test_secret', $configuration['secret']);
+        static::assertSame('test_open_appid', $configuration['open_appid']);
+        static::assertSame('test_open_secret', $configuration['open_secret']);
         static::assertSame('test_mchid', $configuration['mchid']);
         static::assertSame('test_mchkey', $configuration['mchkey']);
         static::assertSame(__DIR__.'/Mock/cert.pem', $configuration['client_cert_file']);
@@ -46,13 +50,13 @@ class ConfigurationTest extends TestCase
         $this->expectException(MissingOptionsException::class);
         $this->expectExceptionMessage('The required option "appid" is missing');
 
-        new Configuration(['appsecret' => 'test_appsecret']);
+        new Configuration(['secret' => 'test_secret']);
     }
 
-    public function testAppsecretMissingOptionsException(): void
+    public function testSecretMissingOptionsException(): void
     {
         $this->expectException(MissingOptionsException::class);
-        $this->expectExceptionMessage('The required option "appsecret" is missing');
+        $this->expectExceptionMessage('The required option "secret" is missing');
 
         new Configuration(['appid' => 'test_appid']);
     }
@@ -64,7 +68,7 @@ class ConfigurationTest extends TestCase
 
         new Configuration([
             'appid' => 'test_appid',
-            'appsecret' => 'test_appsecret',
+            'secret' => 'test_secret',
             'client_cert_file' => 'non_existing_file.pem',
         ]);
     }
@@ -76,7 +80,7 @@ class ConfigurationTest extends TestCase
 
         new Configuration([
             'appid' => 'test_appid',
-            'appsecret' => 'test_appsecret',
+            'secret' => 'test_secret',
             'client_key_file' => 'non_existing_file.pem',
         ]);
     }
@@ -88,7 +92,7 @@ class ConfigurationTest extends TestCase
 
         new Configuration([
             'appid' => 'test_appid',
-            'appsecret' => 'test_appsecret',
+            'secret' => 'test_secret',
             'sign_type' => 'invalid_sign_type',
         ]);
     }
@@ -97,7 +101,9 @@ class ConfigurationTest extends TestCase
     {
         $options = [
             'appid' => 'test_appid',
-            'appsecret' => 'test_appsecret',
+            'secret' => 'test_secret',
+            'open_appid' => 'test_open_appid',
+            'open_secret' => 'test_open_secret',
             'mchid' => 'test_mchid',
             'mchkey' => 'test_mchkey',
             'client_cert_file' => __DIR__.'/Mock/cert.pem',

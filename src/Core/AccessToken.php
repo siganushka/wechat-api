@@ -30,7 +30,7 @@ class AccessToken extends AbstractRequest implements CacheableResponseInterface
     {
         $query = [
             'appid' => $this->configuration['appid'],
-            'secret' => $this->configuration['appsecret'],
+            'secret' => $this->configuration['secret'],
             'grant_type' => 'client_credential',
         ];
 

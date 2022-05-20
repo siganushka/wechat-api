@@ -28,5 +28,8 @@
             "Siganushka\\ApiClient\\Wechat\\Tests\\": "tests/"
         }
     },
+    "config": {
+        "sort-packages": true
+    },
     "minimum-stability": "dev"
 }

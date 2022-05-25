@@ -7,7 +7,7 @@ use Siganushka\ApiClient\RequestRegistry;
 use Siganushka\ApiClient\Wechat\Configuration;
 use Siganushka\ApiClient\Wechat\Core\AccessToken;
 use Siganushka\ApiClient\Wechat\Core\ServerIp;
-use Siganushka\ApiClient\Wechat\Message\Template\Send;
+use Siganushka\ApiClient\Wechat\Message\Template\Message;
 use Siganushka\ApiClient\Wechat\Miniapp\SessionKey;
 use Siganushka\ApiClient\Wechat\OAuth\AccessToken as OAuthAccessToken;
 use Siganushka\ApiClient\Wechat\OAuth\CheckToken;
@@ -69,7 +69,7 @@ $requests = [
     new RefreshToken($configuration),
     new Ticket(),
     new CheckToken(),
-    new Send(),
+    new Message(),
 ];
 
 $registry = new RequestRegistry($requests);

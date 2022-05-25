@@ -3,7 +3,7 @@
 declare(strict_types=1);
 
 use Siganushka\ApiClient\Wechat\Core\AccessToken;
-use Siganushka\ApiClient\Wechat\Message\Template\Send;
+use Siganushka\ApiClient\Wechat\Message\Template\Message;
 use Siganushka\ApiClient\Wechat\Message\Template\Template;
 
 require __DIR__.'/_autoload.php';
@@ -27,5 +27,5 @@ $options = [
     // ],
 ];
 
-$result = $client->send(Send::class, $options);
+$result = $client->send(Message::class, $options);
 dd($result);

@@ -12,7 +12,7 @@ use Symfony\Contracts\HttpClient\ResponseInterface;
 /**
  * @see https://developers.weixin.qq.com/doc/offiaccount/Message_Management/Template_Message_Interface.html#5
  */
-class Send extends AbstractRequest
+class Message extends AbstractRequest
 {
     public const URL = 'https://api.weixin.qq.com/cgi-bin/message/template/send';
 

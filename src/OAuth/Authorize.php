@@ -50,6 +50,10 @@ class Authorize implements ConfigurableOptionsInterface
             'response_type' => 'code',
         ];
 
+        if ($resolved['state']) {
+            $query['state'] = $resolved['state'];
+        }
+
         ksort($query);
 
         return ($resolved['using_open_api'] ? static::URL2 : static::URL).'?'.http_build_query($query).'#wechat_redirect';
@@ -72,7 +76,7 @@ class Authorize implements ConfigurableOptionsInterface
     protected function configureOptions(OptionsResolver $resolver): void
     {
         $resolver->setRequired('redirect_uri');
-        $resolver->setDefined('state');
+        $resolver->setDefault('state', null);
         $resolver->setDefault('using_open_api', false);
         $resolver->setDefault('scope', function (Options $options) {
             return $options['using_open_api'] ? 'snsapi_login' : 'snsapi_base';
@@ -80,7 +84,7 @@ class Authorize implements ConfigurableOptionsInterface
 
         $resolver->setAllowedTypes('redirect_uri', 'string');
         $resolver->setAllowedTypes('scope', 'string');
-        $resolver->setAllowedTypes('state', 'string');
+        $resolver->setAllowedTypes('state', ['null', 'string']);
         $resolver->setAllowedTypes('using_open_api', 'bool');
 
         $resolver->setAllowedValues('scope', ['snsapi_base', 'snsapi_userinfo', 'snsapi_login']);

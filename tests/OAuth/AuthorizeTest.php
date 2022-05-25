@@ -15,6 +15,7 @@ class AuthorizeTest extends TestCase
     {
         $options = [
             'redirect_uri' => 'http://localhost',
+            'state' => 'foo',
         ];
 
         $authorize = static::createAuthorize();
@@ -24,6 +25,7 @@ class AuthorizeTest extends TestCase
         static::assertStringEndsWith('#wechat_redirect', $authorizeUrl);
         static::assertStringContainsString('test_appid', $authorizeUrl);
         static::assertStringContainsString('snsapi_base', $authorizeUrl);
+        static::assertStringContainsString('state', $authorizeUrl);
         static::assertStringContainsString(urlencode($options['redirect_uri']), $authorizeUrl);
 
         $authorizeUrl = $authorize->getAuthorizeUrl($options + ['using_open_api' => true]);
@@ -31,6 +33,7 @@ class AuthorizeTest extends TestCase
         static::assertStringEndsWith('#wechat_redirect', $authorizeUrl);
         static::assertStringContainsString('test_open_appid', $authorizeUrl);
         static::assertStringContainsString('snsapi_login', $authorizeUrl);
+        static::assertStringContainsString('state', $authorizeUrl);
         static::assertStringContainsString(urlencode($options['redirect_uri']), $authorizeUrl);
     }
 

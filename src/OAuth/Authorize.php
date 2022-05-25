@@ -52,9 +52,7 @@ class Authorize implements ConfigurableOptionsInterface
 
         ksort($query);
 
-        $url = $resolved['using_open_api'] ? static::URL2 : static::URL;
-
-        return ($url).'?'.http_build_query($query).'#wechat_redirect';
+        return ($resolved['using_open_api'] ? static::URL2 : static::URL).'?'.http_build_query($query).'#wechat_redirect';
     }
 
     /**

@@ -15,7 +15,8 @@ use Symfony\Component\OptionsResolver\OptionsResolver;
 /**
  * Wechat oauth authorize class.
  *
- * @see https://developers.weixin.qq.com/doc/offiaccount/OA_Web_Apps/Wechat_webpage_authorization.html#0
+ * @see https://developers.weixin.qq.com/doc/offiaccount/OA_Web_Apps/Wechat_webpage_authorization.html
+ * @see https://developers.weixin.qq.com/doc/oplatform/Website_App/WeChat_Login/Wechat_Login.html
  */
 class Authorize implements ConfigurableOptionsInterface
 {

@@ -7,6 +7,7 @@ namespace Siganushka\ApiClient\Wechat\OAuth;
 use Siganushka\ApiClient\AbstractRequest;
 use Siganushka\ApiClient\Exception\ParseResponseException;
 use Siganushka\ApiClient\Wechat\Configuration;
+use Symfony\Component\OptionsResolver\Exception\NoConfigurationException;
 use Symfony\Component\OptionsResolver\OptionsResolver;
 use Symfony\Contracts\HttpClient\ResponseInterface;
 
@@ -26,9 +27,16 @@ class AccessToken extends AbstractRequest
 
     protected function configureRequest(array $options): void
     {
+        $appid = $options['using_open_api'] ? 'open_appid' : 'appid';
+        $secret = $options['using_open_api'] ? 'open_secret' : 'secret';
+
+        if (null === $this->configuration[$appid]) {
+            throw new NoConfigurationException(sprintf('No configured value for "%s" option.', $appid));
+        }
+
         $query = [
-            'appid' => $this->configuration['appid'],
-            'secret' => $this->configuration['secret'],
+            'appid' => $this->configuration[$appid],
+            'secret' => $this->configuration[$secret],
             'code' => $options['code'],
             'grant_type' => 'authorization_code',
         ];
@@ -43,7 +51,10 @@ class AccessToken extends AbstractRequest
     public function configureOptions(OptionsResolver $resolver): void
     {
         $resolver->setRequired('code');
+        $resolver->setDefault('using_open_api', false);
+
         $resolver->setAllowedTypes('code', 'string');
+        $resolver->setAllowedTypes('using_open_api', 'bool');
     }
 
     /**

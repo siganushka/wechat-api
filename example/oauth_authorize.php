@@ -12,7 +12,6 @@ if (!isset($_GET['code'])) {
     $options = [
         'redirect_uri' => HelperSet::getCurrentUrl(),
         'scope' => 'snsapi_userinfo',
-        'state' => 'foo',
     ];
 
     $authorize = new Authorize($configuration);

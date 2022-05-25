@@ -8,6 +8,8 @@ use Siganushka\ApiClient\ConfigurableOptionsInterface;
 use Siganushka\ApiClient\ConfigurableOptionsTrait;
 use Siganushka\ApiClient\Wechat\Configuration;
 use Symfony\Component\HttpFoundation\RedirectResponse;
+use Symfony\Component\OptionsResolver\Exception\NoConfigurationException;
+use Symfony\Component\OptionsResolver\Options;
 use Symfony\Component\OptionsResolver\OptionsResolver;
 
 /**
@@ -20,6 +22,7 @@ class Authorize implements ConfigurableOptionsInterface
     use ConfigurableOptionsTrait;
 
     public const URL = 'https://open.weixin.qq.com/connect/oauth2/authorize';
+    public const URL2 = 'https://open.weixin.qq.com/connect/qrconnect';
 
     protected Configuration $configuration;
 
@@ -34,12 +37,24 @@ class Authorize implements ConfigurableOptionsInterface
     public function getAuthorizeUrl(array $options = []): string
     {
         $resolved = $this->resolveOptions($options);
-        $resolved['appid'] = $this->configuration['appid'];
-        $resolved['response_type'] = 'code';
 
-        ksort($resolved);
+        $appid = $resolved['using_open_api'] ? 'open_appid' : 'appid';
+        if (null === $this->configuration[$appid]) {
+            throw new NoConfigurationException(sprintf('No configured value for "%s" option.', $appid));
+        }
 
-        return static::URL.'?'.http_build_query($resolved).'#wechat_redirect';
+        $query = [
+            'appid' => $this->configuration[$appid],
+            'redirect_uri' => $resolved['redirect_uri'],
+            'scope' => $resolved['scope'],
+            'response_type' => 'code',
+        ];
+
+        ksort($query);
+
+        $url = $resolved['using_open_api'] ? static::URL2 : static::URL;
+
+        return ($url).'?'.http_build_query($query).'#wechat_redirect';
     }
 
     /**
@@ -59,13 +74,17 @@ class Authorize implements ConfigurableOptionsInterface
     protected function configureOptions(OptionsResolver $resolver): void
     {
         $resolver->setRequired('redirect_uri');
-        $resolver->setDefault('scope', 'snsapi_base');
         $resolver->setDefined('state');
+        $resolver->setDefault('using_open_api', false);
+        $resolver->setDefault('scope', function (Options $options) {
+            return $options['using_open_api'] ? 'snsapi_login' : 'snsapi_base';
+        });
 
         $resolver->setAllowedTypes('redirect_uri', 'string');
         $resolver->setAllowedTypes('scope', 'string');
         $resolver->setAllowedTypes('state', 'string');
+        $resolver->setAllowedTypes('using_open_api', 'bool');
 
-        $resolver->setAllowedValues('scope', ['snsapi_base', 'snsapi_userinfo']);
+        $resolver->setAllowedValues('scope', ['snsapi_base', 'snsapi_userinfo', 'snsapi_login']);
     }
 }

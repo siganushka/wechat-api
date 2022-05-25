@@ -48,7 +48,7 @@ class AccessToken extends AbstractRequest
         ;
     }
 
-    public function configureOptions(OptionsResolver $resolver): void
+    protected function configureOptions(OptionsResolver $resolver): void
     {
         $resolver->setRequired('code');
         $resolver->setDefault('using_open_api', false);

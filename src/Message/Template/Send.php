@@ -51,7 +51,7 @@ class Send extends AbstractRequest
         ;
     }
 
-    public function configureOptions(OptionsResolver $resolver): void
+    protected function configureOptions(OptionsResolver $resolver): void
     {
         $resolver->setRequired(['access_token', 'touser', 'template']);
         $resolver->setDefault('url', null);

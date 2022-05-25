@@ -41,7 +41,7 @@ class AccessToken extends AbstractRequest implements CacheableResponseInterface
         ;
     }
 
-    public function configureOptions(OptionsResolver $resolver): void
+    protected function configureOptions(OptionsResolver $resolver): void
     {
     }
 

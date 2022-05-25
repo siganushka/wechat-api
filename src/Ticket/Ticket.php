@@ -33,7 +33,7 @@ class Ticket extends AbstractRequest implements CacheableResponseInterface
         ;
     }
 
-    public function configureOptions(OptionsResolver $resolver): void
+    protected function configureOptions(OptionsResolver $resolver): void
     {
         $resolver->setRequired('access_token');
         $resolver->setRequired('type');

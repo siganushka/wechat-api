@@ -83,7 +83,7 @@ class Transfer extends AbstractRequest
         ;
     }
 
-    public function configureOptions(OptionsResolver $resolver): void
+    protected function configureOptions(OptionsResolver $resolver): void
     {
         $resolver->setDefaults($this->defaultOptions);
         $resolver->setRequired(['partner_trade_no', 'openid', 'amount', 'desc']);

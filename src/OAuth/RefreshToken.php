@@ -39,7 +39,7 @@ class RefreshToken extends AbstractRequest
         ;
     }
 
-    public function configureOptions(OptionsResolver $resolver): void
+    protected function configureOptions(OptionsResolver $resolver): void
     {
         $resolver->setRequired('refresh_token');
         $resolver->setAllowedTypes('refresh_token', 'string');

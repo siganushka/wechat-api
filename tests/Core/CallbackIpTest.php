@@ -7,11 +7,11 @@ namespace Siganushka\ApiClient\Wechat\Tests\Core;
 use PHPUnit\Framework\TestCase;
 use Siganushka\ApiClient\Exception\ParseResponseException;
 use Siganushka\ApiClient\Response\ResponseFactory;
-use Siganushka\ApiClient\Wechat\Core\ServerIp;
+use Siganushka\ApiClient\Wechat\Core\CallbackIp;
 use Symfony\Component\OptionsResolver\Exception\InvalidOptionsException;
 use Symfony\Component\OptionsResolver\Exception\MissingOptionsException;
 
-class ServerIpTest extends TestCase
+class CallbackIpTest extends TestCase
 {
     public function testAll(): void
     {
@@ -22,7 +22,7 @@ class ServerIpTest extends TestCase
 
         $request->build(['access_token' => '123']);
         static::assertSame('GET', $request->getMethod());
-        static::assertSame(ServerIp::URL, $request->getUrl());
+        static::assertSame(CallbackIp::URL, $request->getUrl());
 
         /**
          * @var array{
@@ -84,8 +84,8 @@ class ServerIpTest extends TestCase
         $request->parseResponse($response);
     }
 
-    public static function createRequest(): ServerIp
+    public static function createRequest(): CallbackIp
     {
-        return new ServerIp();
+        return new CallbackIp();
     }
 }

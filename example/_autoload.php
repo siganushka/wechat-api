@@ -6,6 +6,7 @@ use Siganushka\ApiClient\RequestClient;
 use Siganushka\ApiClient\RequestRegistry;
 use Siganushka\ApiClient\Wechat\Configuration;
 use Siganushka\ApiClient\Wechat\Core\AccessToken;
+use Siganushka\ApiClient\Wechat\Core\CallbackIp;
 use Siganushka\ApiClient\Wechat\Core\ServerIp;
 use Siganushka\ApiClient\Wechat\Message\Template\Message;
 use Siganushka\ApiClient\Wechat\Miniapp\SessionKey;
@@ -61,6 +62,7 @@ $configuration = new Configuration([
 $requests = [
     new AccessToken($configuration),
     new ServerIp($configuration),
+    new CallbackIp($configuration),
     new SessionKey($configuration),
     new Transfer($configuration, $xmlEncoder),
     new Unifiedorder($configuration, $xmlEncoder),

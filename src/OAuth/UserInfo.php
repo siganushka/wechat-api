@@ -6,6 +6,7 @@ namespace Siganushka\ApiClient\Wechat\OAuth;
 
 use Siganushka\ApiClient\AbstractRequest;
 use Siganushka\ApiClient\Exception\ParseResponseException;
+use Siganushka\ApiClient\RequestOptions;
 use Symfony\Component\OptionsResolver\OptionsResolver;
 use Symfony\Contracts\HttpClient\ResponseInterface;
 
@@ -16,22 +17,7 @@ class UserInfo extends AbstractRequest
 {
     public const URL = 'https://api.weixin.qq.com/sns/userinfo';
 
-    protected function configureRequest(array $options): void
-    {
-        $query = [
-            'access_token' => $options['access_token'],
-            'openid' => $options['openid'],
-            'lang' => $options['lang'],
-        ];
-
-        $this
-            ->setMethod('GET')
-            ->setUrl(static::URL)
-            ->setQuery($query)
-        ;
-    }
-
-    protected function configureOptions(OptionsResolver $resolver): void
+    public function configureOptions(OptionsResolver $resolver): void
     {
         $resolver->setRequired('access_token');
         $resolver->setRequired('openid');
@@ -40,6 +26,21 @@ class UserInfo extends AbstractRequest
         $resolver->setAllowedTypes('access_token', 'string');
         $resolver->setAllowedTypes('openid', 'string');
         $resolver->setAllowedTypes('lang', 'string');
+    }
+
+    protected function configureRequest(RequestOptions $request, array $options): void
+    {
+        $query = [
+            'access_token' => $options['access_token'],
+            'openid' => $options['openid'],
+            'lang' => $options['lang'],
+        ];
+
+        $request
+            ->setMethod('GET')
+            ->setUrl(static::URL)
+            ->setQuery($query)
+        ;
     }
 
     /**

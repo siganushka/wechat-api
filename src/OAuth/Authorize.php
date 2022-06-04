@@ -33,11 +33,11 @@ class Authorize implements ConfigurableOptionsInterface
     }
 
     /**
-     * @param array<string, string> $options
+     * @param array<string, mixed> $options
      */
     public function getAuthorizeUrl(array $options = []): string
     {
-        $resolved = $this->resolveOptions($options);
+        $resolved = $this->resolve($options);
 
         $appid = $resolved['using_open_api'] ? 'open_appid' : 'appid';
         if (null === $this->configuration[$appid]) {
@@ -61,7 +61,7 @@ class Authorize implements ConfigurableOptionsInterface
     }
 
     /**
-     * @param array<string, string> $options
+     * @param array<string, mixed> $options
      */
     public function redirect(array $options = []): void
     {
@@ -74,7 +74,7 @@ class Authorize implements ConfigurableOptionsInterface
         header(sprintf('Location: %s', $authorizeUrl));
     }
 
-    protected function configureOptions(OptionsResolver $resolver): void
+    public function configureOptions(OptionsResolver $resolver): void
     {
         $resolver->setRequired('redirect_uri');
         $resolver->setDefault('state', null);

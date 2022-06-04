@@ -2,7 +2,6 @@
 
 declare(strict_types=1);
 
-use Siganushka\ApiClient\Wechat\Core\AccessToken;
 use Siganushka\ApiClient\Wechat\Message\Template\Message;
 use Siganushka\ApiClient\Wechat\Message\Template\Template;
 
@@ -15,9 +14,7 @@ $template->addData('keyword2', 'value 222');
 $template->addData('keyword3', 'value 333');
 $template->addData('remark', 'remark 111', '#0000ff');
 
-$result = $client->send(AccessToken::class);
 $options = [
-    'access_token' => $result['access_token'],
     'template' => $template,
     'touser' => 'o_rGJ5xuO3r4Zh9NGKRiVTzSwbfM',
     // 'url' => 'https://cn.bing.com',
@@ -27,5 +24,5 @@ $options = [
     // ],
 ];
 
-$result = $client->send(Message::class, $options);
-dd($result);
+$parsedResponse = $client->send(Message::class, $options);
+dd($parsedResponse);

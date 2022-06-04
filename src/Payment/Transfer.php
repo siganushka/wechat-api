@@ -6,6 +6,7 @@ namespace Siganushka\ApiClient\Wechat\Payment;
 
 use Siganushka\ApiClient\AbstractRequest;
 use Siganushka\ApiClient\Exception\ParseResponseException;
+use Siganushka\ApiClient\RequestOptions;
 use Siganushka\ApiClient\Wechat\Configuration;
 use Siganushka\ApiClient\Wechat\HelperSet;
 use Symfony\Component\OptionsResolver\Exception\MissingOptionsException;
@@ -22,18 +23,18 @@ class Transfer extends AbstractRequest
 {
     public const URL = 'https://api.mch.weixin.qq.com/mmpaymkttransfers/promotion/transfers';
 
-    private Configuration $configuration;
     private XmlEncoder $xmlEncoder;
+    private Configuration $configuration;
 
     /**
      * @var array<string, mixed>
      */
-    private array $defaultOptions = [];
+    private array $defaultOptions;
 
-    public function __construct(Configuration $configuration, XmlEncoder $xmlEncoder)
+    public function __construct(XmlEncoder $xmlEncoder, Configuration $configuration)
     {
-        $this->configuration = $configuration;
         $this->xmlEncoder = $xmlEncoder;
+        $this->configuration = $configuration;
         $this->defaultOptions = [
             'nonce_str' => HelperSet::getNonceStr(),
             'check_name' => 'NO_CHECK',
@@ -46,7 +47,23 @@ class Transfer extends AbstractRequest
         ];
     }
 
-    protected function configureRequest(array $options): void
+    public function configureOptions(OptionsResolver $resolver): void
+    {
+        $resolver->setDefaults($this->defaultOptions);
+        $resolver->setRequired(['partner_trade_no', 'openid', 'amount', 'desc']);
+        $resolver->setAllowedTypes('amount', 'int');
+        $resolver->setAllowedValues('check_name', ['NO_CHECK', 'FORCE_CHECK']);
+
+        $resolver->setNormalizer('re_user_name', function (Options $options, ?string $reUserName) {
+            if ('FORCE_CHECK' === $options['check_name'] && null === $reUserName) {
+                throw new MissingOptionsException('The required option "re_user_name" is missing (when "check_name" option is set to "FORCE_CHECK").');
+            }
+
+            return $reUserName;
+        });
+    }
+
+    protected function configureRequest(RequestOptions $request, array $options): void
     {
         foreach (['mchid', 'mchkey', 'client_cert_file', 'client_key_file'] as $optionName) {
             if (null === $this->configuration[$optionName]) {
@@ -74,7 +91,7 @@ class Transfer extends AbstractRequest
 
         $xmlBody = $this->xmlEncoder->encode($body, 'xml');
 
-        $this
+        $request
             ->setMethod('POST')
             ->setUrl(static::URL)
             ->setBody($xmlBody)
@@ -83,26 +100,13 @@ class Transfer extends AbstractRequest
         ;
     }
 
-    protected function configureOptions(OptionsResolver $resolver): void
-    {
-        $resolver->setDefaults($this->defaultOptions);
-        $resolver->setRequired(['partner_trade_no', 'openid', 'amount', 'desc']);
-        $resolver->setAllowedTypes('amount', 'int');
-        $resolver->setAllowedValues('check_name', ['NO_CHECK', 'FORCE_CHECK']);
-
-        $resolver->setNormalizer('re_user_name', function (Options $options, ?string $reUserName) {
-            if ('FORCE_CHECK' === $options['check_name'] && null === $reUserName) {
-                throw new MissingOptionsException('The required option "re_user_name" is missing (when "check_name" option is set to "FORCE_CHECK").');
-            }
-
-            return $reUserName;
-        });
-    }
-
     public function parseResponse(ResponseInterface $response)
     {
         /**
          * @var array{
+         *  mch_appid: string,
+         *  mchid: string,
+         *  nonce_str: string,
          *  return_code?: string,
          *  result_code?: string,
          *  return_msg?: string,

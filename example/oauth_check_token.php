@@ -7,9 +7,9 @@ use Siganushka\ApiClient\Wechat\OAuth\CheckToken;
 require __DIR__.'/_autoload.php';
 
 $options = [
-    'access_token' => '57_rojSbXULqiF6RJMpurXVHMUUkQQX445B-ROFAZO2V2CdsJK7LJPng9dTMrKq-pcpAFHB5CG-xTB4YbDFjHHRdA',
-    'openid' => 'oS7zK6Q1nUvE1JD4sWAUwi3rmAkg',
+    'access_token' => '57_X5L14BQvMcS6T39gWcUPE_XxmFEHoXWpAWmbwvRdAz7inJ9pz8aqSqTgfHj4yv8BNtMoRBSk014jA1bOM6j1B2WrIFJz8EYAuR69Wi3zDzw',
+    'openid' => 'oeBlc54IakibieYAIQYgQ5YOFO_U',
 ];
 
-$result = $client->send(CheckToken::class, $options);
-dd($result);
+$parsedResponse = $client->send(CheckToken::class, $options);
+dd($parsedResponse);

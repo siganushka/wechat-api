@@ -6,6 +6,7 @@ namespace Siganushka\ApiClient\Wechat\Core;
 
 use Siganushka\ApiClient\AbstractRequest;
 use Siganushka\ApiClient\Exception\ParseResponseException;
+use Siganushka\ApiClient\RequestOptions;
 use Symfony\Component\OptionsResolver\OptionsResolver;
 use Symfony\Contracts\HttpClient\ResponseInterface;
 
@@ -16,29 +17,29 @@ class ServerIp extends AbstractRequest
 {
     public const URL = 'https://api.weixin.qq.com/cgi-bin/get_api_domain_ip';
 
-    protected function configureRequest(array $options): void
+    public function configureOptions(OptionsResolver $resolver): void
+    {
+        $resolver->setRequired('access_token');
+        $resolver->setAllowedTypes('access_token', 'string');
+    }
+
+    protected function configureRequest(RequestOptions $request, array $options): void
     {
         $query = [
             'access_token' => $options['access_token'],
         ];
 
-        $this
+        $request
             ->setMethod('GET')
             ->setUrl(static::URL)
             ->setQuery($query)
         ;
     }
 
-    protected function configureOptions(OptionsResolver $resolver): void
-    {
-        $resolver->setRequired('access_token');
-        $resolver->setAllowedTypes('access_token', 'string');
-    }
-
     /**
      * @return array<int, string>
      */
-    public function parseResponse(ResponseInterface $response): array
+    protected function parseResponse(ResponseInterface $response)
     {
         /**
          * @var array{

@@ -6,93 +6,110 @@ namespace Siganushka\ApiClient\Wechat\Tests\Miniapp;
 
 use PHPUnit\Framework\TestCase;
 use Siganushka\ApiClient\Exception\ParseResponseException;
+use Siganushka\ApiClient\RequestOptions;
 use Siganushka\ApiClient\Response\ResponseFactory;
 use Siganushka\ApiClient\Wechat\Miniapp\SessionKey;
 use Siganushka\ApiClient\Wechat\Tests\ConfigurationTest;
+use Symfony\Component\Cache\Adapter\FilesystemAdapter;
 use Symfony\Component\OptionsResolver\Exception\InvalidOptionsException;
 use Symfony\Component\OptionsResolver\Exception\MissingOptionsException;
+use Symfony\Contracts\HttpClient\HttpClientInterface;
 
 class SessionKeyTest extends TestCase
 {
-    public function testAll(): void
+    public function testResolve(): void
     {
-        $request = static::createRequest();
-        static::assertNull($request->getMethod());
-        static::assertNull($request->getUrl());
-        static::assertSame([], $request->getOptions());
+        $sessionKey = static::createRequest();
 
-        $request->build(['js_code' => '123']);
-        static::assertSame('GET', $request->getMethod());
-        static::assertSame(SessionKey::URL, $request->getUrl());
-
-        /**
-         * @var array{
-         *  query: array{ appid: string, secret: string, grant_type: string, js_code: string }
-         * }
-         */
-        $options = $request->getOptions();
-        static::assertSame('test_appid', $options['query']['appid']);
-        static::assertSame('test_secret', $options['query']['secret']);
-        static::assertSame('authorization_code', $options['query']['grant_type']);
-        static::assertSame('123', $options['query']['js_code']);
+        $resolved = $sessionKey->resolve(['code' => 'foo']);
+        static::assertSame(['code' => 'foo'], $resolved);
+        static::assertSame(['code'], $sessionKey->getResolver()->getDefinedOptions());
     }
 
-    public function testJsCodeMissingOptionsException(): void
-    {
-        $this->expectException(MissingOptionsException::class);
-        $this->expectExceptionMessage('The required option "js_code" is missing');
-
-        $request = static::createRequest();
-        $request->build();
-    }
-
-    public function testJsCodeInvalidOptionsException(): void
-    {
-        $this->expectException(InvalidOptionsException::class);
-        $this->expectExceptionMessage('The option "js_code" with value 123 is expected to be of type "string", but is of type "int"');
-
-        $request = static::createRequest();
-        $request->build(['js_code' => 123]);
-    }
-
-    public function testParseResponse(): void
+    public function testSend(): void
     {
         $data = [
-            'openid' => 'test_openid',
-            'session_key' => 'test_session_key',
+            'openid' => 'foo',
+            'session_key' => 'bar',
         ];
 
-        /** @var string */
-        $body = json_encode($data);
-        $response = ResponseFactory::createMockResponse($body);
+        $response = ResponseFactory::createMockResponseWithJson($data);
 
-        $request = static::createRequest();
-        static::assertSame($data, $request->parseResponse($response));
+        $httpClient = $this->createMock(HttpClientInterface::class);
+        $httpClient->method('request')->willReturn($response);
+
+        $sessionKey = static::createRequest();
+        $sessionKey->setHttpClient($httpClient);
+
+        $parsedResponse = $sessionKey->send(['code' => 'foo']);
+        static::assertSame($data, $parsedResponse);
+    }
+
+    public function testConfigureRequest(): void
+    {
+        $sessionKey = static::createRequest();
+        $request = new RequestOptions();
+
+        $configureRequestRef = new \ReflectionMethod($sessionKey, 'configureRequest');
+        $configureRequestRef->setAccessible(true);
+        $configureRequestRef->invoke($sessionKey, $request, $sessionKey->resolve(['code' => 'foo']));
+
+        static::assertSame('GET', $request->getMethod());
+        static::assertSame(SessionKey::URL, $request->getUrl());
+        static::assertSame([
+            'query' => [
+                'appid' => 'test_appid',
+                'secret' => 'test_secret',
+                'grant_type' => 'authorization_code',
+                'code' => 'foo',
+            ],
+        ], $request->toArray());
     }
 
     public function testParseResponseException(): void
     {
         $this->expectException(ParseResponseException::class);
-        $this->expectExceptionCode(12);
-        $this->expectExceptionMessage('bar');
+        $this->expectExceptionCode(16);
+        $this->expectExceptionMessage('test error');
 
         $data = [
-            'errcode' => 12,
-            'errmsg' => 'bar',
+            'errcode' => 16,
+            'errmsg' => 'test error',
         ];
 
-        /** @var string */
-        $body = json_encode($data);
-        $response = ResponseFactory::createMockResponse($body);
+        $response = ResponseFactory::createMockResponseWithJson($data);
 
-        $request = static::createRequest();
-        $request->parseResponse($response);
+        $sessionKey = static::createRequest();
+        $parseResponseRef = new \ReflectionMethod($sessionKey, 'parseResponse');
+        $parseResponseRef->setAccessible(true);
+        $parseResponseRef->invoke($sessionKey, $response);
+    }
+
+    public function testCodeMissingException(): void
+    {
+        $this->expectException(MissingOptionsException::class);
+        $this->expectExceptionMessage('The required option "code" is missing');
+
+        $sessionKey = static::createRequest();
+        $sessionKey->resolve();
+    }
+
+    public function testCodeInvalidException(): void
+    {
+        $this->expectException(InvalidOptionsException::class);
+        $this->expectExceptionMessage('The option "code" with value 123 is expected to be of type "string", but is of type "int"');
+
+        $sessionKey = static::createRequest();
+        $sessionKey->resolve(['code' => 123]);
     }
 
     public static function createRequest(): SessionKey
     {
+        $cachePool = new FilesystemAdapter();
+        $cachePool->clear();
+
         $configuration = ConfigurationTest::createConfiguration();
 
-        return new SessionKey($configuration);
+        return new SessionKey($cachePool, $configuration);
     }
 }

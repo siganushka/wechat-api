@@ -7,9 +7,9 @@ use Siganushka\ApiClient\Wechat\OAuth\UserInfo;
 require __DIR__.'/_autoload.php';
 
 $options = [
-    'access_token' => '57_bnoZR8Y3M7unvodqU0S37WmodHaF5c3jRVW3XcYo7ZzcwF5mJtyzFHGd3oC6SA19OCFmpL8GXUCDlvQI6JC69A',
-    'openid' => 'oS7zK6Q1nUvE1JD4sWAUwi3rmAkg',
+    'access_token' => '57_DOas9TmX1eF-GlBM9FD_sEMvSCSCIRC2RvadqLKmBnfZPfXLH38DxtL2YUj6HpfM2iRT2WJ32qopz6HGLTy36mL3c8jVRqzdjG_8SskmJH8',
+    'openid' => 'oeBlc54IakibieYAIQYgQ5YOFO_U',
 ];
 
-$result = $client->send(UserInfo::class, $options);
-dd($result);
+$parsedResponse = $client->send(UserInfo::class, $options);
+dd($parsedResponse);

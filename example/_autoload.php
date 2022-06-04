@@ -2,12 +2,13 @@
 
 declare(strict_types=1);
 
-use Siganushka\ApiClient\RequestClient;
+use Siganushka\ApiClient\ApiClient;
 use Siganushka\ApiClient\RequestRegistry;
 use Siganushka\ApiClient\Wechat\Configuration;
 use Siganushka\ApiClient\Wechat\Core\AccessToken;
 use Siganushka\ApiClient\Wechat\Core\CallbackIp;
 use Siganushka\ApiClient\Wechat\Core\ServerIp;
+use Siganushka\ApiClient\Wechat\Extension\AccessTokenExtension;
 use Siganushka\ApiClient\Wechat\Message\Template\Message;
 use Siganushka\ApiClient\Wechat\Miniapp\SessionKey;
 use Siganushka\ApiClient\Wechat\OAuth\AccessToken as OAuthAccessToken;
@@ -19,7 +20,7 @@ use Siganushka\ApiClient\Wechat\Payment\Unifiedorder;
 use Siganushka\ApiClient\Wechat\Ticket\Ticket;
 use Symfony\Component\Cache\Adapter\FilesystemAdapter;
 use Symfony\Component\ErrorHandler\Debug;
-use Symfony\Component\HttpClient\HttpClient;
+use Symfony\Component\HttpClient\NativeHttpClient;
 use Symfony\Component\Serializer\Encoder\XmlEncoder;
 
 $configFile = __DIR__.'/_config.php';
@@ -39,13 +40,8 @@ if (!function_exists('dd')) {
 }
 
 $xmlEncoder = new XmlEncoder();
-// dd($xmlEncoder);
-
-$httpClient = HttpClient::create();
-// dd($httpClient);
-
+$httpClient = new NativeHttpClient();
 $cachePool = new FilesystemAdapter();
-// dd($cachePool);
 
 $configuration = new Configuration([
     'appid' => WECHAT_APPID,
@@ -57,25 +53,26 @@ $configuration = new Configuration([
     'client_cert_file' => WECHAT_CLIENT_CERT,
     'client_key_file' => WECHAT_CLIENT_KEY,
 ]);
-// dd($configuration);
 
 $requests = [
-    new AccessToken($configuration),
-    new ServerIp($configuration),
-    new CallbackIp($configuration),
-    new SessionKey($configuration),
-    new Transfer($configuration, $xmlEncoder),
-    new Unifiedorder($configuration, $xmlEncoder),
+    new AccessToken($cachePool, $configuration),
+    new ServerIp(),
+    new CallbackIp(),
+    new SessionKey($cachePool, $configuration),
+    new Transfer($xmlEncoder, $configuration),
+    new Unifiedorder($xmlEncoder, $configuration),
     new OAuthAccessToken($configuration),
     new UserInfo(),
     new RefreshToken($configuration),
-    new Ticket(),
+    new Ticket($cachePool),
     new CheckToken(),
     new Message(),
 ];
 
 $registry = new RequestRegistry($requests);
-// dd($registry);
 
-$client = new RequestClient($httpClient, $cachePool, $registry);
-// dd($client);
+$extensions = [
+    new AccessTokenExtension($httpClient, $registry),
+];
+
+$client = new ApiClient($httpClient, $registry, $extensions);

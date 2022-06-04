@@ -6,6 +6,7 @@ namespace Siganushka\ApiClient\Wechat\Payment;
 
 use Siganushka\ApiClient\AbstractRequest;
 use Siganushka\ApiClient\Exception\ParseResponseException;
+use Siganushka\ApiClient\RequestOptions;
 use Siganushka\ApiClient\Wechat\Configuration;
 use Siganushka\ApiClient\Wechat\HelperSet;
 use Symfony\Component\OptionsResolver\Exception\MissingOptionsException;
@@ -23,18 +24,18 @@ class Unifiedorder extends AbstractRequest
     public const URL = 'https://api.mch.weixin.qq.com/pay/unifiedorder';
     public const URL2 = 'https://api2.mch.weixin.qq.com/pay/unifiedorder';
 
-    private Configuration $configuration;
     private XmlEncoder $xmlEncoder;
+    private Configuration $configuration;
 
     /**
      * @var array<string, mixed>
      */
-    private array $defaultOptions = [];
+    private array $defaultOptions;
 
-    public function __construct(Configuration $configuration, XmlEncoder $xmlEncoder)
+    public function __construct(XmlEncoder $xmlEncoder, Configuration $configuration)
     {
-        $this->configuration = $configuration;
         $this->xmlEncoder = $xmlEncoder;
+        $this->configuration = $configuration;
         $this->defaultOptions = [
             'nonce_str' => HelperSet::getNonceStr(),
             'spbill_create_ip' => HelperSet::getClientIp(),
@@ -55,7 +56,37 @@ class Unifiedorder extends AbstractRequest
         ];
     }
 
-    protected function configureRequest(array $options): void
+    public function configureOptions(OptionsResolver $resolver): void
+    {
+        $resolver->setDefaults($this->defaultOptions);
+        $resolver->setRequired(['body', 'out_trade_no', 'total_fee', 'trade_type', 'notify_url']);
+        $resolver->setAllowedTypes('total_fee', 'int');
+        $resolver->setAllowedTypes('using_slave_api', 'bool');
+
+        $resolver->setAllowedValues('fee_type', [null, 'CNY']);
+        $resolver->setAllowedValues('trade_type', [null, 'JSAPI', 'NATIVE', 'APP', 'MWEB']);
+        $resolver->setAllowedValues('limit_pay', [null, 'no_credit']);
+        $resolver->setAllowedValues('receipt', [null, 'Y']);
+        $resolver->setAllowedValues('profit_sharing', [null, 'Y', 'N']);
+
+        $resolver->setNormalizer('openid', function (Options $options, ?string $openid) {
+            if ('JSAPI' === $options['trade_type'] && null === $openid) {
+                throw new MissingOptionsException('The required option "openid" is missing (when "trade_type" option is set to "JSAPI").');
+            }
+
+            return $openid;
+        });
+
+        $resolver->setNormalizer('product_id', function (Options $options, ?string $productId) {
+            if ('NATIVE' === $options['trade_type'] && null === $productId) {
+                throw new MissingOptionsException('The required option "product_id" is missing (when "trade_type" option is set to "NATIVE").');
+            }
+
+            return $productId;
+        });
+    }
+
+    protected function configureRequest(RequestOptions $request, array $options): void
     {
         foreach (['mchid', 'mchkey'] as $optionName) {
             if (null === $this->configuration[$optionName]) {
@@ -87,41 +118,11 @@ class Unifiedorder extends AbstractRequest
         $xmlBody = $this->xmlEncoder->encode($body, 'xml');
         $apiURL = $options['using_slave_api'] ? static::URL2 : static::URL;
 
-        $this
+        $request
             ->setMethod('POST')
             ->setUrl($apiURL)
             ->setBody($xmlBody)
         ;
-    }
-
-    protected function configureOptions(OptionsResolver $resolver): void
-    {
-        $resolver->setDefaults($this->defaultOptions);
-        $resolver->setRequired(['body', 'out_trade_no', 'total_fee', 'trade_type', 'notify_url']);
-        $resolver->setAllowedTypes('total_fee', 'int');
-        $resolver->setAllowedTypes('using_slave_api', 'bool');
-
-        $resolver->setAllowedValues('fee_type', [null, 'CNY']);
-        $resolver->setAllowedValues('trade_type', [null, 'JSAPI', 'NATIVE', 'APP', 'MWEB']);
-        $resolver->setAllowedValues('limit_pay', [null, 'no_credit']);
-        $resolver->setAllowedValues('receipt', [null, 'Y']);
-        $resolver->setAllowedValues('profit_sharing', [null, 'Y', 'N']);
-
-        $resolver->setNormalizer('openid', function (Options $options, ?string $openid) {
-            if ('JSAPI' === $options['trade_type'] && null === $openid) {
-                throw new MissingOptionsException('The required option "openid" is missing (when "trade_type" option is set to "JSAPI").');
-            }
-
-            return $openid;
-        });
-
-        $resolver->setNormalizer('product_id', function (Options $options, ?string $productId) {
-            if ('NATIVE' === $options['trade_type'] && null === $productId) {
-                throw new MissingOptionsException('The required option "product_id" is missing (when "trade_type" option is set to "NATIVE").');
-            }
-
-            return $productId;
-        });
     }
 
     public function parseResponse(ResponseInterface $response)

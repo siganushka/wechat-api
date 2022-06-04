@@ -26,5 +26,5 @@ $options = [
     'using_open_api' => true,
 ];
 
-$result = $client->send(AccessToken::class, $options);
-dd($result);
+$parsedResponse = $client->send(AccessToken::class, $options);
+dd($parsedResponse);

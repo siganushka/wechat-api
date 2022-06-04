@@ -25,5 +25,5 @@ $options = [
     'code' => $_GET['code'],
 ];
 
-$result = $client->send(AccessToken::class, $options);
-dd($result);
+$parsedResponse = $client->send(AccessToken::class, $options);
+dd($parsedResponse);

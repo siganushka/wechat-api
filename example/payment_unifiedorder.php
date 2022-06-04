@@ -16,5 +16,5 @@ $options = [
     // 'sign_type' => 'HMAC-SHA256',
 ];
 
-$result = $client->send(Unifiedorder::class, $options);
-dd($result);
+$parsedResponse = $client->send(Unifiedorder::class, $options);
+dd($parsedResponse);

@@ -6,74 +6,89 @@ namespace Siganushka\ApiClient\Wechat\Tests\Core;
 
 use PHPUnit\Framework\TestCase;
 use Siganushka\ApiClient\Exception\ParseResponseException;
+use Siganushka\ApiClient\RequestOptions;
 use Siganushka\ApiClient\Response\ResponseFactory;
 use Siganushka\ApiClient\Wechat\Core\AccessToken;
 use Siganushka\ApiClient\Wechat\Tests\ConfigurationTest;
+use Symfony\Component\Cache\Adapter\FilesystemAdapter;
+use Symfony\Contracts\HttpClient\HttpClientInterface;
 
 class AccessTokenTest extends TestCase
 {
-    public function testAll(): void
+    public function testResolve(): void
     {
-        $request = static::createRequest();
-        static::assertNull($request->getMethod());
-        static::assertNull($request->getUrl());
-        static::assertSame([], $request->getOptions());
+        $accessToken = static::createRequest();
 
-        $request->build();
-        static::assertSame('GET', $request->getMethod());
-        static::assertSame(AccessToken::URL, $request->getUrl());
-
-        /**
-         * @var array{
-         *  query: array{ appid: string, secret: string, grant_type: string }
-         * }
-         */
-        $options = $request->getOptions();
-        static::assertSame('test_appid', $options['query']['appid']);
-        static::assertSame('test_secret', $options['query']['secret']);
-        static::assertSame('client_credential', $options['query']['grant_type']);
+        $resolved = $accessToken->resolve();
+        static::assertSame([], $resolved);
+        static::assertSame([], $accessToken->getResolver()->getDefinedOptions());
     }
 
-    public function testParseResponse(): void
+    public function testSend(): void
     {
         $data = [
             'access_token' => 'foo',
-            'expires_in' => 600,
+            'expires_in' => 1024,
         ];
 
-        /** @var string */
-        $body = json_encode($data);
-        $response = ResponseFactory::createMockResponse($body);
+        $response = ResponseFactory::createMockResponseWithJson($data);
 
-        $request = static::createRequest();
-        static::assertSame(7200, $request->getCacheTtl());
-        static::assertSame($data, $request->parseResponse($response));
-        static::assertSame($data['expires_in'], $request->getCacheTtl());
+        $httpClient = $this->createMock(HttpClientInterface::class);
+        $httpClient->method('request')->willReturn($response);
+
+        $accessToken = static::createRequest();
+        $accessToken->setHttpClient($httpClient);
+
+        $parsedResponse = $accessToken->send();
+        static::assertSame($data, $parsedResponse);
+    }
+
+    public function testConfigureRequest(): void
+    {
+        $accessToken = static::createRequest();
+        $request = new RequestOptions();
+
+        $configureRequestRef = new \ReflectionMethod($accessToken, 'configureRequest');
+        $configureRequestRef->setAccessible(true);
+        $configureRequestRef->invoke($accessToken, $request, $accessToken->resolve());
+
+        static::assertSame('GET', $request->getMethod());
+        static::assertSame(AccessToken::URL, $request->getUrl());
+        static::assertSame([
+            'query' => [
+                'appid' => 'test_appid',
+                'secret' => 'test_secret',
+                'grant_type' => 'client_credential',
+            ],
+        ], $request->toArray());
     }
 
     public function testParseResponseException(): void
     {
         $this->expectException(ParseResponseException::class);
-        $this->expectExceptionCode(12);
-        $this->expectExceptionMessage('bar');
+        $this->expectExceptionCode(16);
+        $this->expectExceptionMessage('test error');
 
         $data = [
-            'errcode' => 12,
-            'errmsg' => 'bar',
+            'errcode' => 16,
+            'errmsg' => 'test error',
         ];
 
-        /** @var string */
-        $body = json_encode($data);
-        $response = ResponseFactory::createMockResponse($body);
+        $response = ResponseFactory::createMockResponseWithJson($data);
 
-        $request = static::createRequest();
-        $request->parseResponse($response);
+        $accessToken = static::createRequest();
+        $parseResponseRef = new \ReflectionMethod($accessToken, 'parseResponse');
+        $parseResponseRef->setAccessible(true);
+        $parseResponseRef->invoke($accessToken, $response);
     }
 
     public static function createRequest(): AccessToken
     {
+        $cachePool = new FilesystemAdapter();
+        $cachePool->clear();
+
         $configuration = ConfigurationTest::createConfiguration();
 
-        return new AccessToken($configuration);
+        return new AccessToken($cachePool, $configuration);
     }
 }

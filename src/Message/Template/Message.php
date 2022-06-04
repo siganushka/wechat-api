@@ -6,6 +6,7 @@ namespace Siganushka\ApiClient\Wechat\Message\Template;
 
 use Siganushka\ApiClient\AbstractRequest;
 use Siganushka\ApiClient\Exception\ParseResponseException;
+use Siganushka\ApiClient\RequestOptions;
 use Symfony\Component\OptionsResolver\OptionsResolver;
 use Symfony\Contracts\HttpClient\ResponseInterface;
 
@@ -16,6 +17,20 @@ class Message extends AbstractRequest
 {
     public const URL = 'https://api.weixin.qq.com/cgi-bin/message/template/send';
 
+    public function configureOptions(OptionsResolver $resolver): void
+    {
+        $resolver->setRequired(['access_token', 'touser', 'template']);
+        $resolver->setDefault('url', null);
+        $resolver->setDefault('miniprogram', function (OptionsResolver $miniprogramResolver) {
+            $miniprogramResolver->setDefined(['appid', 'pagepath']);
+        });
+
+        $resolver->setAllowedTypes('access_token', 'string');
+        $resolver->setAllowedTypes('touser', 'string');
+        $resolver->setAllowedTypes('template', Template::class);
+        $resolver->setAllowedTypes('url', ['null', 'string']);
+    }
+
     /**
      * @param array{
      *  access_token: string,
@@ -25,7 +40,7 @@ class Message extends AbstractRequest
      *  miniprogram: array{ appid: string, pagepath: string }
      * } $options
      */
-    protected function configureRequest(array $options): void
+    protected function configureRequest(RequestOptions $request, array $options): void
     {
         $query = [
             'access_token' => $options['access_token'],
@@ -43,26 +58,12 @@ class Message extends AbstractRequest
             }
         }
 
-        $this
+        $request
             ->setMethod('POST')
             ->setUrl(static::URL)
             ->setQuery($query)
             ->setJson($body)
         ;
-    }
-
-    protected function configureOptions(OptionsResolver $resolver): void
-    {
-        $resolver->setRequired(['access_token', 'touser', 'template']);
-        $resolver->setDefault('url', null);
-        $resolver->setDefault('miniprogram', function (OptionsResolver $miniprogramResolver) {
-            $miniprogramResolver->setDefined(['appid', 'pagepath']);
-        });
-
-        $resolver->setAllowedTypes('access_token', 'string');
-        $resolver->setAllowedTypes('touser', 'string');
-        $resolver->setAllowedTypes('template', Template::class);
-        $resolver->setAllowedTypes('url', ['null', 'string']);
     }
 
     /**

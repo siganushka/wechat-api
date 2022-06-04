@@ -7,8 +7,8 @@ use Siganushka\ApiClient\Wechat\Miniapp\SessionKey;
 require __DIR__.'/_autoload.php';
 
 $options = [
-    'js_code' => '00373VFa1G2nJC0t2iHa1MkYlo173VFK',
+    'js_code' => '053GLSll2wZij94xpOol2mqhxo4GLSlv',
 ];
 
-$result = $client->send(SessionKey::class, $options);
-dd($result);
+$parsedResponse = $client->send(SessionKey::class, $options);
+dd($parsedResponse);

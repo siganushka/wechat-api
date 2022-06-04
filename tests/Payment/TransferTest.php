@@ -6,6 +6,7 @@ namespace Siganushka\ApiClient\Wechat\Tests\Payment;
 
 use PHPUnit\Framework\TestCase;
 use Siganushka\ApiClient\Exception\ParseResponseException;
+use Siganushka\ApiClient\RequestOptions;
 use Siganushka\ApiClient\Response\ResponseFactory;
 use Siganushka\ApiClient\Wechat\Configuration;
 use Siganushka\ApiClient\Wechat\Payment\Transfer;
@@ -13,16 +14,12 @@ use Siganushka\ApiClient\Wechat\Tests\ConfigurationTest;
 use Symfony\Component\OptionsResolver\Exception\InvalidOptionsException;
 use Symfony\Component\OptionsResolver\Exception\MissingOptionsException;
 use Symfony\Component\OptionsResolver\Exception\NoConfigurationException;
+use Symfony\Contracts\HttpClient\HttpClientInterface;
 
 class TransferTest extends TestCase
 {
-    public function testAll(): void
+    public function testResolve(): void
     {
-        $request = static::createRequest();
-        static::assertNull($request->getMethod());
-        static::assertNull($request->getUrl());
-        static::assertEquals([], $request->getOptions());
-
         $options = [
             'partner_trade_no' => 'test_partner_trade_no',
             'openid' => 'test_openid',
@@ -30,51 +27,99 @@ class TransferTest extends TestCase
             'desc' => 'test_desc',
         ];
 
-        $request->build($options);
-        static::assertEquals('POST', $request->getMethod());
-        static::assertEquals(Transfer::URL, $request->getUrl());
+        $transfer = static::createRequest();
 
-        /**
-         * @var array{ body: string, local_cert: string, local_pk: string }
-         */
-        $options2 = $request->getOptions();
-        static::assertArrayHasKey('body', $options2);
-        static::assertArrayHasKey('local_cert', $options2);
-        static::assertArrayHasKey('local_pk', $options2);
-
-        /**
-         * @var array{
-         *  partner_trade_no: string,
-         *  openid: string,
-         *  amount: int,
-         *  desc: string
-         * }
-         */
-        $data = ConfigurationTest::createXmlEncoder()->decode($options2['body'], 'xml');
-        static::assertArrayHasKey('mch_appid', $data);
-        static::assertArrayHasKey('mchid', $data);
-        static::assertArrayHasKey('nonce_str', $data);
-        static::assertArrayHasKey('check_name', $data);
-        static::assertArrayHasKey('sign', $data);
-        static::assertEquals($options['partner_trade_no'], $data['partner_trade_no']);
-        static::assertEquals($options['openid'], $data['openid']);
-        static::assertEquals($options['amount'], $data['amount']);
-        static::assertEquals($options['desc'], $data['desc']);
-
-        $configuration = ConfigurationTest::createConfiguration();
-        static::assertEquals($configuration['client_cert_file'], $options2['local_cert']);
-        static::assertEquals($configuration['client_key_file'], $options2['local_pk']);
+        $resolved = $transfer->resolve($options);
+        static::assertArrayHasKey('nonce_str', $resolved);
+        static::assertSame('NO_CHECK', $resolved['check_name']);
+        static::assertSame('test_partner_trade_no', $resolved['partner_trade_no']);
+        static::assertSame('test_openid', $resolved['openid']);
+        static::assertSame(1, $resolved['amount']);
+        static::assertSame('test_desc', $resolved['desc']);
+        static::assertSame([
+            'nonce_str',
+            'check_name',
+            'device_info',
+            're_user_name',
+            'spbill_create_ip',
+            'scene',
+            'brand_id',
+            'finder_template_id',
+            'partner_trade_no',
+            'openid',
+            'amount',
+            'desc',
+        ], $transfer->getResolver()->getDefinedOptions());
     }
 
-    public function testWithOptions(): void
+    public function testSend(): void
     {
         $options = [
             'partner_trade_no' => 'test_partner_trade_no',
             'openid' => 'test_openid',
             'amount' => 1,
             'desc' => 'test_desc',
-            'nonce_str' => 'test_nonce_str',
-            'check_name' => 'FORCE_CHECK',
+        ];
+
+        $responseData = [
+            'mch_appid' => 'foo',
+            'mchid' => 'bar',
+            'nonce_str' => 'baz',
+            'return_code' => 'SUCCESS',
+            'result_code' => 'SUCCESS',
+        ];
+
+        $encoder = ConfigurationTest::createXmlEncoder();
+        $response = ResponseFactory::createMockResponse($encoder->encode($responseData, 'xml'));
+
+        $httpClient = $this->createMock(HttpClientInterface::class);
+        $httpClient->method('request')->willReturn($response);
+
+        $transfer = static::createRequest();
+        $transfer->setHttpClient($httpClient);
+
+        $parsedResponse = $transfer->send($options);
+        static::assertSame($responseData, $parsedResponse);
+    }
+
+    public function testConfigureRequest(): void
+    {
+        $options = [
+            'partner_trade_no' => 'test_partner_trade_no',
+            'openid' => 'test_openid',
+            'amount' => 1,
+            'desc' => 'test_desc',
+        ];
+
+        $transfer = static::createRequest();
+        $request = new RequestOptions();
+
+        $configureRequestRef = new \ReflectionMethod($transfer, 'configureRequest');
+        $configureRequestRef->setAccessible(true);
+        $configureRequestRef->invoke($transfer, $request, $transfer->resolve($options));
+
+        static::assertSame('POST', $request->getMethod());
+        static::assertSame(Transfer::URL, $request->getUrl());
+
+        $configuration = ConfigurationTest::createConfiguration();
+        $encoder = ConfigurationTest::createXmlEncoder();
+
+        $requestOptions = $request->toArray();
+        static::assertSame($configuration['client_cert_file'], $requestOptions['local_cert']);
+        static::assertSame($configuration['client_key_file'], $requestOptions['local_pk']);
+
+        $body = $encoder->decode($requestOptions['body'], 'xml');
+        static::assertArrayHasKey('nonce_str', $body);
+        static::assertArrayHasKey('sign', $body);
+        static::assertSame('NO_CHECK', $body['check_name']);
+        static::assertSame('test_partner_trade_no', $body['partner_trade_no']);
+        static::assertSame('test_openid', $body['openid']);
+        static::assertSame('test_appid', $body['mch_appid']);
+        static::assertSame('test_mchid', $body['mchid']);
+        static::assertSame('1', $body['amount']);
+        static::assertSame('test_desc', $body['desc']);
+
+        $customOptions = [
             'device_info' => 'test_device_info',
             're_user_name' => 'test_re_user_name',
             'spbill_create_ip' => 'test_spbill_create_ip',
@@ -83,33 +128,57 @@ class TransferTest extends TestCase
             'finder_template_id' => 'test_finder_template_id',
         ];
 
-        $request = static::createRequest();
-        $request->build($options);
+        $configureRequestRef->invoke($transfer, $request, $transfer->resolve($options + $customOptions));
 
-        /**
-         * @var array{ body: string, local_cert: string, local_pk: string }
-         */
-        $options2 = $request->getOptions();
-        static::assertArrayHasKey('body', $options2);
-        static::assertArrayHasKey('local_cert', $options2);
-        static::assertArrayHasKey('local_pk', $options2);
+        $requestOptions = $request->toArray();
+        $body = $encoder->decode($requestOptions['body'], 'xml');
 
-        /**
-         * @var array{
-         *  partner_trade_no: string,
-         *  openid: string,
-         *  amount: int,
-         *  desc: string
-         * }
-         */
-        $data = ConfigurationTest::createXmlEncoder()->decode($options2['body'], 'xml');
-        static::assertArrayHasKey('mch_appid', $data);
-        static::assertArrayHasKey('mchid', $data);
-        static::assertArrayHasKey('sign', $data);
+        static::assertSame('test_device_info', $body['device_info']);
+        static::assertSame('test_re_user_name', $body['re_user_name']);
+        static::assertSame('test_spbill_create_ip', $body['spbill_create_ip']);
+        static::assertSame('test_scene', $body['scene']);
+        static::assertSame('test_brand_id', $body['brand_id']);
+        static::assertSame('test_finder_template_id', $body['finder_template_id']);
+    }
 
-        foreach ($options as $key => $value) {
-            static::assertEquals($value, $data[$key]);
-        }
+    public function testReturnCodeParseResponseException(): void
+    {
+        $this->expectException(ParseResponseException::class);
+        $this->expectExceptionCode(0);
+        $this->expectExceptionMessage('test_return_msg');
+
+        $responseData = [
+            'return_code' => 'FAIL',
+            'return_msg' => 'test_return_msg',
+        ];
+
+        $encoder = ConfigurationTest::createXmlEncoder();
+        $response = ResponseFactory::createMockResponse($encoder->encode($responseData, 'xml'));
+
+        $transfer = static::createRequest();
+        $parseResponseRef = new \ReflectionMethod($transfer, 'parseResponse');
+        $parseResponseRef->setAccessible(true);
+        $parseResponseRef->invoke($transfer, $response);
+    }
+
+    public function testResultCodeParseResponseException(): void
+    {
+        $this->expectException(ParseResponseException::class);
+        $this->expectExceptionCode(0);
+        $this->expectExceptionMessage('test_err_code_des');
+
+        $responseData = [
+            'result_code' => 'FAIL',
+            'err_code_des' => 'test_err_code_des',
+        ];
+
+        $encoder = ConfigurationTest::createXmlEncoder();
+        $response = ResponseFactory::createMockResponse($encoder->encode($responseData, 'xml'));
+
+        $transfer = static::createRequest();
+        $parseResponseRef = new \ReflectionMethod($transfer, 'parseResponse');
+        $parseResponseRef->setAccessible(true);
+        $parseResponseRef->invoke($transfer, $response);
     }
 
     public function testMissingOptionsException(): void
@@ -117,8 +186,8 @@ class TransferTest extends TestCase
         $this->expectException(MissingOptionsException::class);
         $this->expectExceptionMessage('The required options "amount", "desc", "openid", "partner_trade_no" are missing');
 
-        $request = static::createRequest();
-        $request->build();
+        $transfer = static::createRequest();
+        $transfer->resolve();
     }
 
     public function testReUserNameMissingOptionsException(): void
@@ -126,8 +195,8 @@ class TransferTest extends TestCase
         $this->expectException(MissingOptionsException::class);
         $this->expectExceptionMessage('The required option "re_user_name" is missing (when "check_name" option is set to "FORCE_CHECK")');
 
-        $request = static::createRequest();
-        $request->build([
+        $transfer = static::createRequest();
+        $transfer->resolve([
             'partner_trade_no' => 'test_partner_trade_no',
             'openid' => 'test_openid',
             'amount' => 1,
@@ -141,8 +210,8 @@ class TransferTest extends TestCase
         $this->expectException(InvalidOptionsException::class);
         $this->expectExceptionMessage('The option "check_name" with value "test_check_name" is invalid. Accepted values are: "NO_CHECK", "FORCE_CHECK"');
 
-        $request = static::createRequest();
-        $request->build([
+        $transfer = static::createRequest();
+        $transfer->resolve([
             'partner_trade_no' => 'test_partner_trade_no',
             'openid' => 'test_openid',
             'amount' => 1,
@@ -156,8 +225,8 @@ class TransferTest extends TestCase
         $this->expectException(InvalidOptionsException::class);
         $this->expectExceptionMessage('The option "amount" with value "test_amount" is expected to be of type "int", but is of type "string"');
 
-        $request = static::createRequest();
-        $request->build([
+        $transfer = static::createRequest();
+        $transfer->resolve([
             'partner_trade_no' => 'test_partner_trade_no',
             'openid' => 'test_openid',
             'amount' => 'test_amount',
@@ -176,8 +245,8 @@ class TransferTest extends TestCase
         ]);
 
         $encoder = ConfigurationTest::createXmlEncoder();
-        $request = new Transfer($configuration, $encoder);
-        $request->build([
+        $transfer = new Transfer($encoder, $configuration);
+        $transfer->send([
             'partner_trade_no' => 'test_partner_trade_no',
             'openid' => 'test_openid',
             'amount' => 1,
@@ -197,8 +266,8 @@ class TransferTest extends TestCase
         ]);
 
         $encoder = ConfigurationTest::createXmlEncoder();
-        $request = new Transfer($configuration, $encoder);
-        $request->build([
+        $transfer = new Transfer($encoder, $configuration);
+        $transfer->send([
             'partner_trade_no' => 'test_partner_trade_no',
             'openid' => 'test_openid',
             'amount' => 1,
@@ -219,8 +288,8 @@ class TransferTest extends TestCase
         ]);
 
         $encoder = ConfigurationTest::createXmlEncoder();
-        $request = new Transfer($configuration, $encoder);
-        $request->build([
+        $transfer = new Transfer($encoder, $configuration);
+        $transfer->send([
             'partner_trade_no' => 'test_partner_trade_no',
             'openid' => 'test_openid',
             'amount' => 1,
@@ -242,8 +311,8 @@ class TransferTest extends TestCase
         ]);
 
         $encoder = ConfigurationTest::createXmlEncoder();
-        $request = new Transfer($configuration, $encoder);
-        $request->build([
+        $transfer = new Transfer($encoder, $configuration);
+        $transfer->send([
             'partner_trade_no' => 'test_partner_trade_no',
             'openid' => 'test_openid',
             'amount' => 1,
@@ -251,67 +320,11 @@ class TransferTest extends TestCase
         ]);
     }
 
-    public function testParseResponse(): void
-    {
-        $data = [
-            'return_code' => 'SUCCESS',
-            'result_code' => 'SUCCESS',
-            'mch_appid' => 'test_mch_appid',
-            'mchid' => 'test_mchid',
-            'partner_trade_no' => 'test_partner_trade_no',
-            'payment_no' => 'test_payment_no',
-            'payment_time' => 'test_payment_time',
-        ];
-
-        /** @var string */
-        $body = ConfigurationTest::createXmlEncoder()->encode($data, 'xml');
-        $response = ResponseFactory::createMockResponse($body);
-
-        $request = static::createRequest();
-        static::assertEquals($data, $request->parseResponse($response));
-    }
-
-    public function testParseResponseReturnCodeException(): void
-    {
-        $this->expectException(ParseResponseException::class);
-        $this->expectExceptionMessage('test_return_msg');
-
-        $data = [
-            'return_code' => 'FAIL',
-            'return_msg' => 'test_return_msg',
-        ];
-
-        /** @var string */
-        $body = ConfigurationTest::createXmlEncoder()->encode($data, 'xml');
-        $response = ResponseFactory::createMockResponse($body);
-
-        $request = static::createRequest();
-        $request->parseResponse($response);
-    }
-
-    public function testParseResponseResultCodeException(): void
-    {
-        $this->expectException(ParseResponseException::class);
-        $this->expectExceptionMessage('test_err_code_des');
-
-        $data = [
-            'result_code' => 'FAIL',
-            'err_code_des' => 'test_err_code_des',
-        ];
-
-        /** @var string */
-        $body = ConfigurationTest::createXmlEncoder()->encode($data, 'xml');
-        $response = ResponseFactory::createMockResponse($body);
-
-        $request = static::createRequest();
-        $request->parseResponse($response);
-    }
-
     public static function createRequest(): Transfer
     {
         $configuration = ConfigurationTest::createConfiguration();
         $encoder = ConfigurationTest::createXmlEncoder();
 
-        return new Transfer($configuration, $encoder);
+        return new Transfer($encoder, $configuration);
     }
 }

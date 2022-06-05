@@ -8,7 +8,7 @@ use Siganushka\ApiClient\AbstractRequest;
 use Siganushka\ApiClient\Exception\ParseResponseException;
 use Siganushka\ApiClient\RequestOptions;
 use Siganushka\ApiClient\Wechat\Configuration;
-use Siganushka\ApiClient\Wechat\HelperSet;
+use Siganushka\ApiClient\Wechat\GenericUtils;
 use Symfony\Component\OptionsResolver\Exception\MissingOptionsException;
 use Symfony\Component\OptionsResolver\Exception\NoConfigurationException;
 use Symfony\Component\OptionsResolver\Options;
@@ -37,8 +37,8 @@ class Unifiedorder extends AbstractRequest
         $this->xmlEncoder = $xmlEncoder;
         $this->configuration = $configuration;
         $this->defaultOptions = [
-            'nonce_str' => HelperSet::getNonceStr(),
-            'spbill_create_ip' => HelperSet::getClientIp(),
+            'nonce_str' => GenericUtils::getNonceStr(),
+            'spbill_create_ip' => GenericUtils::getClientIp(),
             'openid' => null,
             'product_id' => null,
             'device_info' => null,

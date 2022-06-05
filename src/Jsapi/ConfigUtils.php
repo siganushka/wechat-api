@@ -5,7 +5,7 @@ declare(strict_types=1);
 namespace Siganushka\ApiClient\Wechat\Jsapi;
 
 use Siganushka\ApiClient\Wechat\Configuration;
-use Siganushka\ApiClient\Wechat\HelperSet;
+use Siganushka\ApiClient\Wechat\GenericUtils;
 
 /**
  * Wechat jssdk config utils class.
@@ -37,9 +37,9 @@ class ConfigUtils
     {
         $parameters = [
             'jsapi_ticket' => $ticket,
-            'timestamp' => HelperSet::getTimestamp(),
-            'noncestr' => HelperSet::getNonceStr(),
-            'url' => HelperSet::getCurrentUrl(),
+            'timestamp' => GenericUtils::getTimestamp(),
+            'noncestr' => GenericUtils::getNonceStr(),
+            'url' => GenericUtils::getCurrentUrl(),
         ];
 
         ksort($parameters);

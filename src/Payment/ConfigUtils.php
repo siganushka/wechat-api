@@ -5,7 +5,7 @@ declare(strict_types=1);
 namespace Siganushka\ApiClient\Wechat\Payment;
 
 use Siganushka\ApiClient\Wechat\Configuration;
-use Siganushka\ApiClient\Wechat\HelperSet;
+use Siganushka\ApiClient\Wechat\GenericUtils;
 
 /**
  * Wechat payment config utils class.
@@ -36,8 +36,8 @@ class ConfigUtils
         $parameters = [
             'appId' => $this->configuration['appid'],
             'signType' => $this->configuration['sign_type'],
-            'timeStamp' => HelperSet::getTimestamp(),
-            'nonceStr' => HelperSet::getNonceStr(),
+            'timeStamp' => GenericUtils::getTimestamp(),
+            'nonceStr' => GenericUtils::getNonceStr(),
             'package' => sprintf('prepay_id=%s', $prepayId),
         ];
 

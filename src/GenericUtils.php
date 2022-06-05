@@ -4,7 +4,7 @@ declare(strict_types=1);
 
 namespace Siganushka\ApiClient\Wechat;
 
-class HelperSet
+class GenericUtils
 {
     /**
      * Returns string of timestamp.

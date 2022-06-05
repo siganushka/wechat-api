@@ -8,7 +8,7 @@ use Siganushka\ApiClient\AbstractRequest;
 use Siganushka\ApiClient\Exception\ParseResponseException;
 use Siganushka\ApiClient\RequestOptions;
 use Siganushka\ApiClient\Wechat\Configuration;
-use Siganushka\ApiClient\Wechat\HelperSet;
+use Siganushka\ApiClient\Wechat\GenericUtils;
 use Symfony\Component\OptionsResolver\Exception\MissingOptionsException;
 use Symfony\Component\OptionsResolver\Exception\NoConfigurationException;
 use Symfony\Component\OptionsResolver\Options;
@@ -36,7 +36,7 @@ class Transfer extends AbstractRequest
         $this->xmlEncoder = $xmlEncoder;
         $this->configuration = $configuration;
         $this->defaultOptions = [
-            'nonce_str' => HelperSet::getNonceStr(),
+            'nonce_str' => GenericUtils::getNonceStr(),
             'check_name' => 'NO_CHECK',
             'device_info' => null,
             're_user_name' => null,

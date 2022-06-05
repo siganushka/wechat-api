@@ -103,9 +103,25 @@ class UnifiedorderTest extends TestCase
         static::assertSame('POST', $request->getMethod());
         static::assertSame(Unifiedorder::URL, $request->getUrl());
 
+        $requestOptions = $request->toArray();
         $encoder = ConfigurationTest::createXmlEncoder();
 
-        $requestOptions = $request->toArray();
+        /**
+         * @var array{
+         *  nonce_str: string,
+         *  sign: string,
+         *  appid: string,
+         *  mch_id: string,
+         *  sign_type: string,
+         *  body: string,
+         *  out_trade_no: string,
+         *  total_fee: string,
+         *  trade_type: string,
+         *  notify_url: string,
+         *  spbill_create_ip: string,
+         *  openid: string
+         * }
+         */
         $body = $encoder->decode($requestOptions['body'], 'xml');
         static::assertArrayHasKey('nonce_str', $body);
         static::assertArrayHasKey('sign', $body);
@@ -137,9 +153,25 @@ class UnifiedorderTest extends TestCase
         ];
 
         $configureRequestRef->invoke($unifiedorder, $request, $unifiedorder->resolve($options + $customOptions));
+        $requestOptions = $request->toArray();
         static::assertSame(Unifiedorder::URL2, $request->getUrl());
 
-        $requestOptions = $request->toArray();
+        /**
+         * @var array{
+         *  product_id: string,
+         *  device_info: string,
+         *  detail: string,
+         *  attach: string,
+         *  fee_type: string,
+         *  time_start: string,
+         *  time_expire: string,
+         *  goods_tag: string,
+         *  limit_pay: string,
+         *  receipt: string,
+         *  profit_sharing: string,
+         *  scene_info: string
+         * }
+         */
         $body = $encoder->decode($requestOptions['body'], 'xml');
         static::assertSame('test_product_id', $body['product_id']);
         static::assertSame('test_device_info', $body['device_info']);

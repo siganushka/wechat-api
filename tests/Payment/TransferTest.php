@@ -108,6 +108,19 @@ class TransferTest extends TestCase
         static::assertSame($configuration['client_cert_file'], $requestOptions['local_cert']);
         static::assertSame($configuration['client_key_file'], $requestOptions['local_pk']);
 
+        /**
+         * @var array{
+         *  nonce_str: string,
+         *  sign: string,
+         *  check_name: string,
+         *  partner_trade_no: string,
+         *  openid: string,
+         *  mch_appid: string,
+         *  mchid: string,
+         *  amount: string,
+         *  desc: string
+         * }
+         */
         $body = $encoder->decode($requestOptions['body'], 'xml');
         static::assertArrayHasKey('nonce_str', $body);
         static::assertArrayHasKey('sign', $body);
@@ -129,10 +142,19 @@ class TransferTest extends TestCase
         ];
 
         $configureRequestRef->invoke($transfer, $request, $transfer->resolve($options + $customOptions));
-
         $requestOptions = $request->toArray();
-        $body = $encoder->decode($requestOptions['body'], 'xml');
 
+        /**
+         * @var array{
+         *  device_info: string,
+         *  re_user_name: string,
+         *  spbill_create_ip: string,
+         *  scene: string,
+         *  brand_id: string,
+         *  finder_template_id: string
+         * }
+         */
+        $body = $encoder->decode($requestOptions['body'], 'xml');
         static::assertSame('test_device_info', $body['device_info']);
         static::assertSame('test_re_user_name', $body['re_user_name']);
         static::assertSame('test_spbill_create_ip', $body['spbill_create_ip']);

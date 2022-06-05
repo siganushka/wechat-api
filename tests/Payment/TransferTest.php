@@ -261,7 +261,7 @@ class TransferTest extends TestCase
             'secret' => 'test_secret',
         ]);
 
-        $transfer = new Transfer($configuration);
+        $transfer = static::createRequest($configuration);
         $transfer->send([
             'partner_trade_no' => 'test_partner_trade_no',
             'openid' => 'test_openid',
@@ -281,7 +281,7 @@ class TransferTest extends TestCase
             'mchid' => 'test_mchid',
         ]);
 
-        $transfer = new Transfer($configuration);
+        $transfer = static::createRequest($configuration);
         $transfer->send([
             'partner_trade_no' => 'test_partner_trade_no',
             'openid' => 'test_openid',
@@ -302,7 +302,7 @@ class TransferTest extends TestCase
             'mchkey' => 'test_mchkey',
         ]);
 
-        $transfer = new Transfer($configuration);
+        $transfer = static::createRequest($configuration);
         $transfer->send([
             'partner_trade_no' => 'test_partner_trade_no',
             'openid' => 'test_openid',
@@ -324,7 +324,7 @@ class TransferTest extends TestCase
             'client_cert_file' => __DIR__.'/../Mock/cert.pem',
         ]);
 
-        $transfer = new Transfer($configuration);
+        $transfer = static::createRequest($configuration);
         $transfer->send([
             'partner_trade_no' => 'test_partner_trade_no',
             'openid' => 'test_openid',
@@ -333,9 +333,11 @@ class TransferTest extends TestCase
         ]);
     }
 
-    public static function createRequest(): Transfer
+    public static function createRequest(Configuration $configuration = null): Transfer
     {
-        $configuration = ConfigurationTest::createConfiguration();
+        if (null === $configuration) {
+            $configuration = ConfigurationTest::createConfiguration();
+        }
 
         return new Transfer($configuration);
     }

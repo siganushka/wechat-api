@@ -373,7 +373,7 @@ class UnifiedorderTest extends TestCase
             'secret' => 'test_secret',
         ]);
 
-        $unifiedorder = new Unifiedorder($configuration);
+        $unifiedorder = static::createRequest($configuration);
         $unifiedorder->send([
             'body' => 'test_body',
             'notify_url' => 'test_notify_url',
@@ -395,7 +395,7 @@ class UnifiedorderTest extends TestCase
             'mchid' => 'test_mchid',
         ]);
 
-        $unifiedorder = new Unifiedorder($configuration);
+        $unifiedorder = static::createRequest($configuration);
         $unifiedorder->send([
             'body' => 'test_body',
             'notify_url' => 'test_notify_url',
@@ -406,9 +406,11 @@ class UnifiedorderTest extends TestCase
         ]);
     }
 
-    public static function createRequest(): Unifiedorder
+    public static function createRequest(Configuration $configuration = null): Unifiedorder
     {
-        $configuration = ConfigurationTest::createConfiguration();
+        if (null === $configuration) {
+            $configuration = ConfigurationTest::createConfiguration();
+        }
 
         return new Unifiedorder($configuration);
     }

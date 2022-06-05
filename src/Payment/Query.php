@@ -17,11 +17,12 @@ use Symfony\Component\OptionsResolver\OptionsResolver;
 use Symfony\Contracts\HttpClient\ResponseInterface;
 
 /**
- * @see https://pay.weixin.qq.com/wiki/doc/api/tools/mch_pay.php?chapter=14_2
+ * @see https://pay.weixin.qq.com/wiki/doc/api/jsapi.php?chapter=9_2
  */
-class Transfer extends AbstractRequest
+class Query extends AbstractRequest
 {
-    public const URL = 'https://api.mch.weixin.qq.com/mmpaymkttransfers/promotion/transfers';
+    public const URL = 'https://api.mch.weixin.qq.com/pay/orderquery';
+    public const URL2 = 'https://api2.mch.weixin.qq.com/pay/orderquery';
 
     private Configuration $configuration;
 
@@ -35,68 +36,63 @@ class Transfer extends AbstractRequest
         $this->configuration = $configuration;
         $this->defaultOptions = [
             'nonce_str' => GenericUtils::getNonceStr(),
-            'check_name' => 'NO_CHECK',
-            'device_info' => null,
-            're_user_name' => null,
-            'spbill_create_ip' => null,
-            'scene' => null,
-            'brand_id' => null,
-            'finder_template_id' => null,
+            'transaction_id' => null,
+            'out_trade_no' => null,
+            'using_slave_api' => false,
         ];
     }
 
     public function configureOptions(OptionsResolver $resolver): void
     {
         $resolver->setDefaults($this->defaultOptions);
-        $resolver->setRequired(['partner_trade_no', 'openid', 'amount', 'desc']);
-        $resolver->setAllowedTypes('amount', 'int');
-        $resolver->setAllowedValues('check_name', ['NO_CHECK', 'FORCE_CHECK']);
-
-        $resolver->setNormalizer('re_user_name', function (Options $options, ?string $reUserName) {
-            if ('FORCE_CHECK' === $options['check_name'] && null === $reUserName) {
-                throw new MissingOptionsException('The required option "re_user_name" is missing (when "check_name" option is set to "FORCE_CHECK").');
+        $resolver->setNormalizer('transaction_id', function (Options $options, ?string $transactionId) {
+            if (null === $options['out_trade_no'] && null === $transactionId) {
+                throw new MissingOptionsException('The required option "transaction_id" or "out_trade_no" is missing.');
             }
 
-            return $reUserName;
+            return $transactionId;
         });
     }
 
     protected function configureRequest(RequestOptions $request, array $options): void
     {
-        foreach (['mchid', 'mchkey', 'client_cert_file', 'client_key_file'] as $optionName) {
+        foreach (['mchid', 'mchkey'] as $optionName) {
             if (null === $this->configuration[$optionName]) {
                 throw new NoConfigurationException(sprintf('No configured value for "%s" option.', $optionName));
             }
         }
 
         $body = [
-            'mch_appid' => $this->configuration['appid'],
-            'mchid' => $this->configuration['mchid'],
-            'partner_trade_no' => $options['partner_trade_no'],
-            'openid' => $options['openid'],
-            'amount' => $options['amount'],
-            'desc' => $options['desc'],
+            'appid' => $this->configuration['appid'],
+            'mch_id' => $this->configuration['mchid'],
+            'sign_type' => $this->configuration['sign_type'],
         ];
 
+        $ignoreOptions = ['using_slave_api'];
         foreach (array_keys($this->defaultOptions) as $optionName) {
-            if (null !== $options[$optionName]) {
+            if (null !== $options[$optionName] && !\in_array($optionName, $ignoreOptions)) {
                 $body[$optionName] = $options[$optionName];
             }
+        }
+
+        if (isset($body['out_trade_no']) && isset($body['transaction_id'])) {
+            unset($body['out_trade_no']);
         }
 
         $signatureUtils = new SignatureUtils($this->configuration);
         $body['sign'] = $signatureUtils->generate($body);
 
+        $xmlBody = SerializerUtils::xmlEncode($body);
+        $apiURL = $options['using_slave_api'] ? static::URL2 : static::URL;
+
         $request
             ->setMethod('POST')
-            ->setUrl(static::URL)
-            ->setBody(SerializerUtils::xmlEncode($body))
-            ->setLocalCert($this->configuration['client_cert_file'])
-            ->setLocalPk($this->configuration['client_key_file'])
+            ->setUrl($apiURL)
+            ->setBody($xmlBody)
         ;
     }
 
-    public function parseResponse(ResponseInterface $response)
+    protected function parseResponse(ResponseInterface $response)
     {
         /**
          * @var array{

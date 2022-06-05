@@ -41,6 +41,7 @@ class UnifiedorderTest extends TestCase
         static::assertSame('test_body', $resolved['body']);
         static::assertSame('test_notify_url', $resolved['notify_url']);
         static::assertSame('test_out_trade_no', $resolved['out_trade_no']);
+        static::assertFalse($resolved['using_slave_api']);
         static::assertSame([
             'nonce_str', 'spbill_create_ip', 'openid', 'product_id',
             'device_info', 'detail', 'attach', 'fee_type', 'time_start',
@@ -62,10 +63,6 @@ class UnifiedorderTest extends TestCase
         ];
 
         $responseData = [
-            'appid' => 'foo',
-            'mch_id' => 'bar',
-            'nonce_str' => 'baz',
-            'sign' => 'test_sign',
             'return_code' => 'SUCCESS',
             'result_code' => 'SUCCESS',
         ];
@@ -230,7 +227,7 @@ class UnifiedorderTest extends TestCase
     public function testMissingOptionsException(): void
     {
         $this->expectException(MissingOptionsException::class);
-        $this->expectExceptionMessage('The required options "body", "notify_url", "out_trade_no", "total_fee", "trade_type" are missing.');
+        $this->expectExceptionMessage('The required options "body", "notify_url", "out_trade_no", "total_fee", "trade_type" are missing');
 
         $unifiedorder = static::createRequest();
         $unifiedorder->resolve();

@@ -63,9 +63,6 @@ class TransferTest extends TestCase
         ];
 
         $responseData = [
-            'mch_appid' => 'foo',
-            'mchid' => 'bar',
-            'nonce_str' => 'baz',
             'return_code' => 'SUCCESS',
             'result_code' => 'SUCCESS',
         ];

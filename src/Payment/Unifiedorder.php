@@ -128,8 +128,8 @@ class Unifiedorder extends AbstractRequest
         /**
          * @var array{
          *  return_code?: string,
-         *  result_code?: string,
          *  return_msg?: string,
+         *  result_code?: string,
          *  err_code_des?: string
          * }
          */

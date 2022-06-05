@@ -9,11 +9,11 @@ use Siganushka\ApiClient\Exception\ParseResponseException;
 use Siganushka\ApiClient\RequestOptions;
 use Siganushka\ApiClient\Wechat\Configuration;
 use Siganushka\ApiClient\Wechat\GenericUtils;
+use Siganushka\ApiClient\Wechat\SerializerUtils;
 use Symfony\Component\OptionsResolver\Exception\MissingOptionsException;
 use Symfony\Component\OptionsResolver\Exception\NoConfigurationException;
 use Symfony\Component\OptionsResolver\Options;
 use Symfony\Component\OptionsResolver\OptionsResolver;
-use Symfony\Component\Serializer\Encoder\XmlEncoder;
 use Symfony\Contracts\HttpClient\ResponseInterface;
 
 /**
@@ -23,7 +23,6 @@ class Transfer extends AbstractRequest
 {
     public const URL = 'https://api.mch.weixin.qq.com/mmpaymkttransfers/promotion/transfers';
 
-    private XmlEncoder $xmlEncoder;
     private Configuration $configuration;
 
     /**
@@ -31,9 +30,8 @@ class Transfer extends AbstractRequest
      */
     private array $defaultOptions;
 
-    public function __construct(XmlEncoder $xmlEncoder, Configuration $configuration)
+    public function __construct(Configuration $configuration)
     {
-        $this->xmlEncoder = $xmlEncoder;
         $this->configuration = $configuration;
         $this->defaultOptions = [
             'nonce_str' => GenericUtils::getNonceStr(),
@@ -89,12 +87,10 @@ class Transfer extends AbstractRequest
         $signatureUtils = new SignatureUtils($this->configuration);
         $body['sign'] = $signatureUtils->generate($body);
 
-        $xmlBody = $this->xmlEncoder->encode($body, 'xml');
-
         $request
             ->setMethod('POST')
             ->setUrl(static::URL)
-            ->setBody($xmlBody)
+            ->setBody(SerializerUtils::xmlEncode($body))
             ->setLocalCert($this->configuration['client_cert_file'])
             ->setLocalPk($this->configuration['client_key_file'])
         ;
@@ -113,7 +109,7 @@ class Transfer extends AbstractRequest
          *  err_code_des?: string
          * }
          */
-        $result = $this->xmlEncoder->decode($response->getContent(), 'xml');
+        $result = SerializerUtils::xmlDecode($response->getContent());
 
         $returnCode = (string) ($result['return_code'] ?? '');
         $resultCode = (string) ($result['result_code'] ?? '');

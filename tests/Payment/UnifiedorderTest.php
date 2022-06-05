@@ -10,6 +10,7 @@ use Siganushka\ApiClient\RequestOptions;
 use Siganushka\ApiClient\Response\ResponseFactory;
 use Siganushka\ApiClient\Wechat\Configuration;
 use Siganushka\ApiClient\Wechat\Payment\Unifiedorder;
+use Siganushka\ApiClient\Wechat\SerializerUtils;
 use Siganushka\ApiClient\Wechat\Tests\ConfigurationTest;
 use Symfony\Component\OptionsResolver\Exception\InvalidOptionsException;
 use Symfony\Component\OptionsResolver\Exception\MissingOptionsException;
@@ -69,8 +70,8 @@ class UnifiedorderTest extends TestCase
             'result_code' => 'SUCCESS',
         ];
 
-        $encoder = ConfigurationTest::createXmlEncoder();
-        $response = ResponseFactory::createMockResponse($encoder->encode($responseData, 'xml'));
+        $xml = SerializerUtils::xmlEncode($responseData);
+        $response = ResponseFactory::createMockResponse($xml);
 
         $httpClient = $this->createMock(HttpClientInterface::class);
         $httpClient->method('request')->willReturn($response);
@@ -104,7 +105,6 @@ class UnifiedorderTest extends TestCase
         static::assertSame(Unifiedorder::URL, $request->getUrl());
 
         $requestOptions = $request->toArray();
-        $encoder = ConfigurationTest::createXmlEncoder();
 
         /**
          * @var array{
@@ -122,7 +122,7 @@ class UnifiedorderTest extends TestCase
          *  openid: string
          * }
          */
-        $body = $encoder->decode($requestOptions['body'], 'xml');
+        $body = SerializerUtils::xmlDecode($requestOptions['body']);
         static::assertArrayHasKey('nonce_str', $body);
         static::assertArrayHasKey('sign', $body);
         static::assertSame('test_appid', $body['appid']);
@@ -172,7 +172,7 @@ class UnifiedorderTest extends TestCase
          *  scene_info: string
          * }
          */
-        $body = $encoder->decode($requestOptions['body'], 'xml');
+        $body = SerializerUtils::xmlDecode($requestOptions['body']);
         static::assertSame('test_product_id', $body['product_id']);
         static::assertSame('test_device_info', $body['device_info']);
         static::assertSame('test_detail', $body['detail']);
@@ -198,8 +198,8 @@ class UnifiedorderTest extends TestCase
             'return_msg' => 'test_return_msg',
         ];
 
-        $encoder = ConfigurationTest::createXmlEncoder();
-        $response = ResponseFactory::createMockResponse($encoder->encode($responseData, 'xml'));
+        $xml = SerializerUtils::xmlEncode($responseData);
+        $response = ResponseFactory::createMockResponse($xml);
 
         $unifiedorder = static::createRequest();
         $parseResponseRef = new \ReflectionMethod($unifiedorder, 'parseResponse');
@@ -218,8 +218,8 @@ class UnifiedorderTest extends TestCase
             'err_code_des' => 'test_err_code_des',
         ];
 
-        $encoder = ConfigurationTest::createXmlEncoder();
-        $response = ResponseFactory::createMockResponse($encoder->encode($responseData, 'xml'));
+        $xml = SerializerUtils::xmlEncode($responseData);
+        $response = ResponseFactory::createMockResponse($xml);
 
         $unifiedorder = static::createRequest();
         $parseResponseRef = new \ReflectionMethod($unifiedorder, 'parseResponse');
@@ -376,8 +376,7 @@ class UnifiedorderTest extends TestCase
             'secret' => 'test_secret',
         ]);
 
-        $encoder = ConfigurationTest::createXmlEncoder();
-        $unifiedorder = new Unifiedorder($encoder, $configuration);
+        $unifiedorder = new Unifiedorder($configuration);
         $unifiedorder->send([
             'body' => 'test_body',
             'notify_url' => 'test_notify_url',
@@ -399,8 +398,7 @@ class UnifiedorderTest extends TestCase
             'mchid' => 'test_mchid',
         ]);
 
-        $encoder = ConfigurationTest::createXmlEncoder();
-        $unifiedorder = new Unifiedorder($encoder, $configuration);
+        $unifiedorder = new Unifiedorder($configuration);
         $unifiedorder->send([
             'body' => 'test_body',
             'notify_url' => 'test_notify_url',
@@ -414,8 +412,7 @@ class UnifiedorderTest extends TestCase
     public static function createRequest(): Unifiedorder
     {
         $configuration = ConfigurationTest::createConfiguration();
-        $encoder = ConfigurationTest::createXmlEncoder();
 
-        return new Unifiedorder($encoder, $configuration);
+        return new Unifiedorder($configuration);
     }
 }

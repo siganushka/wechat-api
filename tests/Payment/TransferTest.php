@@ -10,6 +10,7 @@ use Siganushka\ApiClient\RequestOptions;
 use Siganushka\ApiClient\Response\ResponseFactory;
 use Siganushka\ApiClient\Wechat\Configuration;
 use Siganushka\ApiClient\Wechat\Payment\Transfer;
+use Siganushka\ApiClient\Wechat\SerializerUtils;
 use Siganushka\ApiClient\Wechat\Tests\ConfigurationTest;
 use Symfony\Component\OptionsResolver\Exception\InvalidOptionsException;
 use Symfony\Component\OptionsResolver\Exception\MissingOptionsException;
@@ -69,8 +70,7 @@ class TransferTest extends TestCase
             'result_code' => 'SUCCESS',
         ];
 
-        $encoder = ConfigurationTest::createXmlEncoder();
-        $response = ResponseFactory::createMockResponse($encoder->encode($responseData, 'xml'));
+        $response = ResponseFactory::createMockResponse(SerializerUtils::xmlEncode($responseData));
 
         $httpClient = $this->createMock(HttpClientInterface::class);
         $httpClient->method('request')->willReturn($response);
@@ -102,8 +102,6 @@ class TransferTest extends TestCase
         static::assertSame(Transfer::URL, $request->getUrl());
 
         $configuration = ConfigurationTest::createConfiguration();
-        $encoder = ConfigurationTest::createXmlEncoder();
-
         $requestOptions = $request->toArray();
         static::assertSame($configuration['client_cert_file'], $requestOptions['local_cert']);
         static::assertSame($configuration['client_key_file'], $requestOptions['local_pk']);
@@ -121,7 +119,7 @@ class TransferTest extends TestCase
          *  desc: string
          * }
          */
-        $body = $encoder->decode($requestOptions['body'], 'xml');
+        $body = SerializerUtils::xmlDecode($requestOptions['body']);
         static::assertArrayHasKey('nonce_str', $body);
         static::assertArrayHasKey('sign', $body);
         static::assertSame('NO_CHECK', $body['check_name']);
@@ -154,7 +152,7 @@ class TransferTest extends TestCase
          *  finder_template_id: string
          * }
          */
-        $body = $encoder->decode($requestOptions['body'], 'xml');
+        $body = SerializerUtils::xmlDecode($requestOptions['body']);
         static::assertSame('test_device_info', $body['device_info']);
         static::assertSame('test_re_user_name', $body['re_user_name']);
         static::assertSame('test_spbill_create_ip', $body['spbill_create_ip']);
@@ -174,8 +172,8 @@ class TransferTest extends TestCase
             'return_msg' => 'test_return_msg',
         ];
 
-        $encoder = ConfigurationTest::createXmlEncoder();
-        $response = ResponseFactory::createMockResponse($encoder->encode($responseData, 'xml'));
+        $xml = SerializerUtils::xmlEncode($responseData);
+        $response = ResponseFactory::createMockResponse($xml);
 
         $transfer = static::createRequest();
         $parseResponseRef = new \ReflectionMethod($transfer, 'parseResponse');
@@ -194,8 +192,8 @@ class TransferTest extends TestCase
             'err_code_des' => 'test_err_code_des',
         ];
 
-        $encoder = ConfigurationTest::createXmlEncoder();
-        $response = ResponseFactory::createMockResponse($encoder->encode($responseData, 'xml'));
+        $xml = SerializerUtils::xmlEncode($responseData);
+        $response = ResponseFactory::createMockResponse($xml);
 
         $transfer = static::createRequest();
         $parseResponseRef = new \ReflectionMethod($transfer, 'parseResponse');
@@ -266,8 +264,7 @@ class TransferTest extends TestCase
             'secret' => 'test_secret',
         ]);
 
-        $encoder = ConfigurationTest::createXmlEncoder();
-        $transfer = new Transfer($encoder, $configuration);
+        $transfer = new Transfer($configuration);
         $transfer->send([
             'partner_trade_no' => 'test_partner_trade_no',
             'openid' => 'test_openid',
@@ -287,8 +284,7 @@ class TransferTest extends TestCase
             'mchid' => 'test_mchid',
         ]);
 
-        $encoder = ConfigurationTest::createXmlEncoder();
-        $transfer = new Transfer($encoder, $configuration);
+        $transfer = new Transfer($configuration);
         $transfer->send([
             'partner_trade_no' => 'test_partner_trade_no',
             'openid' => 'test_openid',
@@ -309,8 +305,7 @@ class TransferTest extends TestCase
             'mchkey' => 'test_mchkey',
         ]);
 
-        $encoder = ConfigurationTest::createXmlEncoder();
-        $transfer = new Transfer($encoder, $configuration);
+        $transfer = new Transfer($configuration);
         $transfer->send([
             'partner_trade_no' => 'test_partner_trade_no',
             'openid' => 'test_openid',
@@ -332,8 +327,7 @@ class TransferTest extends TestCase
             'client_cert_file' => __DIR__.'/../Mock/cert.pem',
         ]);
 
-        $encoder = ConfigurationTest::createXmlEncoder();
-        $transfer = new Transfer($encoder, $configuration);
+        $transfer = new Transfer($configuration);
         $transfer->send([
             'partner_trade_no' => 'test_partner_trade_no',
             'openid' => 'test_openid',
@@ -345,8 +339,7 @@ class TransferTest extends TestCase
     public static function createRequest(): Transfer
     {
         $configuration = ConfigurationTest::createConfiguration();
-        $encoder = ConfigurationTest::createXmlEncoder();
 
-        return new Transfer($encoder, $configuration);
+        return new Transfer($configuration);
     }
 }

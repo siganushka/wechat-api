@@ -21,7 +21,6 @@ use Siganushka\ApiClient\Wechat\Ticket\Ticket;
 use Symfony\Component\Cache\Adapter\FilesystemAdapter;
 use Symfony\Component\ErrorHandler\Debug;
 use Symfony\Component\HttpClient\NativeHttpClient;
-use Symfony\Component\Serializer\Encoder\XmlEncoder;
 
 $configFile = __DIR__.'/_config.php';
 if (!is_file($configFile)) {
@@ -39,7 +38,6 @@ if (!function_exists('dd')) {
     }
 }
 
-$xmlEncoder = new XmlEncoder();
 $httpClient = new NativeHttpClient();
 $cachePool = new FilesystemAdapter();
 
@@ -59,8 +57,8 @@ $requests = [
     new ServerIp(),
     new CallbackIp(),
     new SessionKey($cachePool, $configuration),
-    new Transfer($xmlEncoder, $configuration),
-    new Unifiedorder($xmlEncoder, $configuration),
+    new Transfer($configuration),
+    new Unifiedorder($configuration),
     new OAuthAccessToken($configuration),
     new UserInfo(),
     new RefreshToken($configuration),

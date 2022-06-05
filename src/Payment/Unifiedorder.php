@@ -9,11 +9,11 @@ use Siganushka\ApiClient\Exception\ParseResponseException;
 use Siganushka\ApiClient\RequestOptions;
 use Siganushka\ApiClient\Wechat\Configuration;
 use Siganushka\ApiClient\Wechat\GenericUtils;
+use Siganushka\ApiClient\Wechat\SerializerUtils;
 use Symfony\Component\OptionsResolver\Exception\MissingOptionsException;
 use Symfony\Component\OptionsResolver\Exception\NoConfigurationException;
 use Symfony\Component\OptionsResolver\Options;
 use Symfony\Component\OptionsResolver\OptionsResolver;
-use Symfony\Component\Serializer\Encoder\XmlEncoder;
 use Symfony\Contracts\HttpClient\ResponseInterface;
 
 /**
@@ -24,7 +24,6 @@ class Unifiedorder extends AbstractRequest
     public const URL = 'https://api.mch.weixin.qq.com/pay/unifiedorder';
     public const URL2 = 'https://api2.mch.weixin.qq.com/pay/unifiedorder';
 
-    private XmlEncoder $xmlEncoder;
     private Configuration $configuration;
 
     /**
@@ -32,9 +31,8 @@ class Unifiedorder extends AbstractRequest
      */
     private array $defaultOptions;
 
-    public function __construct(XmlEncoder $xmlEncoder, Configuration $configuration)
+    public function __construct(Configuration $configuration)
     {
-        $this->xmlEncoder = $xmlEncoder;
         $this->configuration = $configuration;
         $this->defaultOptions = [
             'nonce_str' => GenericUtils::getNonceStr(),
@@ -115,7 +113,7 @@ class Unifiedorder extends AbstractRequest
         $signatureUtils = new SignatureUtils($this->configuration);
         $body['sign'] = $signatureUtils->generate($body);
 
-        $xmlBody = $this->xmlEncoder->encode($body, 'xml');
+        $xmlBody = SerializerUtils::xmlEncode($body);
         $apiURL = $options['using_slave_api'] ? static::URL2 : static::URL;
 
         $request
@@ -135,7 +133,7 @@ class Unifiedorder extends AbstractRequest
          *  err_code_des?: string
          * }
          */
-        $result = $this->xmlEncoder->decode($response->getContent(), 'xml');
+        $result = SerializerUtils::xmlDecode($response->getContent());
 
         $returnCode = (string) ($result['return_code'] ?? '');
         $resultCode = (string) ($result['result_code'] ?? '');

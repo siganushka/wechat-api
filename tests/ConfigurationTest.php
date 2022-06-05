@@ -8,7 +8,6 @@ use PHPUnit\Framework\TestCase;
 use Siganushka\ApiClient\Wechat\Configuration;
 use Symfony\Component\OptionsResolver\Exception\InvalidOptionsException;
 use Symfony\Component\OptionsResolver\Exception\MissingOptionsException;
-use Symfony\Component\Serializer\Encoder\XmlEncoder;
 
 class ConfigurationTest extends TestCase
 {
@@ -112,15 +111,5 @@ class ConfigurationTest extends TestCase
         ];
 
         return new Configuration($options);
-    }
-
-    public static function createXmlEncoder(): XmlEncoder
-    {
-        $context = [
-            XmlEncoder::ENCODING => 'UTF-8',
-            XmlEncoder::FORMAT_OUTPUT => true,
-        ];
-
-        return new XmlEncoder($context);
     }
 }

@@ -8,7 +8,7 @@ use Siganushka\ApiClient\Wechat\Configuration;
 use Siganushka\ApiClient\Wechat\GenericUtils;
 
 /**
- * Wechat jssdk config utils class.
+ * Wechat jsapi config utils class.
  *
  * @see https://developers.weixin.qq.com/doc/offiaccount/OA_Web_Apps/JS-SDK.html
  */

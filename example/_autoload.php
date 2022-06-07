@@ -2,7 +2,7 @@
 
 declare(strict_types=1);
 
-use Siganushka\ApiClient\ApiClient;
+use Siganushka\ApiClient\RequestClient;
 use Siganushka\ApiClient\RequestRegistry;
 use Siganushka\ApiClient\Wechat\Configuration;
 use Siganushka\ApiClient\Wechat\Core\AccessToken;
@@ -73,4 +73,4 @@ $extensions = [
     new AccessTokenExtension($httpClient, $registry),
 ];
 
-$client = new ApiClient($httpClient, $registry, $extensions);
+$client = new RequestClient($httpClient, $registry, $extensions);

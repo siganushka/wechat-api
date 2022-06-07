@@ -25,6 +25,6 @@ class ConfigUtilsTest extends TestCase
 
         $configs = $configUtils->generate('foo', ['test_api'], true);
         static::assertSame(['test_api'], $configs['jsApiList']);
-        static::assertTrue($configs['debug']);
+        static::assertTrue($configs['debug'] ?? false);
     }
 }

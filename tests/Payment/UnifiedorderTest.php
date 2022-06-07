@@ -30,9 +30,9 @@ class UnifiedorderTest extends TestCase
             'openid' => 'test_openid',
         ];
 
-        $unifiedorder = static::createRequest();
+        $request = static::createRequest();
 
-        $resolved = $unifiedorder->resolve($options);
+        $resolved = $request->resolve($options);
         static::assertArrayHasKey('nonce_str', $resolved);
         static::assertSame('0.0.0.0', $resolved['spbill_create_ip']);
         static::assertSame('JSAPI', $resolved['trade_type']);
@@ -48,7 +48,7 @@ class UnifiedorderTest extends TestCase
             'time_expire', 'goods_tag', 'limit_pay', 'receipt',
             'profit_sharing', 'scene_info', 'using_slave_api', 'body',
             'out_trade_no', 'total_fee', 'trade_type', 'notify_url',
-        ], $unifiedorder->getResolver()->getDefinedOptions());
+        ], $request->getResolver()->getDefinedOptions());
     }
 
     public function testSend(): void
@@ -73,10 +73,10 @@ class UnifiedorderTest extends TestCase
         $httpClient = $this->createMock(HttpClientInterface::class);
         $httpClient->method('request')->willReturn($response);
 
-        $unifiedorder = static::createRequest();
-        $unifiedorder->setHttpClient($httpClient);
+        $request = static::createRequest();
+        $request->setHttpClient($httpClient);
 
-        $parsedResponse = $unifiedorder->send($options);
+        $parsedResponse = $request->send($options);
         static::assertSame($responseData, $parsedResponse);
     }
 
@@ -91,17 +91,15 @@ class UnifiedorderTest extends TestCase
             'openid' => 'test_openid',
         ];
 
-        $unifiedorder = static::createRequest();
-        $request = new RequestOptions();
+        $request = static::createRequest();
+        $requestOptions = new RequestOptions();
 
-        $configureRequestRef = new \ReflectionMethod($unifiedorder, 'configureRequest');
+        $configureRequestRef = new \ReflectionMethod($request, 'configureRequest');
         $configureRequestRef->setAccessible(true);
-        $configureRequestRef->invoke($unifiedorder, $request, $unifiedorder->resolve($options));
+        $configureRequestRef->invoke($request, $requestOptions, $request->resolve($options));
 
-        static::assertSame('POST', $request->getMethod());
-        static::assertSame(Unifiedorder::URL, $request->getUrl());
-
-        $requestOptions = $request->toArray();
+        static::assertSame('POST', $requestOptions->getMethod());
+        static::assertSame(Unifiedorder::URL, $requestOptions->getUrl());
 
         /**
          * @var array{
@@ -119,7 +117,7 @@ class UnifiedorderTest extends TestCase
          *  openid: string
          * }
          */
-        $body = SerializerUtils::xmlDecode($requestOptions['body']);
+        $body = SerializerUtils::xmlDecode($requestOptions->toArray()['body']);
         static::assertArrayHasKey('nonce_str', $body);
         static::assertArrayHasKey('sign', $body);
         static::assertSame('test_appid', $body['appid']);
@@ -149,9 +147,8 @@ class UnifiedorderTest extends TestCase
             'using_slave_api' => true,
         ];
 
-        $configureRequestRef->invoke($unifiedorder, $request, $unifiedorder->resolve($options + $customOptions));
-        $requestOptions = $request->toArray();
-        static::assertSame(Unifiedorder::URL2, $request->getUrl());
+        $configureRequestRef->invoke($request, $requestOptions, $request->resolve($options + $customOptions));
+        static::assertSame(Unifiedorder::URL2, $requestOptions->getUrl());
 
         /**
          * @var array{
@@ -169,7 +166,7 @@ class UnifiedorderTest extends TestCase
          *  scene_info: string
          * }
          */
-        $body = SerializerUtils::xmlDecode($requestOptions['body']);
+        $body = SerializerUtils::xmlDecode($requestOptions->toArray()['body']);
         static::assertSame('test_product_id', $body['product_id']);
         static::assertSame('test_device_info', $body['device_info']);
         static::assertSame('test_detail', $body['detail']);
@@ -198,10 +195,10 @@ class UnifiedorderTest extends TestCase
         $xml = SerializerUtils::xmlEncode($responseData);
         $response = ResponseFactory::createMockResponse($xml);
 
-        $unifiedorder = static::createRequest();
-        $parseResponseRef = new \ReflectionMethod($unifiedorder, 'parseResponse');
+        $request = static::createRequest();
+        $parseResponseRef = new \ReflectionMethod($request, 'parseResponse');
         $parseResponseRef->setAccessible(true);
-        $parseResponseRef->invoke($unifiedorder, $response);
+        $parseResponseRef->invoke($request, $response);
     }
 
     public function testResultCodeParseResponseException(): void
@@ -218,10 +215,10 @@ class UnifiedorderTest extends TestCase
         $xml = SerializerUtils::xmlEncode($responseData);
         $response = ResponseFactory::createMockResponse($xml);
 
-        $unifiedorder = static::createRequest();
-        $parseResponseRef = new \ReflectionMethod($unifiedorder, 'parseResponse');
+        $request = static::createRequest();
+        $parseResponseRef = new \ReflectionMethod($request, 'parseResponse');
         $parseResponseRef->setAccessible(true);
-        $parseResponseRef->invoke($unifiedorder, $response);
+        $parseResponseRef->invoke($request, $response);
     }
 
     public function testMissingOptionsException(): void
@@ -229,8 +226,8 @@ class UnifiedorderTest extends TestCase
         $this->expectException(MissingOptionsException::class);
         $this->expectExceptionMessage('The required options "body", "notify_url", "out_trade_no", "total_fee", "trade_type" are missing');
 
-        $unifiedorder = static::createRequest();
-        $unifiedorder->resolve();
+        $request = static::createRequest();
+        $request->resolve();
     }
 
     public function testOpenidMissingOptionsException(): void
@@ -238,8 +235,8 @@ class UnifiedorderTest extends TestCase
         $this->expectException(MissingOptionsException::class);
         $this->expectExceptionMessage('The required option "openid" is missing (when "trade_type" option is set to "JSAPI")');
 
-        $unifiedorder = static::createRequest();
-        $unifiedorder->resolve([
+        $request = static::createRequest();
+        $request->resolve([
             'body' => 'test_body',
             'notify_url' => 'test_notify_url',
             'out_trade_no' => 'test_out_trade_no',
@@ -253,8 +250,8 @@ class UnifiedorderTest extends TestCase
         $this->expectException(MissingOptionsException::class);
         $this->expectExceptionMessage('The required option "product_id" is missing (when "trade_type" option is set to "NATIVE")');
 
-        $unifiedorder = static::createRequest();
-        $unifiedorder->resolve([
+        $request = static::createRequest();
+        $request->resolve([
             'body' => 'test_body',
             'notify_url' => 'test_notify_url',
             'out_trade_no' => 'test_out_trade_no',
@@ -268,8 +265,8 @@ class UnifiedorderTest extends TestCase
         $this->expectException(InvalidOptionsException::class);
         $this->expectExceptionMessage('The option "fee_type" with value "foo" is invalid. Accepted values are: null, "CNY"');
 
-        $unifiedorder = static::createRequest();
-        $unifiedorder->resolve([
+        $request = static::createRequest();
+        $request->resolve([
             'body' => 'test_body',
             'notify_url' => 'test_notify_url',
             'out_trade_no' => 'test_out_trade_no',
@@ -285,8 +282,8 @@ class UnifiedorderTest extends TestCase
         $this->expectException(InvalidOptionsException::class);
         $this->expectExceptionMessage('The option "trade_type" with value "foo" is invalid. Accepted values are: null, "JSAPI", "NATIVE", "APP", "MWEB"');
 
-        $unifiedorder = static::createRequest();
-        $unifiedorder->resolve([
+        $request = static::createRequest();
+        $request->resolve([
             'body' => 'test_body',
             'notify_url' => 'test_notify_url',
             'out_trade_no' => 'test_out_trade_no',
@@ -301,8 +298,8 @@ class UnifiedorderTest extends TestCase
         $this->expectException(InvalidOptionsException::class);
         $this->expectExceptionMessage('The option "limit_pay" with value "foo" is invalid. Accepted values are: null, "no_credit"');
 
-        $unifiedorder = static::createRequest();
-        $unifiedorder->resolve([
+        $request = static::createRequest();
+        $request->resolve([
             'body' => 'test_body',
             'notify_url' => 'test_notify_url',
             'out_trade_no' => 'test_out_trade_no',
@@ -318,8 +315,8 @@ class UnifiedorderTest extends TestCase
         $this->expectException(InvalidOptionsException::class);
         $this->expectExceptionMessage('The option "receipt" with value "foo" is invalid. Accepted values are: null, "Y"');
 
-        $unifiedorder = static::createRequest();
-        $unifiedorder->resolve([
+        $request = static::createRequest();
+        $request->resolve([
             'body' => 'test_body',
             'notify_url' => 'test_notify_url',
             'out_trade_no' => 'test_out_trade_no',
@@ -335,8 +332,8 @@ class UnifiedorderTest extends TestCase
         $this->expectException(InvalidOptionsException::class);
         $this->expectExceptionMessage('The option "profit_sharing" with value "foo" is invalid. Accepted values are: null, "Y", "N"');
 
-        $unifiedorder = static::createRequest();
-        $unifiedorder->resolve([
+        $request = static::createRequest();
+        $request->resolve([
             'body' => 'test_body',
             'notify_url' => 'test_notify_url',
             'out_trade_no' => 'test_out_trade_no',
@@ -352,8 +349,8 @@ class UnifiedorderTest extends TestCase
         $this->expectException(InvalidOptionsException::class);
         $this->expectExceptionMessage('The option "total_fee" with value "test_total_fee" is expected to be of type "int", but is of type "string"');
 
-        $unifiedorder = static::createRequest();
-        $unifiedorder->resolve([
+        $request = static::createRequest();
+        $request->resolve([
             'body' => 'test_body',
             'notify_url' => 'test_notify_url',
             'out_trade_no' => 'test_out_trade_no',
@@ -373,8 +370,8 @@ class UnifiedorderTest extends TestCase
             'secret' => 'test_secret',
         ]);
 
-        $unifiedorder = static::createRequest($configuration);
-        $unifiedorder->send([
+        $request = static::createRequest($configuration);
+        $request->send([
             'body' => 'test_body',
             'notify_url' => 'test_notify_url',
             'out_trade_no' => 'test_out_trade_no',
@@ -395,8 +392,8 @@ class UnifiedorderTest extends TestCase
             'mchid' => 'test_mchid',
         ]);
 
-        $unifiedorder = static::createRequest($configuration);
-        $unifiedorder->send([
+        $request = static::createRequest($configuration);
+        $request->send([
             'body' => 'test_body',
             'notify_url' => 'test_notify_url',
             'out_trade_no' => 'test_out_trade_no',

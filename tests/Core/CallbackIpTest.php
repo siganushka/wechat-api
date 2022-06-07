@@ -17,11 +17,11 @@ class CallbackIpTest extends TestCase
 {
     public function testResolve(): void
     {
-        $callbackIp = static::createRequest();
+        $request = static::createRequest();
 
-        $resolved = $callbackIp->resolve(['access_token' => 'foo']);
+        $resolved = $request->resolve(['access_token' => 'foo']);
         static::assertSame(['access_token' => 'foo'], $resolved);
-        static::assertSame(['access_token'], $callbackIp->getResolver()->getDefinedOptions());
+        static::assertSame(['access_token'], $request->getResolver()->getDefinedOptions());
     }
 
     public function testSend(): void
@@ -35,29 +35,29 @@ class CallbackIpTest extends TestCase
         $httpClient = $this->createMock(HttpClientInterface::class);
         $httpClient->method('request')->willReturn($response);
 
-        $callbackIp = static::createRequest();
-        $callbackIp->setHttpClient($httpClient);
+        $request = static::createRequest();
+        $request->setHttpClient($httpClient);
 
-        $parsedResponse = $callbackIp->send(['access_token' => 'foo']);
+        $parsedResponse = $request->send(['access_token' => 'foo']);
         static::assertSame($data['ip_list'], $parsedResponse);
     }
 
     public function testConfigureRequest(): void
     {
-        $callbackIp = static::createRequest();
-        $request = new RequestOptions();
+        $request = static::createRequest();
+        $requestOptions = new RequestOptions();
 
-        $configureRequestRef = new \ReflectionMethod($callbackIp, 'configureRequest');
+        $configureRequestRef = new \ReflectionMethod($request, 'configureRequest');
         $configureRequestRef->setAccessible(true);
-        $configureRequestRef->invoke($callbackIp, $request, $callbackIp->resolve(['access_token' => 'foo']));
+        $configureRequestRef->invoke($request, $requestOptions, $request->resolve(['access_token' => 'foo']));
 
-        static::assertSame('GET', $request->getMethod());
-        static::assertSame(CallbackIp::URL, $request->getUrl());
+        static::assertSame('GET', $requestOptions->getMethod());
+        static::assertSame(CallbackIp::URL, $requestOptions->getUrl());
         static::assertSame([
             'query' => [
                 'access_token' => 'foo',
             ],
-        ], $request->toArray());
+        ], $requestOptions->toArray());
     }
 
     public function testParseResponseException(): void
@@ -73,10 +73,10 @@ class CallbackIpTest extends TestCase
 
         $response = ResponseFactory::createMockResponseWithJson($data);
 
-        $callbackIp = static::createRequest();
-        $parseResponseRef = new \ReflectionMethod($callbackIp, 'parseResponse');
+        $request = static::createRequest();
+        $parseResponseRef = new \ReflectionMethod($request, 'parseResponse');
         $parseResponseRef->setAccessible(true);
-        $parseResponseRef->invoke($callbackIp, $response);
+        $parseResponseRef->invoke($request, $response);
     }
 
     public function testAccessTokenMissingException(): void
@@ -84,8 +84,8 @@ class CallbackIpTest extends TestCase
         $this->expectException(MissingOptionsException::class);
         $this->expectExceptionMessage('The required option "access_token" is missing');
 
-        $callbackIp = static::createRequest();
-        $callbackIp->resolve();
+        $request = static::createRequest();
+        $request->resolve();
     }
 
     public function testAccessTokenInvalidException(): void
@@ -93,8 +93,8 @@ class CallbackIpTest extends TestCase
         $this->expectException(InvalidOptionsException::class);
         $this->expectExceptionMessage('The option "access_token" with value 123 is expected to be of type "string", but is of type "int"');
 
-        $callbackIp = static::createRequest();
-        $callbackIp->resolve(['access_token' => 123]);
+        $request = static::createRequest();
+        $request->resolve(['access_token' => 123]);
     }
 
     public static function createRequest(): CallbackIp

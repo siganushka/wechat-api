@@ -20,7 +20,7 @@ use Siganushka\ApiClient\Wechat\Payment\Unifiedorder;
 use Siganushka\ApiClient\Wechat\Ticket\Ticket;
 use Symfony\Component\Cache\Adapter\FilesystemAdapter;
 use Symfony\Component\ErrorHandler\Debug;
-use Symfony\Component\HttpClient\NativeHttpClient;
+use Symfony\Component\HttpClient\HttpClient;
 
 $configFile = __DIR__.'/_config.php';
 if (!is_file($configFile)) {
@@ -38,7 +38,7 @@ if (!function_exists('dd')) {
     }
 }
 
-$httpClient = new NativeHttpClient();
+$httpClient = HttpClient::create();
 $cachePool = new FilesystemAdapter();
 
 $configuration = new Configuration([

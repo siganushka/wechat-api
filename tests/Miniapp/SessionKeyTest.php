@@ -19,11 +19,11 @@ class SessionKeyTest extends TestCase
 {
     public function testResolve(): void
     {
-        $sessionKey = static::createRequest();
+        $request = static::createRequest();
 
-        $resolved = $sessionKey->resolve(['code' => 'foo']);
+        $resolved = $request->resolve(['code' => 'foo']);
         static::assertSame(['code' => 'foo'], $resolved);
-        static::assertSame(['code'], $sessionKey->getResolver()->getDefinedOptions());
+        static::assertSame(['code'], $request->getResolver()->getDefinedOptions());
     }
 
     public function testSend(): void
@@ -38,24 +38,24 @@ class SessionKeyTest extends TestCase
         $httpClient = $this->createMock(HttpClientInterface::class);
         $httpClient->method('request')->willReturn($response);
 
-        $sessionKey = static::createRequest();
-        $sessionKey->setHttpClient($httpClient);
+        $request = static::createRequest();
+        $request->setHttpClient($httpClient);
 
-        $parsedResponse = $sessionKey->send(['code' => 'foo']);
+        $parsedResponse = $request->send(['code' => 'foo']);
         static::assertSame($data, $parsedResponse);
     }
 
     public function testConfigureRequest(): void
     {
-        $sessionKey = static::createRequest();
-        $request = new RequestOptions();
+        $request = static::createRequest();
+        $requestOptions = new RequestOptions();
 
-        $configureRequestRef = new \ReflectionMethod($sessionKey, 'configureRequest');
+        $configureRequestRef = new \ReflectionMethod($request, 'configureRequest');
         $configureRequestRef->setAccessible(true);
-        $configureRequestRef->invoke($sessionKey, $request, $sessionKey->resolve(['code' => 'foo']));
+        $configureRequestRef->invoke($request, $requestOptions, $request->resolve(['code' => 'foo']));
 
-        static::assertSame('GET', $request->getMethod());
-        static::assertSame(SessionKey::URL, $request->getUrl());
+        static::assertSame('GET', $requestOptions->getMethod());
+        static::assertSame(SessionKey::URL, $requestOptions->getUrl());
         static::assertSame([
             'query' => [
                 'appid' => 'test_appid',
@@ -63,7 +63,7 @@ class SessionKeyTest extends TestCase
                 'grant_type' => 'authorization_code',
                 'code' => 'foo',
             ],
-        ], $request->toArray());
+        ], $requestOptions->toArray());
     }
 
     public function testParseResponseException(): void
@@ -79,10 +79,10 @@ class SessionKeyTest extends TestCase
 
         $response = ResponseFactory::createMockResponseWithJson($data);
 
-        $sessionKey = static::createRequest();
-        $parseResponseRef = new \ReflectionMethod($sessionKey, 'parseResponse');
+        $request = static::createRequest();
+        $parseResponseRef = new \ReflectionMethod($request, 'parseResponse');
         $parseResponseRef->setAccessible(true);
-        $parseResponseRef->invoke($sessionKey, $response);
+        $parseResponseRef->invoke($request, $response);
     }
 
     public function testCodeMissingException(): void
@@ -90,8 +90,8 @@ class SessionKeyTest extends TestCase
         $this->expectException(MissingOptionsException::class);
         $this->expectExceptionMessage('The required option "code" is missing');
 
-        $sessionKey = static::createRequest();
-        $sessionKey->resolve();
+        $request = static::createRequest();
+        $request->resolve();
     }
 
     public function testCodeInvalidException(): void
@@ -99,8 +99,8 @@ class SessionKeyTest extends TestCase
         $this->expectException(InvalidOptionsException::class);
         $this->expectExceptionMessage('The option "code" with value 123 is expected to be of type "string", but is of type "int"');
 
-        $sessionKey = static::createRequest();
-        $sessionKey->resolve(['code' => 123]);
+        $request = static::createRequest();
+        $request->resolve(['code' => 123]);
     }
 
     public static function createRequest(): SessionKey

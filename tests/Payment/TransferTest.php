@@ -28,9 +28,9 @@ class TransferTest extends TestCase
             'desc' => 'test_desc',
         ];
 
-        $transfer = static::createRequest();
+        $request = static::createRequest();
 
-        $resolved = $transfer->resolve($options);
+        $resolved = $request->resolve($options);
         static::assertArrayHasKey('nonce_str', $resolved);
         static::assertSame('NO_CHECK', $resolved['check_name']);
         static::assertSame('test_partner_trade_no', $resolved['partner_trade_no']);
@@ -50,7 +50,7 @@ class TransferTest extends TestCase
             'openid',
             'amount',
             'desc',
-        ], $transfer->getResolver()->getDefinedOptions());
+        ], $request->getResolver()->getDefinedOptions());
     }
 
     public function testSend(): void
@@ -72,10 +72,10 @@ class TransferTest extends TestCase
         $httpClient = $this->createMock(HttpClientInterface::class);
         $httpClient->method('request')->willReturn($response);
 
-        $transfer = static::createRequest();
-        $transfer->setHttpClient($httpClient);
+        $request = static::createRequest();
+        $request->setHttpClient($httpClient);
 
-        $parsedResponse = $transfer->send($options);
+        $parsedResponse = $request->send($options);
         static::assertSame($responseData, $parsedResponse);
     }
 
@@ -88,20 +88,19 @@ class TransferTest extends TestCase
             'desc' => 'test_desc',
         ];
 
-        $transfer = static::createRequest();
-        $request = new RequestOptions();
+        $request = static::createRequest();
+        $requestOptions = new RequestOptions();
 
-        $configureRequestRef = new \ReflectionMethod($transfer, 'configureRequest');
+        $configureRequestRef = new \ReflectionMethod($request, 'configureRequest');
         $configureRequestRef->setAccessible(true);
-        $configureRequestRef->invoke($transfer, $request, $transfer->resolve($options));
+        $configureRequestRef->invoke($request, $requestOptions, $request->resolve($options));
 
-        static::assertSame('POST', $request->getMethod());
-        static::assertSame(Transfer::URL, $request->getUrl());
+        static::assertSame('POST', $requestOptions->getMethod());
+        static::assertSame(Transfer::URL, $requestOptions->getUrl());
 
         $configuration = ConfigurationTest::createConfiguration();
-        $requestOptions = $request->toArray();
-        static::assertSame($configuration['client_cert_file'], $requestOptions['local_cert']);
-        static::assertSame($configuration['client_key_file'], $requestOptions['local_pk']);
+        static::assertSame($configuration['client_cert_file'], $requestOptions->toArray()['local_cert']);
+        static::assertSame($configuration['client_key_file'], $requestOptions->toArray()['local_pk']);
 
         /**
          * @var array{
@@ -116,7 +115,7 @@ class TransferTest extends TestCase
          *  desc: string
          * }
          */
-        $body = SerializerUtils::xmlDecode($requestOptions['body']);
+        $body = SerializerUtils::xmlDecode($requestOptions->toArray()['body']);
         static::assertArrayHasKey('nonce_str', $body);
         static::assertArrayHasKey('sign', $body);
         static::assertSame('NO_CHECK', $body['check_name']);
@@ -136,8 +135,7 @@ class TransferTest extends TestCase
             'finder_template_id' => 'test_finder_template_id',
         ];
 
-        $configureRequestRef->invoke($transfer, $request, $transfer->resolve($options + $customOptions));
-        $requestOptions = $request->toArray();
+        $configureRequestRef->invoke($request, $requestOptions, $request->resolve($options + $customOptions));
 
         /**
          * @var array{
@@ -149,7 +147,7 @@ class TransferTest extends TestCase
          *  finder_template_id: string
          * }
          */
-        $body = SerializerUtils::xmlDecode($requestOptions['body']);
+        $body = SerializerUtils::xmlDecode($requestOptions->toArray()['body']);
         static::assertSame('test_device_info', $body['device_info']);
         static::assertSame('test_re_user_name', $body['re_user_name']);
         static::assertSame('test_spbill_create_ip', $body['spbill_create_ip']);
@@ -172,10 +170,10 @@ class TransferTest extends TestCase
         $xml = SerializerUtils::xmlEncode($responseData);
         $response = ResponseFactory::createMockResponse($xml);
 
-        $transfer = static::createRequest();
-        $parseResponseRef = new \ReflectionMethod($transfer, 'parseResponse');
+        $request = static::createRequest();
+        $parseResponseRef = new \ReflectionMethod($request, 'parseResponse');
         $parseResponseRef->setAccessible(true);
-        $parseResponseRef->invoke($transfer, $response);
+        $parseResponseRef->invoke($request, $response);
     }
 
     public function testResultCodeParseResponseException(): void
@@ -192,10 +190,10 @@ class TransferTest extends TestCase
         $xml = SerializerUtils::xmlEncode($responseData);
         $response = ResponseFactory::createMockResponse($xml);
 
-        $transfer = static::createRequest();
-        $parseResponseRef = new \ReflectionMethod($transfer, 'parseResponse');
+        $request = static::createRequest();
+        $parseResponseRef = new \ReflectionMethod($request, 'parseResponse');
         $parseResponseRef->setAccessible(true);
-        $parseResponseRef->invoke($transfer, $response);
+        $parseResponseRef->invoke($request, $response);
     }
 
     public function testMissingOptionsException(): void
@@ -203,8 +201,8 @@ class TransferTest extends TestCase
         $this->expectException(MissingOptionsException::class);
         $this->expectExceptionMessage('The required options "amount", "desc", "openid", "partner_trade_no" are missing');
 
-        $transfer = static::createRequest();
-        $transfer->resolve();
+        $request = static::createRequest();
+        $request->resolve();
     }
 
     public function testReUserNameMissingOptionsException(): void
@@ -212,8 +210,8 @@ class TransferTest extends TestCase
         $this->expectException(MissingOptionsException::class);
         $this->expectExceptionMessage('The required option "re_user_name" is missing (when "check_name" option is set to "FORCE_CHECK")');
 
-        $transfer = static::createRequest();
-        $transfer->resolve([
+        $request = static::createRequest();
+        $request->resolve([
             'partner_trade_no' => 'test_partner_trade_no',
             'openid' => 'test_openid',
             'amount' => 1,
@@ -227,8 +225,8 @@ class TransferTest extends TestCase
         $this->expectException(InvalidOptionsException::class);
         $this->expectExceptionMessage('The option "check_name" with value "test_check_name" is invalid. Accepted values are: "NO_CHECK", "FORCE_CHECK"');
 
-        $transfer = static::createRequest();
-        $transfer->resolve([
+        $request = static::createRequest();
+        $request->resolve([
             'partner_trade_no' => 'test_partner_trade_no',
             'openid' => 'test_openid',
             'amount' => 1,
@@ -242,8 +240,8 @@ class TransferTest extends TestCase
         $this->expectException(InvalidOptionsException::class);
         $this->expectExceptionMessage('The option "amount" with value "test_amount" is expected to be of type "int", but is of type "string"');
 
-        $transfer = static::createRequest();
-        $transfer->resolve([
+        $request = static::createRequest();
+        $request->resolve([
             'partner_trade_no' => 'test_partner_trade_no',
             'openid' => 'test_openid',
             'amount' => 'test_amount',
@@ -261,8 +259,8 @@ class TransferTest extends TestCase
             'secret' => 'test_secret',
         ]);
 
-        $transfer = static::createRequest($configuration);
-        $transfer->send([
+        $request = static::createRequest($configuration);
+        $request->send([
             'partner_trade_no' => 'test_partner_trade_no',
             'openid' => 'test_openid',
             'amount' => 1,
@@ -281,8 +279,8 @@ class TransferTest extends TestCase
             'mchid' => 'test_mchid',
         ]);
 
-        $transfer = static::createRequest($configuration);
-        $transfer->send([
+        $request = static::createRequest($configuration);
+        $request->send([
             'partner_trade_no' => 'test_partner_trade_no',
             'openid' => 'test_openid',
             'amount' => 1,
@@ -302,8 +300,8 @@ class TransferTest extends TestCase
             'mchkey' => 'test_mchkey',
         ]);
 
-        $transfer = static::createRequest($configuration);
-        $transfer->send([
+        $request = static::createRequest($configuration);
+        $request->send([
             'partner_trade_no' => 'test_partner_trade_no',
             'openid' => 'test_openid',
             'amount' => 1,
@@ -324,8 +322,8 @@ class TransferTest extends TestCase
             'client_cert_file' => __DIR__.'/../Mock/cert.pem',
         ]);
 
-        $transfer = static::createRequest($configuration);
-        $transfer->send([
+        $request = static::createRequest($configuration);
+        $request->send([
             'partner_trade_no' => 'test_partner_trade_no',
             'openid' => 'test_openid',
             'amount' => 1,

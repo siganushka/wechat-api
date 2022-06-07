@@ -17,11 +17,11 @@ class AccessTokenTest extends TestCase
 {
     public function testResolve(): void
     {
-        $accessToken = static::createRequest();
+        $request = static::createRequest();
 
-        $resolved = $accessToken->resolve();
+        $resolved = $request->resolve();
         static::assertSame([], $resolved);
-        static::assertSame([], $accessToken->getResolver()->getDefinedOptions());
+        static::assertSame([], $request->getResolver()->getDefinedOptions());
     }
 
     public function testSend(): void
@@ -36,31 +36,31 @@ class AccessTokenTest extends TestCase
         $httpClient = $this->createMock(HttpClientInterface::class);
         $httpClient->method('request')->willReturn($response);
 
-        $accessToken = static::createRequest();
-        $accessToken->setHttpClient($httpClient);
+        $request = static::createRequest();
+        $request->setHttpClient($httpClient);
 
-        $parsedResponse = $accessToken->send();
+        $parsedResponse = $request->send();
         static::assertSame($data, $parsedResponse);
     }
 
     public function testConfigureRequest(): void
     {
-        $accessToken = static::createRequest();
-        $request = new RequestOptions();
+        $request = static::createRequest();
+        $requestOptions = new RequestOptions();
 
-        $configureRequestRef = new \ReflectionMethod($accessToken, 'configureRequest');
+        $configureRequestRef = new \ReflectionMethod($request, 'configureRequest');
         $configureRequestRef->setAccessible(true);
-        $configureRequestRef->invoke($accessToken, $request, $accessToken->resolve());
+        $configureRequestRef->invoke($request, $requestOptions, $request->resolve());
 
-        static::assertSame('GET', $request->getMethod());
-        static::assertSame(AccessToken::URL, $request->getUrl());
+        static::assertSame('GET', $requestOptions->getMethod());
+        static::assertSame(AccessToken::URL, $requestOptions->getUrl());
         static::assertSame([
             'query' => [
                 'appid' => 'test_appid',
                 'secret' => 'test_secret',
                 'grant_type' => 'client_credential',
             ],
-        ], $request->toArray());
+        ], $requestOptions->toArray());
     }
 
     public function testParseResponseException(): void
@@ -76,10 +76,10 @@ class AccessTokenTest extends TestCase
 
         $response = ResponseFactory::createMockResponseWithJson($data);
 
-        $accessToken = static::createRequest();
-        $parseResponseRef = new \ReflectionMethod($accessToken, 'parseResponse');
+        $request = static::createRequest();
+        $parseResponseRef = new \ReflectionMethod($request, 'parseResponse');
         $parseResponseRef->setAccessible(true);
-        $parseResponseRef->invoke($accessToken, $response);
+        $parseResponseRef->invoke($request, $response);
     }
 
     public static function createRequest(): AccessToken

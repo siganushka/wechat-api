@@ -18,12 +18,12 @@ class AccessTokenTest extends TestCase
 {
     public function testResolve(): void
     {
-        $accessToken = static::createRequest();
+        $request = static::createRequest();
 
-        $resolved = $accessToken->resolve(['code' => 'foo']);
+        $resolved = $request->resolve(['code' => 'foo']);
         static::assertSame('foo', $resolved['code']);
         static::assertFalse($resolved['using_open_api']);
-        static::assertSame(['code', 'using_open_api'], $accessToken->getResolver()->getDefinedOptions());
+        static::assertSame(['code', 'using_open_api'], $request->getResolver()->getDefinedOptions());
     }
 
     public function testSend(): void
@@ -41,24 +41,24 @@ class AccessTokenTest extends TestCase
         $httpClient = $this->createMock(HttpClientInterface::class);
         $httpClient->method('request')->willReturn($response);
 
-        $accessToken = static::createRequest();
-        $accessToken->setHttpClient($httpClient);
+        $request = static::createRequest();
+        $request->setHttpClient($httpClient);
 
-        $parsedResponse = $accessToken->send(['code' => 'foo']);
+        $parsedResponse = $request->send(['code' => 'foo']);
         static::assertSame($data, $parsedResponse);
     }
 
     public function testConfigureRequest(): void
     {
-        $accessToken = static::createRequest();
-        $request = new RequestOptions();
+        $request = static::createRequest();
+        $requestOptions = new RequestOptions();
 
-        $configureRequestRef = new \ReflectionMethod($accessToken, 'configureRequest');
+        $configureRequestRef = new \ReflectionMethod($request, 'configureRequest');
         $configureRequestRef->setAccessible(true);
-        $configureRequestRef->invoke($accessToken, $request, $accessToken->resolve(['code' => 'foo']));
+        $configureRequestRef->invoke($request, $requestOptions, $request->resolve(['code' => 'foo']));
 
-        static::assertSame('GET', $request->getMethod());
-        static::assertSame(AccessToken::URL, $request->getUrl());
+        static::assertSame('GET', $requestOptions->getMethod());
+        static::assertSame(AccessToken::URL, $requestOptions->getUrl());
         static::assertSame([
             'query' => [
                 'appid' => 'test_appid',
@@ -66,9 +66,9 @@ class AccessTokenTest extends TestCase
                 'grant_type' => 'authorization_code',
                 'code' => 'foo',
             ],
-        ], $request->toArray());
+        ], $requestOptions->toArray());
 
-        $configureRequestRef->invoke($accessToken, $request, $accessToken->resolve(['code' => 'foo', 'using_open_api' => true]));
+        $configureRequestRef->invoke($request, $requestOptions, $request->resolve(['code' => 'foo', 'using_open_api' => true]));
         static::assertSame([
             'query' => [
                 'appid' => 'test_open_appid',
@@ -76,7 +76,7 @@ class AccessTokenTest extends TestCase
                 'grant_type' => 'authorization_code',
                 'code' => 'foo',
             ],
-        ], $request->toArray());
+        ], $requestOptions->toArray());
     }
 
     public function testParseResponseException(): void
@@ -92,10 +92,10 @@ class AccessTokenTest extends TestCase
 
         $response = ResponseFactory::createMockResponseWithJson($data);
 
-        $accessToken = static::createRequest();
-        $parseResponseRef = new \ReflectionMethod($accessToken, 'parseResponse');
+        $request = static::createRequest();
+        $parseResponseRef = new \ReflectionMethod($request, 'parseResponse');
         $parseResponseRef->setAccessible(true);
-        $parseResponseRef->invoke($accessToken, $response);
+        $parseResponseRef->invoke($request, $response);
     }
 
     public function testCodeMissingException(): void
@@ -103,8 +103,8 @@ class AccessTokenTest extends TestCase
         $this->expectException(MissingOptionsException::class);
         $this->expectExceptionMessage('The required option "code" is missing');
 
-        $sessionKey = static::createRequest();
-        $sessionKey->resolve();
+        $request = static::createRequest();
+        $request->resolve();
     }
 
     public function testCodeInvalidException(): void
@@ -112,8 +112,8 @@ class AccessTokenTest extends TestCase
         $this->expectException(InvalidOptionsException::class);
         $this->expectExceptionMessage('The option "code" with value 123 is expected to be of type "string", but is of type "int"');
 
-        $sessionKey = static::createRequest();
-        $sessionKey->resolve(['code' => 123]);
+        $request = static::createRequest();
+        $request->resolve(['code' => 123]);
     }
 
     public function testUsingOpenApiOptionsException(): void

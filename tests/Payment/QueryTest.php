@@ -25,9 +25,9 @@ class QueryTest extends TestCase
             'out_trade_no' => 'test_out_trade_no',
         ];
 
-        $query = static::createRequest();
+        $request = static::createRequest();
 
-        $resolved = $query->resolve($options);
+        $resolved = $request->resolve($options);
         static::assertArrayHasKey('nonce_str', $resolved);
         static::assertSame('test_out_trade_no', $resolved['out_trade_no']);
         static::assertSame('test_transaction_id', $resolved['transaction_id']);
@@ -37,7 +37,7 @@ class QueryTest extends TestCase
             'transaction_id',
             'out_trade_no',
             'using_slave_api',
-        ], $query->getResolver()->getDefinedOptions());
+        ], $request->getResolver()->getDefinedOptions());
     }
 
     public function testSend(): void
@@ -58,10 +58,10 @@ class QueryTest extends TestCase
         $httpClient = $this->createMock(HttpClientInterface::class);
         $httpClient->method('request')->willReturn($response);
 
-        $query = static::createRequest();
-        $query->setHttpClient($httpClient);
+        $request = static::createRequest();
+        $request->setHttpClient($httpClient);
 
-        $parsedResponse = $query->send($options);
+        $parsedResponse = $request->send($options);
         static::assertSame($responseData, $parsedResponse);
     }
 
@@ -72,17 +72,15 @@ class QueryTest extends TestCase
             'out_trade_no' => 'test_out_trade_no',
         ];
 
-        $query = static::createRequest();
-        $request = new RequestOptions();
+        $request = static::createRequest();
+        $requestOptions = new RequestOptions();
 
-        $configureRequestRef = new \ReflectionMethod($query, 'configureRequest');
+        $configureRequestRef = new \ReflectionMethod($request, 'configureRequest');
         $configureRequestRef->setAccessible(true);
-        $configureRequestRef->invoke($query, $request, $query->resolve($options));
+        $configureRequestRef->invoke($request, $requestOptions, $request->resolve($options));
 
-        static::assertSame('POST', $request->getMethod());
-        static::assertSame(Query::URL, $request->getUrl());
-
-        $requestOptions = $request->toArray();
+        static::assertSame('POST', $requestOptions->getMethod());
+        static::assertSame(Query::URL, $requestOptions->getUrl());
 
         /**
          * @var array{
@@ -94,7 +92,7 @@ class QueryTest extends TestCase
          *  transaction_id: string
          * }
          */
-        $body = SerializerUtils::xmlDecode($requestOptions['body']);
+        $body = SerializerUtils::xmlDecode($requestOptions->toArray()['body']);
         static::assertArrayHasKey('nonce_str', $body);
         static::assertArrayHasKey('sign', $body);
         static::assertSame('test_appid', $body['appid']);
@@ -107,9 +105,8 @@ class QueryTest extends TestCase
             'using_slave_api' => true,
         ];
 
-        $configureRequestRef->invoke($query, $request, $query->resolve($customOptions));
-        $requestOptions = $request->toArray();
-        static::assertSame(Query::URL2, $request->getUrl());
+        $configureRequestRef->invoke($request, $requestOptions, $request->resolve($customOptions));
+        static::assertSame(Query::URL2, $requestOptions->getUrl());
 
         /**
          * @var array{
@@ -121,7 +118,7 @@ class QueryTest extends TestCase
          *  out_trade_no: string
          * }
          */
-        $body = SerializerUtils::xmlDecode($requestOptions['body']);
+        $body = SerializerUtils::xmlDecode($requestOptions->toArray()['body']);
         static::assertArrayHasKey('nonce_str', $body);
         static::assertArrayHasKey('sign', $body);
         static::assertSame('test_appid', $body['appid']);
@@ -144,10 +141,10 @@ class QueryTest extends TestCase
         $xml = SerializerUtils::xmlEncode($responseData);
         $response = ResponseFactory::createMockResponse($xml);
 
-        $query = static::createRequest();
-        $parseResponseRef = new \ReflectionMethod($query, 'parseResponse');
+        $request = static::createRequest();
+        $parseResponseRef = new \ReflectionMethod($request, 'parseResponse');
         $parseResponseRef->setAccessible(true);
-        $parseResponseRef->invoke($query, $response);
+        $parseResponseRef->invoke($request, $response);
     }
 
     public function testResultCodeParseResponseException(): void
@@ -164,10 +161,10 @@ class QueryTest extends TestCase
         $xml = SerializerUtils::xmlEncode($responseData);
         $response = ResponseFactory::createMockResponse($xml);
 
-        $query = static::createRequest();
-        $parseResponseRef = new \ReflectionMethod($query, 'parseResponse');
+        $request = static::createRequest();
+        $parseResponseRef = new \ReflectionMethod($request, 'parseResponse');
         $parseResponseRef->setAccessible(true);
-        $parseResponseRef->invoke($query, $response);
+        $parseResponseRef->invoke($request, $response);
     }
 
     public function testMissingOptionsException(): void
@@ -175,8 +172,8 @@ class QueryTest extends TestCase
         $this->expectException(MissingOptionsException::class);
         $this->expectExceptionMessage('The required option "transaction_id" or "out_trade_no" is missing');
 
-        $query = static::createRequest();
-        $query->resolve();
+        $request = static::createRequest();
+        $request->resolve();
     }
 
     public function testMchidNoConfigurationException(): void
@@ -189,8 +186,8 @@ class QueryTest extends TestCase
             'secret' => 'test_secret',
         ]);
 
-        $query = static::createRequest($configuration);
-        $query->send([
+        $request = static::createRequest($configuration);
+        $request->send([
             'transaction_id' => 'test_transaction_id',
             'out_trade_no' => 'test_out_trade_no',
         ]);
@@ -207,8 +204,8 @@ class QueryTest extends TestCase
             'mchid' => 'test_mchid',
         ]);
 
-        $query = static::createRequest($configuration);
-        $query->send([
+        $request = static::createRequest($configuration);
+        $request->send([
             'transaction_id' => 'test_transaction_id',
             'out_trade_no' => 'test_out_trade_no',
         ]);

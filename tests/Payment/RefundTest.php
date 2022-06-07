@@ -29,9 +29,9 @@ class RefundTest extends TestCase
             'refund_fee' => 10,
         ];
 
-        $refund = static::createRequest();
+        $request = static::createRequest();
 
-        $resolved = $refund->resolve($options);
+        $resolved = $request->resolve($options);
         static::assertArrayHasKey('nonce_str', $resolved);
         static::assertSame('test_out_trade_no', $resolved['out_trade_no']);
         static::assertSame('test_transaction_id', $resolved['transaction_id']);
@@ -49,7 +49,7 @@ class RefundTest extends TestCase
             'out_refund_no',
             'total_fee',
             'refund_fee',
-        ], $refund->getResolver()->getDefinedOptions());
+        ], $request->getResolver()->getDefinedOptions());
     }
 
     public function testSend(): void
@@ -73,10 +73,10 @@ class RefundTest extends TestCase
         $httpClient = $this->createMock(HttpClientInterface::class);
         $httpClient->method('request')->willReturn($response);
 
-        $refund = static::createRequest();
-        $refund->setHttpClient($httpClient);
+        $request = static::createRequest();
+        $request->setHttpClient($httpClient);
 
-        $parsedResponse = $refund->send($options);
+        $parsedResponse = $request->send($options);
         static::assertSame($responseData, $parsedResponse);
     }
 
@@ -90,17 +90,15 @@ class RefundTest extends TestCase
             'refund_fee' => 10,
         ];
 
-        $refund = static::createRequest();
-        $request = new RequestOptions();
+        $request = static::createRequest();
+        $requestOptions = new RequestOptions();
 
-        $configureRequestRef = new \ReflectionMethod($refund, 'configureRequest');
+        $configureRequestRef = new \ReflectionMethod($request, 'configureRequest');
         $configureRequestRef->setAccessible(true);
-        $configureRequestRef->invoke($refund, $request, $refund->resolve($options));
+        $configureRequestRef->invoke($request, $requestOptions, $request->resolve($options));
 
-        static::assertSame('POST', $request->getMethod());
-        static::assertSame(Refund::URL, $request->getUrl());
-
-        $requestOptions = $request->toArray();
+        static::assertSame('POST', $requestOptions->getMethod());
+        static::assertSame(Refund::URL, $requestOptions->getUrl());
 
         /**
          * @var array{
@@ -112,7 +110,7 @@ class RefundTest extends TestCase
          *  transaction_id: string
          * }
          */
-        $body = SerializerUtils::xmlDecode($requestOptions['body']);
+        $body = SerializerUtils::xmlDecode($requestOptions->toArray()['body']);
 
         static::assertArrayHasKey('nonce_str', $body);
         static::assertArrayHasKey('sign', $body);
@@ -132,8 +130,7 @@ class RefundTest extends TestCase
             'notify_url' => 'test_notify_url',
         ];
 
-        $configureRequestRef->invoke($refund, $request, $refund->resolve($customOptions));
-        $requestOptions = $request->toArray();
+        $configureRequestRef->invoke($request, $requestOptions, $request->resolve($customOptions));
 
         /**
          * @var array{
@@ -149,7 +146,7 @@ class RefundTest extends TestCase
          *  notify_url: string
          * }
          */
-        $body = SerializerUtils::xmlDecode($requestOptions['body']);
+        $body = SerializerUtils::xmlDecode($requestOptions->toArray()['body']);
         static::assertArrayHasKey('nonce_str', $body);
         static::assertArrayHasKey('sign', $body);
         static::assertSame('test_appid', $body['appid']);
@@ -176,10 +173,10 @@ class RefundTest extends TestCase
         $xml = SerializerUtils::xmlEncode($responseData);
         $response = ResponseFactory::createMockResponse($xml);
 
-        $refund = static::createRequest();
-        $parseResponseRef = new \ReflectionMethod($refund, 'parseResponse');
+        $request = static::createRequest();
+        $parseResponseRef = new \ReflectionMethod($request, 'parseResponse');
         $parseResponseRef->setAccessible(true);
-        $parseResponseRef->invoke($refund, $response);
+        $parseResponseRef->invoke($request, $response);
     }
 
     public function testResultCodeParseResponseException(): void
@@ -196,10 +193,10 @@ class RefundTest extends TestCase
         $xml = SerializerUtils::xmlEncode($responseData);
         $response = ResponseFactory::createMockResponse($xml);
 
-        $refund = static::createRequest();
-        $parseResponseRef = new \ReflectionMethod($refund, 'parseResponse');
+        $request = static::createRequest();
+        $parseResponseRef = new \ReflectionMethod($request, 'parseResponse');
         $parseResponseRef->setAccessible(true);
-        $parseResponseRef->invoke($refund, $response);
+        $parseResponseRef->invoke($request, $response);
     }
 
     public function testMissingOptionsException(): void
@@ -207,8 +204,8 @@ class RefundTest extends TestCase
         $this->expectException(MissingOptionsException::class);
         $this->expectExceptionMessage('The required options "out_refund_no", "refund_fee", "total_fee" are missing');
 
-        $refund = static::createRequest();
-        $refund->resolve();
+        $request = static::createRequest();
+        $request->resolve();
     }
 
     public function testNumberMissingOptionsException(): void
@@ -216,8 +213,8 @@ class RefundTest extends TestCase
         $this->expectException(MissingOptionsException::class);
         $this->expectExceptionMessage('The required option "transaction_id" or "out_trade_no" is missing');
 
-        $unifiedorder = static::createRequest();
-        $unifiedorder->resolve([
+        $request = static::createRequest();
+        $request->resolve([
             'out_refund_no' => 'test_out_refund_no',
             'total_fee' => 12,
             'refund_fee' => 10,
@@ -229,8 +226,8 @@ class RefundTest extends TestCase
         $this->expectException(InvalidOptionsException::class);
         $this->expectExceptionMessage('The option "refund_fee_type" with value "foo" is invalid. Accepted values are: null, "CNY"');
 
-        $unifiedorder = static::createRequest();
-        $unifiedorder->resolve([
+        $request = static::createRequest();
+        $request->resolve([
             'out_trade_no' => 'test_out_trade_no',
             'out_refund_no' => 'test_out_refund_no',
             'total_fee' => 12,
@@ -244,8 +241,8 @@ class RefundTest extends TestCase
         $this->expectException(InvalidOptionsException::class);
         $this->expectExceptionMessage('The option "refund_account" with value "foo" is invalid. Accepted values are: null, "REFUND_SOURCE_UNSETTLED_FUNDS", "REFUND_SOURCE_RECHARGE_FUNDS"');
 
-        $unifiedorder = static::createRequest();
-        $unifiedorder->resolve([
+        $request = static::createRequest();
+        $request->resolve([
             'out_trade_no' => 'test_out_trade_no',
             'out_refund_no' => 'test_out_refund_no',
             'total_fee' => 12,
@@ -264,8 +261,8 @@ class RefundTest extends TestCase
             'secret' => 'test_secret',
         ]);
 
-        $refund = static::createRequest($configuration);
-        $refund->send([
+        $request = static::createRequest($configuration);
+        $request->send([
             'out_trade_no' => 'test_out_trade_no',
             'out_refund_no' => 'test_out_refund_no',
             'total_fee' => 12,
@@ -284,8 +281,8 @@ class RefundTest extends TestCase
             'mchid' => 'test_mchid',
         ]);
 
-        $refund = static::createRequest($configuration);
-        $refund->send([
+        $request = static::createRequest($configuration);
+        $request->send([
             'out_trade_no' => 'test_out_trade_no',
             'out_refund_no' => 'test_out_refund_no',
             'total_fee' => 12,

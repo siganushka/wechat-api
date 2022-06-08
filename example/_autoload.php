@@ -67,10 +67,10 @@ $requests = [
     new Message(),
 ];
 
-$registry = new RequestRegistry($requests);
+$registry = new RequestRegistry($httpClient, $requests);
 
 $extensions = [
-    new AccessTokenExtension($httpClient, $registry),
+    new AccessTokenExtension($registry),
 ];
 
-$client = new RequestClient($httpClient, $registry, $extensions);
+$client = new RequestClient($registry, $extensions);

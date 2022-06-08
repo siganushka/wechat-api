@@ -36,14 +36,14 @@ class AccessTokenExtensionTest extends TestCase
 
         $configuration = ConfigurationTest::createConfiguration();
 
-        $registry = new RequestRegistry([
+        $registry = new RequestRegistry($httpClient, [
             new AccessToken($cachePool, $configuration),
         ]);
 
         $resolver = new OptionsResolver();
         static::assertSame([], $resolver->resolve());
 
-        $extension = new AccessTokenExtension($httpClient, $registry);
+        $extension = new AccessTokenExtension($registry);
         $extension->configureOptions($resolver);
 
         static::assertSame(['access_token' => 'test_access_token_extension'], $resolver->resolve());

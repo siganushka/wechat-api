@@ -20,9 +20,19 @@ class WxacodeTest extends TestCase
         $request = static::createRequest();
 
         $resolved = $request->resolve(['access_token' => 'foo', 'path' => '/test']);
-        static::assertSame('foo', $resolved['access_token']);
-        static::assertSame('/test', $resolved['path']);
-        static::assertSame([], $resolved['line_color']);
+        static::assertSame([
+            'env_version' => 'release',
+            'width' => 430,
+            'auto_color' => false,
+            'is_hyaline' => false,
+            'line_color' => [
+                'r' => 0,
+                'g' => 0,
+                'b' => 0,
+            ],
+            'access_token' => 'foo',
+            'path' => '/test',
+        ], $resolved);
     }
 
     public function testSend(): void
@@ -52,12 +62,22 @@ class WxacodeTest extends TestCase
 
         static::assertSame('POST', $requestOptions->getMethod());
         static::assertSame(Wxacode::URL, $requestOptions->getUrl());
+
         static::assertSame([
             'query' => [
                 'access_token' => 'foo',
             ],
             'json' => [
                 'path' => '/test',
+                'env_version' => 'release',
+                'width' => 430,
+                'auto_color' => false,
+                'is_hyaline' => false,
+                'line_color' => [
+                    'r' => 0,
+                    'g' => 0,
+                    'b' => 0,
+                ],
             ],
         ], $requestOptions->toArray());
 
@@ -79,10 +99,10 @@ class WxacodeTest extends TestCase
             'json' => [
                 'path' => '/index/index',
                 'env_version' => 'develop',
-                'line_color' => ['r' => 255, 'g' => 255, 'b' => 255],
                 'width' => 320,
                 'auto_color' => true,
                 'is_hyaline' => true,
+                'line_color' => ['r' => 255, 'g' => 255, 'b' => 255],
             ],
         ], $requestOptions->toArray());
     }

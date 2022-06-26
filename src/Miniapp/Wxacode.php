@@ -20,11 +20,19 @@ class Wxacode extends AbstractRequest
     public function configureOptions(OptionsResolver $resolver): void
     {
         $resolver->setRequired(['access_token', 'path']);
-        $resolver->setDefined(['env_version', 'width', 'auto_color', 'is_hyaline']);
-
-        $resolver->setDefault('line_color', function (OptionsResolver $lineColorResolver) {
-            $lineColorResolver->setDefined(['r', 'g', 'b']);
-        });
+        $resolver->setDefaults([
+            'env_version' => 'release',
+            'width' => 430,
+            'auto_color' => false,
+            'is_hyaline' => false,
+            'line_color' => function (OptionsResolver $lineColorResolver) {
+                $lineColorResolver->setDefaults([
+                    'r' => 0,
+                    'g' => 0,
+                    'b' => 0,
+                ]);
+            },
+        ]);
 
         $resolver->setAllowedTypes('access_token', 'string');
         $resolver->setAllowedTypes('path', 'string');
@@ -44,14 +52,12 @@ class Wxacode extends AbstractRequest
 
         $body = [
             'path' => $options['path'],
+            'env_version' => $options['env_version'],
+            'width' => $options['width'],
+            'auto_color' => $options['auto_color'],
+            'is_hyaline' => $options['is_hyaline'],
+            'line_color' => $options['line_color'],
         ];
-
-        foreach (['env_version', 'line_color', 'width', 'auto_color', 'is_hyaline'] as $option) {
-            $optionValue = $options[$option] ?? null;
-            if (null !== $optionValue && [] !== $optionValue) {
-                $body[$option] = $optionValue;
-            }
-        }
 
         $request
             ->setMethod('POST')

@@ -11,6 +11,7 @@ use Siganushka\ApiClient\Wechat\Core\ServerIp;
 use Siganushka\ApiClient\Wechat\Extension\AccessTokenExtension;
 use Siganushka\ApiClient\Wechat\Message\Template\Message;
 use Siganushka\ApiClient\Wechat\Miniapp\SessionKey;
+use Siganushka\ApiClient\Wechat\Miniapp\Wxacode;
 use Siganushka\ApiClient\Wechat\OAuth\AccessToken as OAuthAccessToken;
 use Siganushka\ApiClient\Wechat\OAuth\CheckToken;
 use Siganushka\ApiClient\Wechat\OAuth\RefreshToken;
@@ -57,6 +58,7 @@ $requests = [
     new ServerIp(),
     new CallbackIp(),
     new SessionKey($cachePool, $configuration),
+    new Wxacode(),
     new Transfer($configuration),
     new Unifiedorder($configuration),
     new OAuthAccessToken($configuration),

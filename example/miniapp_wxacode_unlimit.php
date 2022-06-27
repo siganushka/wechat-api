@@ -2,15 +2,17 @@
 
 declare(strict_types=1);
 
-use Siganushka\ApiClient\Wechat\Miniapp\Wxacode;
+use Siganushka\ApiClient\Wechat\Miniapp\WxacodeUnlimited;
 
 require __DIR__.'/_autoload.php';
 
 /**
- * @see https://developers.weixin.qq.com/miniprogram/dev/api-backend/open-api/qr-code/wxacode.get.html
+ * @see https://developers.weixin.qq.com/miniprogram/dev/api-backend/open-api/qr-code/wxacode.getUnlimited.html
  */
 $options = [
-    'path' => '/index/index',
+    'scene' => 'foo',
+    // 'page' => '/pages/index/index',
+    // 'check_path' => false,
     // 'env_version' => 'develop', // release/trial/develop
     // 'width' => 200,
     // 'auto_color' => true,
@@ -18,7 +20,7 @@ $options = [
     // 'line_color' => ['r' => 255, 'g' => 255, 'b' => 255],
 ];
 
-$parsedResponse = $client->send(Wxacode::class, $options);
+$parsedResponse = $client->send(WxacodeUnlimited::class, $options);
 dd($parsedResponse);
 
 // 显示小程序码

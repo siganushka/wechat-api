@@ -21,15 +21,7 @@ class WxacodeTest extends TestCase
 
         $resolved = $request->resolve(['access_token' => 'foo', 'path' => '/test']);
         static::assertSame([
-            'env_version' => 'release',
-            'width' => 430,
-            'auto_color' => false,
-            'is_hyaline' => false,
-            'line_color' => [
-                'r' => 0,
-                'g' => 0,
-                'b' => 0,
-            ],
+            'line_color' => [],
             'access_token' => 'foo',
             'path' => '/test',
         ], $resolved);
@@ -38,8 +30,13 @@ class WxacodeTest extends TestCase
     public function testSend(): void
     {
         $data = 'bin_content';
+        $info = [
+            'response_headers' => [
+                'Content-Type' => 'image/png',
+            ],
+        ];
 
-        $response = ResponseFactory::createMockResponse($data);
+        $response = ResponseFactory::createMockResponse($data, $info);
 
         $httpClient = $this->createMock(HttpClientInterface::class);
         $httpClient->method('request')->willReturn($response);
@@ -69,15 +66,6 @@ class WxacodeTest extends TestCase
             ],
             'json' => [
                 'path' => '/test',
-                'env_version' => 'release',
-                'width' => 430,
-                'auto_color' => false,
-                'is_hyaline' => false,
-                'line_color' => [
-                    'r' => 0,
-                    'g' => 0,
-                    'b' => 0,
-                ],
             ],
         ], $requestOptions->toArray());
 

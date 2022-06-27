@@ -20,19 +20,13 @@ class Wxacode extends AbstractRequest
     public function configureOptions(OptionsResolver $resolver): void
     {
         $resolver->setRequired(['access_token', 'path']);
-        $resolver->setDefaults([
-            'env_version' => 'release',
-            'width' => 430,
-            'auto_color' => false,
-            'is_hyaline' => false,
-            'line_color' => function (OptionsResolver $lineColorResolver) {
-                $lineColorResolver->setDefaults([
-                    'r' => 0,
-                    'g' => 0,
-                    'b' => 0,
-                ]);
-            },
-        ]);
+        $resolver->setDefined(['env_version', 'width', 'auto_color', 'is_hyaline']);
+        $resolver->setDefault('line_color', function (OptionsResolver $lineColorResolver) {
+            $lineColorResolver->setDefined(['r', 'g', 'b']);
+            $lineColorResolver->setAllowedTypes('r', 'int');
+            $lineColorResolver->setAllowedTypes('g', 'int');
+            $lineColorResolver->setAllowedTypes('b', 'int');
+        });
 
         $resolver->setAllowedTypes('access_token', 'string');
         $resolver->setAllowedTypes('path', 'string');
@@ -40,6 +34,7 @@ class Wxacode extends AbstractRequest
         $resolver->setAllowedTypes('width', 'int');
         $resolver->setAllowedTypes('auto_color', 'bool');
         $resolver->setAllowedTypes('is_hyaline', 'bool');
+        $resolver->setAllowedTypes('line_color', 'array');
 
         $resolver->setAllowedValues('env_version', ['release', 'trial', 'develop']);
     }
@@ -52,12 +47,17 @@ class Wxacode extends AbstractRequest
 
         $body = [
             'path' => $options['path'],
-            'env_version' => $options['env_version'],
-            'width' => $options['width'],
-            'auto_color' => $options['auto_color'],
-            'is_hyaline' => $options['is_hyaline'],
-            'line_color' => $options['line_color'],
         ];
+
+        foreach (['env_version', 'width', 'auto_color', 'is_hyaline'] as $option) {
+            if (isset($options[$option])) {
+                $body[$option] = $options[$option];
+            }
+        }
+
+        if ($options['line_color']) {
+            $body['line_color'] = $options['line_color'];
+        }
 
         $request
             ->setMethod('POST')
@@ -73,18 +73,18 @@ class Wxacode extends AbstractRequest
     protected function parseResponse(ResponseInterface $response): string
     {
         $headers = $response->getHeaders();
-        if (str_contains($headers['content-type'][0] ?? '', 'json')) {
-            /**
-             * @var array{ errcode?: int, errmsg?: string }
-             */
-            $result = $response->toArray();
-
-            $errcode = (int) ($result['errcode'] ?? 0);
-            $errmsg = (string) ($result['errmsg'] ?? '');
-
-            throw new ParseResponseException($response, $errmsg, $errcode);
+        if (str_contains($headers['content-type'][0] ?? '', 'image')) {
+            return $response->getContent();
         }
 
-        return $response->getContent();
+        /**
+         * @var array{ errcode?: int, errmsg?: string }
+         */
+        $result = $response->toArray();
+
+        $errcode = (int) ($result['errcode'] ?? 0);
+        $errmsg = (string) ($result['errmsg'] ?? '');
+
+        throw new ParseResponseException($response, $errmsg, $errcode);
     }
 }

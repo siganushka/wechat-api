@@ -17,3 +17,7 @@ $options = [
 
 $parsedResponse = $client->send(Wxacode::class, $options);
 dd($parsedResponse);
+
+// 显示小程序码
+// $base64Content = base64_encode($parsedResponse);
+// echo sprintf('<img src="data:image/png;base64,%s" />', $base64Content);

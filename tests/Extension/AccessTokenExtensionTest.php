@@ -12,6 +12,7 @@ use Siganushka\ApiClient\Wechat\Core\CallbackIp;
 use Siganushka\ApiClient\Wechat\Core\ServerIp;
 use Siganushka\ApiClient\Wechat\Extension\AccessTokenExtension;
 use Siganushka\ApiClient\Wechat\Message\Template\Message;
+use Siganushka\ApiClient\Wechat\Miniapp\Qrcode;
 use Siganushka\ApiClient\Wechat\Miniapp\Wxacode;
 use Siganushka\ApiClient\Wechat\Tests\ConfigurationTest;
 use Siganushka\ApiClient\Wechat\Ticket\Ticket;
@@ -58,6 +59,7 @@ class AccessTokenExtensionTest extends TestCase
             CallbackIp::class,
             Message::class,
             Wxacode::class,
+            Qrcode::class,
         ], AccessTokenExtension::getExtendedRequests());
     }
 }

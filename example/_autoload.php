@@ -10,6 +10,7 @@ use Siganushka\ApiClient\Wechat\Core\CallbackIp;
 use Siganushka\ApiClient\Wechat\Core\ServerIp;
 use Siganushka\ApiClient\Wechat\Extension\AccessTokenExtension;
 use Siganushka\ApiClient\Wechat\Message\Template\Message;
+use Siganushka\ApiClient\Wechat\Miniapp\Qrcode;
 use Siganushka\ApiClient\Wechat\Miniapp\SessionKey;
 use Siganushka\ApiClient\Wechat\Miniapp\Wxacode;
 use Siganushka\ApiClient\Wechat\Miniapp\WxacodeUnlimited;
@@ -61,6 +62,7 @@ $requests = [
     new SessionKey($cachePool, $configuration),
     new Wxacode(),
     new WxacodeUnlimited(),
+    new Qrcode(),
     new Transfer($configuration),
     new Unifiedorder($configuration),
     new OAuthAccessToken($configuration),

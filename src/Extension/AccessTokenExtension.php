@@ -10,6 +10,7 @@ use Siganushka\ApiClient\Wechat\Core\AccessToken;
 use Siganushka\ApiClient\Wechat\Core\CallbackIp;
 use Siganushka\ApiClient\Wechat\Core\ServerIp;
 use Siganushka\ApiClient\Wechat\Message\Template\Message;
+use Siganushka\ApiClient\Wechat\Miniapp\Qrcode;
 use Siganushka\ApiClient\Wechat\Miniapp\Wxacode;
 use Siganushka\ApiClient\Wechat\Ticket\Ticket;
 use Symfony\Component\OptionsResolver\OptionsResolver;
@@ -43,6 +44,7 @@ class AccessTokenExtension extends AbstractRequestExtension
             CallbackIp::class,
             Message::class,
             Wxacode::class,
+            Qrcode::class,
         ];
     }
 }

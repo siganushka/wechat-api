@@ -2,14 +2,14 @@
 
 declare(strict_types=1);
 
-namespace Siganushka\ApiClient\Wechat\Tests\Message\Template;
+namespace Siganushka\ApiClient\Wechat\Tests\Template;
 
 use PHPUnit\Framework\TestCase;
 use Siganushka\ApiClient\Exception\ParseResponseException;
 use Siganushka\ApiClient\RequestOptions;
 use Siganushka\ApiClient\Response\ResponseFactory;
-use Siganushka\ApiClient\Wechat\Message\Template\Message;
-use Siganushka\ApiClient\Wechat\Message\Template\Template;
+use Siganushka\ApiClient\Wechat\Template\Message;
+use Siganushka\ApiClient\Wechat\Template\Template;
 use Symfony\Component\OptionsResolver\Exception\InvalidOptionsException;
 use Symfony\Component\OptionsResolver\Exception\MissingOptionsException;
 use Symfony\Contracts\HttpClient\HttpClientInterface;

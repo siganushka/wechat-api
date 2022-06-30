@@ -2,8 +2,8 @@
 
 declare(strict_types=1);
 
-use Siganushka\ApiClient\Wechat\Message\Template\Message;
-use Siganushka\ApiClient\Wechat\Message\Template\Template;
+use Siganushka\ApiClient\Wechat\Template\Message;
+use Siganushka\ApiClient\Wechat\Template\Template;
 
 require __DIR__.'/_autoload.php';
 

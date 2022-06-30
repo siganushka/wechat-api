@@ -2,7 +2,7 @@
 
 declare(strict_types=1);
 
-namespace Siganushka\ApiClient\Wechat\Message\Template;
+namespace Siganushka\ApiClient\Wechat\Template;
 
 class Template
 {

@@ -2,10 +2,10 @@
 
 declare(strict_types=1);
 
-namespace Siganushka\ApiClient\Wechat\Tests\Message\Template;
+namespace Siganushka\ApiClient\Wechat\Tests\Template;
 
 use PHPUnit\Framework\TestCase;
-use Siganushka\ApiClient\Wechat\Message\Template\Template;
+use Siganushka\ApiClient\Wechat\Template\Template;
 
 class TemplateTest extends TestCase
 {

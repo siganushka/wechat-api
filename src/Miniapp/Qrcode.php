@@ -50,7 +50,7 @@ class Qrcode extends AbstractRequest
     }
 
     /**
-     * @return string 小程序小程序二维码二进制内容
+     * @return string 小程序二维码二进制内容
      */
     protected function parseResponse(ResponseInterface $response): string
     {

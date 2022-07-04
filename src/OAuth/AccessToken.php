@@ -40,8 +40,10 @@ class AccessToken extends AbstractRequest
         $appid = $options['using_open_api'] ? 'open_appid' : 'appid';
         $secret = $options['using_open_api'] ? 'open_secret' : 'secret';
 
-        if (null === $this->configuration[$appid]) {
-            throw new NoConfigurationException(sprintf('No configured value for "%s" option.', $appid));
+        foreach ([$appid, $secret] as $optionName) {
+            if (null === $this->configuration[$optionName]) {
+                throw new NoConfigurationException(sprintf('No configured value for "%s" option.', $optionName));
+            }
         }
 
         $query = [

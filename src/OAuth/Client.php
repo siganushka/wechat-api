@@ -13,12 +13,12 @@ use Symfony\Component\OptionsResolver\Options;
 use Symfony\Component\OptionsResolver\OptionsResolver;
 
 /**
- * Wechat oauth authorize class.
+ * Wechat oauth client class.
  *
  * @see https://developers.weixin.qq.com/doc/offiaccount/OA_Web_Apps/Wechat_webpage_authorization.html
  * @see https://developers.weixin.qq.com/doc/oplatform/Website_App/WeChat_Login/Wechat_Login.html
  */
-class Authorize implements ConfigurableOptionsInterface
+class Client implements ConfigurableOptionsInterface
 {
     use ConfigurableOptionsTrait;
 
@@ -35,7 +35,7 @@ class Authorize implements ConfigurableOptionsInterface
     /**
      * @param array<string, mixed> $options
      */
-    public function getAuthorizeUrl(array $options = []): string
+    public function getRedirectUrl(array $options = []): string
     {
         $resolved = $this->resolve($options);
 
@@ -65,13 +65,13 @@ class Authorize implements ConfigurableOptionsInterface
      */
     public function redirect(array $options = []): void
     {
-        $authorizeUrl = $this->getAuthorizeUrl($options);
+        $redirectUrl = $this->getRedirectUrl($options);
         if (class_exists(RedirectResponse::class)) {
-            $response = new RedirectResponse($authorizeUrl);
+            $response = new RedirectResponse($redirectUrl);
             $response->send();
         }
 
-        header(sprintf('Location: %s', $authorizeUrl));
+        header(sprintf('Location: %s', $redirectUrl));
     }
 
     public function configureOptions(OptionsResolver $resolver): void

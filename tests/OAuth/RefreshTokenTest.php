@@ -9,23 +9,22 @@ use Siganushka\ApiClient\Exception\ParseResponseException;
 use Siganushka\ApiClient\RequestOptions;
 use Siganushka\ApiClient\Response\ResponseFactory;
 use Siganushka\ApiClient\Wechat\Configuration;
-use Siganushka\ApiClient\Wechat\OAuth\AccessToken;
+use Siganushka\ApiClient\Wechat\OAuth\RefreshToken;
 use Siganushka\ApiClient\Wechat\Tests\ConfigurationTest;
 use Symfony\Component\OptionsResolver\Exception\InvalidOptionsException;
 use Symfony\Component\OptionsResolver\Exception\MissingOptionsException;
-use Symfony\Component\OptionsResolver\Exception\NoConfigurationException;
 use Symfony\Contracts\HttpClient\HttpClientInterface;
 
-class AccessTokenTest extends TestCase
+class RefreshTokenTest extends TestCase
 {
     public function testResolve(): void
     {
         $request = static::createRequest();
 
-        $resolved = $request->resolve(['code' => 'foo']);
-        static::assertSame('foo', $resolved['code']);
+        $resolved = $request->resolve(['refresh_token' => 'foo']);
+        static::assertSame('foo', $resolved['refresh_token']);
         static::assertFalse($resolved['using_open_api']);
-        static::assertSame(['code', 'using_open_api'], $request->getResolver()->getDefinedOptions());
+        static::assertSame(['refresh_token', 'using_open_api'], $request->getResolver()->getDefinedOptions());
     }
 
     public function testSend(): void
@@ -46,7 +45,7 @@ class AccessTokenTest extends TestCase
         $request = static::createRequest();
         $request->setHttpClient($httpClient);
 
-        $parsedResponse = $request->send(['code' => 'foo']);
+        $parsedResponse = $request->send(['refresh_token' => 'foo']);
         static::assertSame($data, $parsedResponse);
     }
 
@@ -57,26 +56,24 @@ class AccessTokenTest extends TestCase
 
         $configureRequestRef = new \ReflectionMethod($request, 'configureRequest');
         $configureRequestRef->setAccessible(true);
-        $configureRequestRef->invoke($request, $requestOptions, $request->resolve(['code' => 'foo']));
+        $configureRequestRef->invoke($request, $requestOptions, $request->resolve(['refresh_token' => 'foo']));
 
         static::assertSame('GET', $requestOptions->getMethod());
-        static::assertSame(AccessToken::URL, $requestOptions->getUrl());
+        static::assertSame(RefreshToken::URL, $requestOptions->getUrl());
         static::assertSame([
             'query' => [
                 'appid' => 'test_appid',
-                'secret' => 'test_secret',
-                'grant_type' => 'authorization_code',
-                'code' => 'foo',
+                'refresh_token' => 'foo',
+                'grant_type' => 'refresh_token',
             ],
         ], $requestOptions->toArray());
 
-        $configureRequestRef->invoke($request, $requestOptions, $request->resolve(['code' => 'foo', 'using_open_api' => true]));
+        $configureRequestRef->invoke($request, $requestOptions, $request->resolve(['refresh_token' => 'foo', 'using_open_api' => true]));
         static::assertSame([
             'query' => [
                 'appid' => 'test_open_appid',
-                'secret' => 'test_open_secret',
-                'grant_type' => 'authorization_code',
-                'code' => 'foo',
+                'refresh_token' => 'foo',
+                'grant_type' => 'refresh_token',
             ],
         ], $requestOptions->toArray());
     }
@@ -100,59 +97,22 @@ class AccessTokenTest extends TestCase
         $parseResponseRef->invoke($request, $response);
     }
 
-    public function testCodeMissingException(): void
+    public function testRefreshTokenMissingException(): void
     {
         $this->expectException(MissingOptionsException::class);
-        $this->expectExceptionMessage('The required option "code" is missing');
+        $this->expectExceptionMessage('The required option "refresh_token" is missing');
 
         $request = static::createRequest();
         $request->resolve();
     }
 
-    public function testCodeInvalidException(): void
+    public function testRefreshTokenInvalidException(): void
     {
         $this->expectException(InvalidOptionsException::class);
-        $this->expectExceptionMessage('The option "code" with value 123 is expected to be of type "string", but is of type "int"');
+        $this->expectExceptionMessage('The option "refresh_token" with value 123 is expected to be of type "string", but is of type "int"');
 
         $request = static::createRequest();
-        $request->resolve(['code' => 123]);
-    }
-
-    public function testOpenAppidNoConfigurationException(): void
-    {
-        $this->expectException(NoConfigurationException::class);
-        $this->expectExceptionMessage('No configured value for "open_appid" option');
-
-        $configuration = new Configuration([
-            'appid' => 'test_appid',
-            'secret' => 'test_secret',
-        ]);
-
-        $request = static::createRequest($configuration);
-        $requestOptions = new RequestOptions();
-
-        $configureRequestRef = new \ReflectionMethod($request, 'configureRequest');
-        $configureRequestRef->setAccessible(true);
-        $configureRequestRef->invoke($request, $requestOptions, $request->resolve(['code' => 'foo', 'using_open_api' => true]));
-    }
-
-    public function testOpenSecretNoConfigurationException(): void
-    {
-        $this->expectException(NoConfigurationException::class);
-        $this->expectExceptionMessage('No configured value for "open_secret" option');
-
-        $configuration = new Configuration([
-            'appid' => 'test_appid',
-            'secret' => 'test_secret',
-            'open_appid' => 'test_open_appid',
-        ]);
-
-        $request = static::createRequest($configuration);
-        $requestOptions = new RequestOptions();
-
-        $configureRequestRef = new \ReflectionMethod($request, 'configureRequest');
-        $configureRequestRef->setAccessible(true);
-        $configureRequestRef->invoke($request, $requestOptions, $request->resolve(['code' => 'foo', 'using_open_api' => true]));
+        $request->resolve(['refresh_token' => 123]);
     }
 
     public function testUsingOpenApiOptionsException(): void
@@ -161,15 +121,15 @@ class AccessTokenTest extends TestCase
         $this->expectExceptionMessage('The option "using_open_api" with value 1 is expected to be of type "bool", but is of type "int"');
 
         $request = static::createRequest();
-        $request->resolve(['code' => 'bar', 'using_open_api' => 1]);
+        $request->resolve(['refresh_token' => 'bar', 'using_open_api' => 1]);
     }
 
-    public static function createRequest(Configuration $configuration = null): AccessToken
+    public static function createRequest(Configuration $configuration = null): RefreshToken
     {
         if (null === $configuration) {
             $configuration = ConfigurationTest::createConfiguration();
         }
 
-        return new AccessToken($configuration);
+        return new RefreshToken($configuration);
     }
 }

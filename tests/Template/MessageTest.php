@@ -45,8 +45,8 @@ class MessageTest extends TestCase
         $request->setHttpClient($httpClient);
 
         $template = new Template('baz');
-        $parsedResponse = $request->send(['access_token' => 'foo', 'touser' => 'bar', 'template' => $template]);
-        static::assertSame($data, $parsedResponse);
+        $result = $request->send(['access_token' => 'foo', 'touser' => 'bar', 'template' => $template]);
+        static::assertSame($data, $result);
     }
 
     public function testConfigureRequest(): void

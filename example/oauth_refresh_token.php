@@ -11,5 +11,5 @@ $options = [
     // 'using_open_api' => true,
 ];
 
-$parsedResponse = $client->send(RefreshToken::class, $options);
-dd($parsedResponse);
+$result = $client->send(RefreshToken::class, $options);
+dd($result);

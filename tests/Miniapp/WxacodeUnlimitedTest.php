@@ -44,8 +44,8 @@ class WxacodeUnlimitedTest extends TestCase
         $request = static::createRequest();
         $request->setHttpClient($httpClient);
 
-        $parsedResponse = $request->send(['access_token' => 'foo', 'scene' => 'foo']);
-        static::assertSame($data, $parsedResponse);
+        $result = $request->send(['access_token' => 'foo', 'scene' => 'foo']);
+        static::assertSame($data, $result);
     }
 
     public function testConfigureRequest(): void

@@ -5,7 +5,6 @@ declare(strict_types=1);
 namespace Siganushka\ApiClient\Wechat\Tests\Extension;
 
 use PHPUnit\Framework\TestCase;
-use Siganushka\ApiClient\RequestRegistry;
 use Siganushka\ApiClient\Response\ResponseFactory;
 use Siganushka\ApiClient\Wechat\Core\AccessToken;
 use Siganushka\ApiClient\Wechat\Core\CallbackIp;
@@ -37,15 +36,12 @@ class AccessTokenExtensionTest extends TestCase
         $cachePool->clear();
 
         $configuration = ConfigurationTest::createConfiguration();
-
-        $registry = new RequestRegistry($httpClient, [
-            new AccessToken($cachePool, $configuration),
-        ]);
+        $accessToken = new AccessToken($cachePool, $configuration);
 
         $resolver = new OptionsResolver();
         static::assertSame([], $resolver->resolve());
 
-        $extension = new AccessTokenExtension($registry);
+        $extension = new AccessTokenExtension($httpClient, $accessToken);
         $extension->configureOptions($resolver);
 
         static::assertSame(['access_token' => 'test_access_token_extension'], $resolver->resolve());

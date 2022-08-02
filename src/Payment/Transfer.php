@@ -87,12 +87,17 @@ class Transfer extends AbstractRequest
         $signatureUtils = new SignatureUtils($this->configuration);
         $body['sign'] = $signatureUtils->generate($body);
 
+        /** @var string */
+        $certFile = $this->configuration['client_cert_file'];
+        /** @var string */
+        $keyFile = $this->configuration['client_key_file'];
+
         $request
             ->setMethod('POST')
             ->setUrl(static::URL)
             ->setBody(SerializerUtils::xmlEncode($body))
-            ->setLocalCert($this->configuration['client_cert_file'])
-            ->setLocalPk($this->configuration['client_key_file'])
+            ->setLocalCert($certFile)
+            ->setLocalPk($keyFile)
         ;
     }
 

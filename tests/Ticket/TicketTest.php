@@ -39,8 +39,8 @@ class TicketTest extends TestCase
         $request = static::createRequest();
         $request->setHttpClient($httpClient);
 
-        $parsedResponse = $request->send(['access_token' => 'foo']);
-        static::assertSame($data, $parsedResponse);
+        $result = $request->send(['access_token' => 'foo']);
+        static::assertSame($data, $result);
     }
 
     public function testConfigureRequest(): void

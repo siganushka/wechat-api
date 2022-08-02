@@ -14,9 +14,9 @@ $options = [
     // 'width' => 200,
 ];
 
-$parsedResponse = $client->send(Qrcode::class, $options);
-dd($parsedResponse);
+$result = $client->send(Qrcode::class, $options);
+dd($result);
 
 // 显示小程序码
-// $base64Content = base64_encode($parsedResponse);
+// $base64Content = base64_encode($result);
 // echo sprintf('<img src="data:image/png;base64,%s" />', $base64Content);

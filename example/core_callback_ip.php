@@ -6,5 +6,5 @@ use Siganushka\ApiClient\Wechat\Core\CallbackIp;
 
 require __DIR__.'/_autoload.php';
 
-$parsedResponse = $client->send(CallbackIp::class);
-dd($parsedResponse);
+$result = $client->send(CallbackIp::class);
+dd($result);

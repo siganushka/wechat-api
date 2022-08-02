@@ -15,5 +15,5 @@ $options = [
     're_user_name' => 'foo',
 ];
 
-$parsedResponse = $client->send(Transfer::class, $options);
-dd($parsedResponse);
+$result = $client->send(Transfer::class, $options);
+dd($result);

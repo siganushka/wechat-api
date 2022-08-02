@@ -75,8 +75,8 @@ class TransferTest extends TestCase
         $request = static::createRequest();
         $request->setHttpClient($httpClient);
 
-        $parsedResponse = $request->send($options);
-        static::assertSame($responseData, $parsedResponse);
+        $result = $request->send($options);
+        static::assertSame($responseData, $result);
     }
 
     public function testConfigureRequest(): void

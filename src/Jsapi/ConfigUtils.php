@@ -28,9 +28,9 @@ class ConfigUtils
      *  appId: string,
      *  nonceStr: string,
      *  timestamp: string,
-     *  signature: string,
+     *  signature: non-empty-string,
      *  jsApiList: array<int, string>,
-     *  debug?: bool
+     *  debug: bool
      * }
      */
     public function generate(string $ticket, array $apis = [], bool $debug = false): array
@@ -47,17 +47,17 @@ class ConfigUtils
         $signature = urldecode($signature);
         $signature = sha1($signature);
 
+        /** @var string */
+        $appid = $this->configuration['appid'];
+
         $config = [
-            'appId' => $this->configuration['appid'],
+            'appId' => $appid,
             'nonceStr' => $parameters['noncestr'],
             'timestamp' => $parameters['timestamp'],
             'signature' => $signature,
             'jsApiList' => $apis,
+            'debug' => $debug,
         ];
-
-        if ($debug) {
-            $config['debug'] = true;
-        }
 
         return $config;
     }

@@ -12,5 +12,5 @@ $options = [
     'openid' => 'oeBlc54IakibieYAIQYgQ5YOFO_U',
 ];
 
-$parsedResponse = $client->send(UserInfo::class, $options);
-dd($parsedResponse);
+$result = $client->send(UserInfo::class, $options);
+dd($result);

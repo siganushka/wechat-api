@@ -45,8 +45,8 @@ class RefreshTokenTest extends TestCase
         $request = static::createRequest();
         $request->setHttpClient($httpClient);
 
-        $parsedResponse = $request->send(['refresh_token' => 'foo']);
-        static::assertSame($data, $parsedResponse);
+        $result = $request->send(['refresh_token' => 'foo']);
+        static::assertSame($data, $result);
     }
 
     public function testConfigureRequest(): void

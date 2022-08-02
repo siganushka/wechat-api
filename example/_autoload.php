@@ -56,7 +56,7 @@ $configuration = new Configuration([
 ]);
 
 $requests = [
-    new AccessToken($cachePool, $configuration),
+    $accessToken = new AccessToken($cachePool, $configuration),
     new ServerIp(),
     new CallbackIp(),
     new SessionKey($cachePool, $configuration),
@@ -76,7 +76,7 @@ $requests = [
 $registry = new RequestRegistry($httpClient, $requests);
 
 $extensions = [
-    new AccessTokenExtension($registry),
+    new AccessTokenExtension($httpClient, $accessToken),
 ];
 
 $client = new RequestClient($registry, $extensions);

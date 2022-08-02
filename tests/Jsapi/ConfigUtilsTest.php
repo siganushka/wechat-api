@@ -19,12 +19,13 @@ class ConfigUtilsTest extends TestCase
         static::assertArrayHasKey('nonceStr', $configs);
         static::assertArrayHasKey('timestamp', $configs);
         static::assertArrayHasKey('signature', $configs);
-        static::assertArrayNotHasKey('debug', $configs);
+        static::assertArrayHasKey('debug', $configs);
         static::assertSame('test_appid', $configs['appId']);
         static::assertSame([], $configs['jsApiList']);
+        static::assertFalse($configs['debug']);
 
         $configs = $configUtils->generate('foo', ['test_api'], true);
         static::assertSame(['test_api'], $configs['jsApiList']);
-        static::assertTrue($configs['debug'] ?? false);
+        static::assertTrue($configs['debug']);
     }
 }

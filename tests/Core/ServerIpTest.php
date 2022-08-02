@@ -38,8 +38,8 @@ class ServerIpTest extends TestCase
         $request = static::createRequest();
         $request->setHttpClient($httpClient);
 
-        $parsedResponse = $request->send(['access_token' => 'foo']);
-        static::assertSame($data['ip_list'], $parsedResponse);
+        $result = $request->send(['access_token' => 'foo']);
+        static::assertSame($data['ip_list'], $result);
     }
 
     public function testConfigureRequest(): void

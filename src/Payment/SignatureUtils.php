@@ -36,8 +36,11 @@ class SignatureUtils
         $signature = http_build_query($parameters);
         $signature = urldecode($signature);
 
+        /** @var string */
+        $mchkey = $this->configuration['mchkey'];
+
         $signature = ('HMAC-SHA256' === $this->configuration['sign_type'])
-            ? hash_hmac('sha256', $signature, $this->configuration['mchkey'])
+            ? hash_hmac('sha256', $signature, $mchkey)
             : hash('md5', $signature);
 
         return strtoupper($signature);

@@ -24,5 +24,5 @@ $options = [
     // ],
 ];
 
-$parsedResponse = $client->send(Message::class, $options);
-dd($parsedResponse);
+$result = $client->send(Message::class, $options);
+dd($result);

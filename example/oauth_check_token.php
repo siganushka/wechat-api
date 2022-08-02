@@ -11,5 +11,5 @@ $options = [
     'openid' => 'oeBlc54IakibieYAIQYgQ5YOFO_U',
 ];
 
-$parsedResponse = $client->send(CheckToken::class, $options);
-dd($parsedResponse);
+$result = $client->send(CheckToken::class, $options);
+dd($result);

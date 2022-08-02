@@ -6,5 +6,5 @@ use Siganushka\ApiClient\Wechat\Core\AccessToken;
 
 require __DIR__.'/_autoload.php';
 
-$parsedResponse = $client->send(AccessToken::class);
-dd($parsedResponse);
+$result = $client->send(AccessToken::class);
+dd($result);

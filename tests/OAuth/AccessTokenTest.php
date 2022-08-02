@@ -46,8 +46,8 @@ class AccessTokenTest extends TestCase
         $request = static::createRequest();
         $request->setHttpClient($httpClient);
 
-        $parsedResponse = $request->send(['code' => 'foo']);
-        static::assertSame($data, $parsedResponse);
+        $result = $request->send(['code' => 'foo']);
+        static::assertSame($data, $result);
     }
 
     public function testConfigureRequest(): void

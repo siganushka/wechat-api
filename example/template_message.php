@@ -24,5 +24,8 @@ $options = [
     // ],
 ];
 
-$result = $client->send(Message::class, $options);
+$request = new Message($accessToken);
+$request->setHttpClient($httpClient);
+
+$result = $request->send($options);
 dd($result);

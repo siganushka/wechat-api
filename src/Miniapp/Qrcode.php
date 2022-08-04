@@ -7,6 +7,7 @@ namespace Siganushka\ApiClient\Wechat\Miniapp;
 use Siganushka\ApiClient\AbstractRequest;
 use Siganushka\ApiClient\Exception\ParseResponseException;
 use Siganushka\ApiClient\RequestOptions;
+use Siganushka\ApiClient\Wechat\Core\AccessToken;
 use Symfony\Component\OptionsResolver\OptionsResolver;
 use Symfony\Contracts\HttpClient\ResponseInterface;
 
@@ -17,20 +18,30 @@ class Qrcode extends AbstractRequest
 {
     public const URL = 'https://api.weixin.qq.com/cgi-bin/wxaapp/createwxaqrcode';
 
-    public function configureOptions(OptionsResolver $resolver): void
+    private AccessToken $accessToken;
+
+    public function __construct(AccessToken $accessToken)
     {
-        $resolver->setRequired(['access_token', 'path']);
+        $this->accessToken = $accessToken;
+    }
+
+    protected function configureOptions(OptionsResolver $resolver): void
+    {
+        $result = $this->accessToken->send();
+
+        $resolver->setRequired('path');
         $resolver->setDefined('width');
 
-        $resolver->setAllowedTypes('access_token', 'string');
         $resolver->setAllowedTypes('path', 'string');
         $resolver->setAllowedTypes('width', 'int');
     }
 
     protected function configureRequest(RequestOptions $request, array $options): void
     {
+        $result = $this->accessToken->send();
+
         $query = [
-            'access_token' => $options['access_token'],
+            'access_token' => $result['access_token'],
         ];
 
         $body = [
@@ -49,9 +60,6 @@ class Qrcode extends AbstractRequest
         ;
     }
 
-    /**
-     * @return string 小程序二维码二进制内容
-     */
     protected function parseResponse(ResponseInterface $response): string
     {
         $headers = $response->getHeaders();
@@ -59,9 +67,6 @@ class Qrcode extends AbstractRequest
             return $response->getContent();
         }
 
-        /**
-         * @var array{ errcode?: int, errmsg?: string }
-         */
         $result = $response->toArray();
 
         $errcode = (int) ($result['errcode'] ?? 0);

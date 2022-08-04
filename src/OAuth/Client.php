@@ -7,7 +7,6 @@ namespace Siganushka\ApiClient\Wechat\OAuth;
 use Siganushka\ApiClient\ConfigurableOptionsInterface;
 use Siganushka\ApiClient\ConfigurableOptionsTrait;
 use Siganushka\ApiClient\Wechat\Configuration;
-use Symfony\Component\HttpFoundation\RedirectResponse;
 use Symfony\Component\OptionsResolver\Exception\NoConfigurationException;
 use Symfony\Component\OptionsResolver\Options;
 use Symfony\Component\OptionsResolver\OptionsResolver;
@@ -32,9 +31,6 @@ class Client implements ConfigurableOptionsInterface
         $this->configuration = $configuration;
     }
 
-    /**
-     * @param array<string, mixed> $options
-     */
     public function getRedirectUrl(array $options = []): string
     {
         $resolved = $this->resolve($options);
@@ -60,21 +56,12 @@ class Client implements ConfigurableOptionsInterface
         return ($resolved['using_open_api'] ? static::URL2 : static::URL).'?'.http_build_query($query).'#wechat_redirect';
     }
 
-    /**
-     * @param array<string, mixed> $options
-     */
     public function redirect(array $options = []): void
     {
-        $redirectUrl = $this->getRedirectUrl($options);
-        if (class_exists(RedirectResponse::class)) {
-            $response = new RedirectResponse($redirectUrl);
-            $response->send();
-        }
-
-        header(sprintf('Location: %s', $redirectUrl));
+        header(sprintf('Location: %s', $this->getRedirectUrl($options)));
     }
 
-    public function configureOptions(OptionsResolver $resolver): void
+    protected function configureOptions(OptionsResolver $resolver): void
     {
         $resolver->setRequired('redirect_uri');
         $resolver->setDefault('state', null);

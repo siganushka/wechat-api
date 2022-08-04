@@ -14,7 +14,7 @@ class WxacodeUnlimited extends Wxacode
 {
     public const URL = 'https://api.weixin.qq.com/wxa/getwxacodeunlimit';
 
-    public function configureOptions(OptionsResolver $resolver): void
+    protected function configureOptions(OptionsResolver $resolver): void
     {
         parent::configureOptions($resolver);
 
@@ -29,8 +29,10 @@ class WxacodeUnlimited extends Wxacode
 
     protected function configureRequest(RequestOptions $request, array $options): void
     {
+        $result = $this->accessToken->send();
+
         $query = [
-            'access_token' => $options['access_token'],
+            'access_token' => $result['access_token'],
         ];
 
         $body = [

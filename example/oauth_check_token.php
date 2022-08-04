@@ -11,5 +11,8 @@ $options = [
     'openid' => 'oeBlc54IakibieYAIQYgQ5YOFO_U',
 ];
 
-$result = $client->send(CheckToken::class, $options);
+$request = new CheckToken();
+$request->setHttpClient($httpClient);
+
+$result = $request->send($options);
 dd($result);

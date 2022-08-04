@@ -36,7 +36,6 @@ class ConfigUtilsTest extends TestCase
         $signatureUtils = new SignatureUtils($configuration);
         static::assertTrue($signatureUtils->checkParameters($payConfig, 'paySign'));
 
-        /** @var string */
         $sign = $payConfig['paySign'];
         unset($payConfig['paySign']);
 

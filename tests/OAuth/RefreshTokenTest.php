@@ -6,14 +6,13 @@ namespace Siganushka\ApiClient\Wechat\Tests\OAuth;
 
 use PHPUnit\Framework\TestCase;
 use Siganushka\ApiClient\Exception\ParseResponseException;
-use Siganushka\ApiClient\RequestOptions;
 use Siganushka\ApiClient\Response\ResponseFactory;
 use Siganushka\ApiClient\Wechat\Configuration;
 use Siganushka\ApiClient\Wechat\OAuth\RefreshToken;
 use Siganushka\ApiClient\Wechat\Tests\ConfigurationTest;
+use Symfony\Component\HttpClient\MockHttpClient;
 use Symfony\Component\OptionsResolver\Exception\InvalidOptionsException;
 use Symfony\Component\OptionsResolver\Exception\MissingOptionsException;
-use Symfony\Contracts\HttpClient\HttpClientInterface;
 
 class RefreshTokenTest extends TestCase
 {
@@ -24,7 +23,31 @@ class RefreshTokenTest extends TestCase
         $resolved = $request->resolve(['refresh_token' => 'foo']);
         static::assertSame('foo', $resolved['refresh_token']);
         static::assertFalse($resolved['using_open_api']);
-        static::assertSame(['refresh_token', 'using_open_api'], $request->getResolver()->getDefinedOptions());
+    }
+
+    public function testBuild(): void
+    {
+        $request = static::createRequest();
+        $requestOptions = $request->build(['refresh_token' => 'foo']);
+
+        static::assertSame('GET', $requestOptions->getMethod());
+        static::assertSame(RefreshToken::URL, $requestOptions->getUrl());
+        static::assertSame([
+            'query' => [
+                'appid' => 'test_appid',
+                'refresh_token' => 'foo',
+                'grant_type' => 'refresh_token',
+            ],
+        ], $requestOptions->toArray());
+
+        $requestOptions = $request->build(['refresh_token' => 'foo', 'using_open_api' => true]);
+        static::assertSame([
+            'query' => [
+                'appid' => 'test_open_appid',
+                'refresh_token' => 'foo',
+                'grant_type' => 'refresh_token',
+            ],
+        ], $requestOptions->toArray());
     }
 
     public function testSend(): void
@@ -38,44 +61,13 @@ class RefreshTokenTest extends TestCase
         ];
 
         $response = ResponseFactory::createMockResponseWithJson($data);
-
-        $httpClient = $this->createMock(HttpClientInterface::class);
-        $httpClient->method('request')->willReturn($response);
+        $httpClient = new MockHttpClient($response);
 
         $request = static::createRequest();
         $request->setHttpClient($httpClient);
 
         $result = $request->send(['refresh_token' => 'foo']);
         static::assertSame($data, $result);
-    }
-
-    public function testConfigureRequest(): void
-    {
-        $request = static::createRequest();
-        $requestOptions = new RequestOptions();
-
-        $configureRequestRef = new \ReflectionMethod($request, 'configureRequest');
-        $configureRequestRef->setAccessible(true);
-        $configureRequestRef->invoke($request, $requestOptions, $request->resolve(['refresh_token' => 'foo']));
-
-        static::assertSame('GET', $requestOptions->getMethod());
-        static::assertSame(RefreshToken::URL, $requestOptions->getUrl());
-        static::assertSame([
-            'query' => [
-                'appid' => 'test_appid',
-                'refresh_token' => 'foo',
-                'grant_type' => 'refresh_token',
-            ],
-        ], $requestOptions->toArray());
-
-        $configureRequestRef->invoke($request, $requestOptions, $request->resolve(['refresh_token' => 'foo', 'using_open_api' => true]));
-        static::assertSame([
-            'query' => [
-                'appid' => 'test_open_appid',
-                'refresh_token' => 'foo',
-                'grant_type' => 'refresh_token',
-            ],
-        ], $requestOptions->toArray());
     }
 
     public function testParseResponseException(): void

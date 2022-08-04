@@ -9,6 +9,7 @@ use Siganushka\ApiClient\AbstractRequest;
 use Siganushka\ApiClient\Exception\ParseResponseException;
 use Siganushka\ApiClient\RequestOptions;
 use Siganushka\ApiClient\Response\ResponseFactory;
+use Siganushka\ApiClient\Wechat\Core\AccessToken;
 use Symfony\Component\OptionsResolver\OptionsResolver;
 use Symfony\Contracts\HttpClient\ResponseInterface;
 
@@ -20,27 +21,26 @@ class Ticket extends AbstractRequest
     public const URL = 'https://api.weixin.qq.com/cgi-bin/ticket/getticket';
 
     private CacheItemPoolInterface $cachePool;
+    private AccessToken $accessToken;
 
-    public function __construct(CacheItemPoolInterface $cachePool)
+    public function __construct(CacheItemPoolInterface $cachePool, AccessToken $accessToken)
     {
         $this->cachePool = $cachePool;
+        $this->accessToken = $accessToken;
     }
 
-    public function configureOptions(OptionsResolver $resolver): void
+    protected function configureOptions(OptionsResolver $resolver): void
     {
-        $resolver->setRequired('access_token');
         $resolver->setDefault('type', 'jsapi');
-
-        $resolver->setAllowedTypes('access_token', 'string');
-        $resolver->setAllowedTypes('type', 'string');
-
         $resolver->setAllowedValues('type', ['jsapi', 'wx_card']);
     }
 
     protected function configureRequest(RequestOptions $request, array $options): void
     {
+        $result = $this->accessToken->send();
+
         $query = [
-            'access_token' => $options['access_token'],
+            'access_token' => $result['access_token'],
             'type' => $options['type'],
         ];
 
@@ -57,10 +57,7 @@ class Ticket extends AbstractRequest
 
         $cacheItem = $this->cachePool->getItem($key);
         if ($cacheItem->isHit()) {
-            /** @var array{ ticket: string, expires_in: int } */
-            $cacheData = $cacheItem->get();
-
-            return ResponseFactory::createMockResponseWithJson($cacheData);
+            return ResponseFactory::createMockResponseWithJson($cacheItem->get());
         }
 
         $response = parent::sendRequest($request);
@@ -73,19 +70,8 @@ class Ticket extends AbstractRequest
         return $response;
     }
 
-    /**
-     * @return array{ ticket?: string, expires_in?: int }
-     */
-    protected function parseResponse(ResponseInterface $response)
+    protected function parseResponse(ResponseInterface $response): array
     {
-        /**
-         * @var array{
-         *  ticket?: string,
-         *  expires_in?: int,
-         *  errcode?: int,
-         *  errmsg?: string
-         * }
-         */
         $result = $response->toArray();
 
         $errcode = (int) ($result['errcode'] ?? 0);

@@ -14,9 +14,12 @@ $options = [
     // 'width' => 200,
 ];
 
-$result = $client->send(Qrcode::class, $options);
+$request = new Qrcode($accessToken);
+$request->setHttpClient($httpClient);
+
+$result = $request->send($options);
 dd($result);
 
-// 显示小程序码
+// // 显示小程序码
 // $base64Content = base64_encode($result);
 // echo sprintf('<img src="data:image/png;base64,%s" />', $base64Content);

@@ -17,7 +17,7 @@ class CheckToken extends AbstractRequest
 {
     public const URL = 'https://api.weixin.qq.com/sns/auth';
 
-    public function configureOptions(OptionsResolver $resolver): void
+    protected function configureOptions(OptionsResolver $resolver): void
     {
         $resolver->setRequired('access_token');
         $resolver->setRequired('openid');
@@ -40,14 +40,8 @@ class CheckToken extends AbstractRequest
         ;
     }
 
-    /**
-     * @return array{ errcode?: int, errmsg?: string }
-     */
-    public function parseResponse(ResponseInterface $response): array
+    protected function parseResponse(ResponseInterface $response): array
     {
-        /**
-         * @var array{ errcode?: int, errmsg?: string }
-         */
         $result = $response->toArray();
 
         $errcode = (int) ($result['errcode'] ?? 0);

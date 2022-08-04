@@ -6,12 +6,11 @@ namespace Siganushka\ApiClient\Wechat\Tests\OAuth;
 
 use PHPUnit\Framework\TestCase;
 use Siganushka\ApiClient\Exception\ParseResponseException;
-use Siganushka\ApiClient\RequestOptions;
 use Siganushka\ApiClient\Response\ResponseFactory;
 use Siganushka\ApiClient\Wechat\OAuth\UserInfo;
+use Symfony\Component\HttpClient\MockHttpClient;
 use Symfony\Component\OptionsResolver\Exception\InvalidOptionsException;
 use Symfony\Component\OptionsResolver\Exception\MissingOptionsException;
-use Symfony\Contracts\HttpClient\HttpClientInterface;
 
 class UserInfoTest extends TestCase
 {
@@ -23,36 +22,13 @@ class UserInfoTest extends TestCase
         static::assertSame('foo', $resolved['access_token']);
         static::assertSame('bar', $resolved['openid']);
         static::assertSame('zh_CN', $resolved['lang']);
-        static::assertSame(['access_token', 'openid', 'lang'], $request->getResolver()->getDefinedOptions());
     }
 
-    public function testSend(): void
-    {
-        $data = [
-            'openid' => 'test_openid',
-            'nickname' => 'test_nickname',
-        ];
-
-        $response = ResponseFactory::createMockResponseWithJson($data);
-
-        $httpClient = $this->createMock(HttpClientInterface::class);
-        $httpClient->method('request')->willReturn($response);
-
-        $request = static::createRequest();
-        $request->setHttpClient($httpClient);
-
-        $result = $request->send(['access_token' => 'foo', 'openid' => 'bar']);
-        static::assertSame($data, $result);
-    }
-
-    public function testConfigureRequest(): void
+    public function testBuild(): void
     {
         $request = static::createRequest();
-        $requestOptions = new RequestOptions();
+        $requestOptions = $request->build(['access_token' => 'foo', 'openid' => 'bar']);
 
-        $configureRequestRef = new \ReflectionMethod($request, 'configureRequest');
-        $configureRequestRef->setAccessible(true);
-        $configureRequestRef->invoke($request, $requestOptions, $request->resolve(['access_token' => 'foo', 'openid' => 'bar']));
         static::assertSame('GET', $requestOptions->getMethod());
         static::assertSame(UserInfo::URL, $requestOptions->getUrl());
         static::assertSame([
@@ -63,7 +39,7 @@ class UserInfoTest extends TestCase
             ],
         ], $requestOptions->toArray());
 
-        $configureRequestRef->invoke($request, $requestOptions, $request->resolve(['access_token' => 'foo', 'openid' => 'bar', 'lang' => 'en_US']));
+        $requestOptions = $request->build(['access_token' => 'foo', 'openid' => 'bar', 'lang' => 'en_US']);
         static::assertSame([
             'query' => [
                 'access_token' => 'foo',
@@ -71,6 +47,23 @@ class UserInfoTest extends TestCase
                 'lang' => 'en_US',
             ],
         ], $requestOptions->toArray());
+    }
+
+    public function testSend(): void
+    {
+        $data = [
+            'openid' => 'test_openid',
+            'nickname' => 'test_nickname',
+        ];
+
+        $response = ResponseFactory::createMockResponseWithJson($data);
+        $httpClient = new MockHttpClient($response);
+
+        $request = static::createRequest();
+        $request->setHttpClient($httpClient);
+
+        $result = $request->send(['access_token' => 'foo', 'openid' => 'bar']);
+        static::assertSame($data, $result);
     }
 
     public function testParseResponseException(): void

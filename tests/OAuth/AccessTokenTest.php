@@ -11,10 +11,10 @@ use Siganushka\ApiClient\Response\ResponseFactory;
 use Siganushka\ApiClient\Wechat\Configuration;
 use Siganushka\ApiClient\Wechat\OAuth\AccessToken;
 use Siganushka\ApiClient\Wechat\Tests\ConfigurationTest;
+use Symfony\Component\HttpClient\MockHttpClient;
 use Symfony\Component\OptionsResolver\Exception\InvalidOptionsException;
 use Symfony\Component\OptionsResolver\Exception\MissingOptionsException;
 use Symfony\Component\OptionsResolver\Exception\NoConfigurationException;
-use Symfony\Contracts\HttpClient\HttpClientInterface;
 
 class AccessTokenTest extends TestCase
 {
@@ -25,7 +25,33 @@ class AccessTokenTest extends TestCase
         $resolved = $request->resolve(['code' => 'foo']);
         static::assertSame('foo', $resolved['code']);
         static::assertFalse($resolved['using_open_api']);
-        static::assertSame(['code', 'using_open_api'], $request->getResolver()->getDefinedOptions());
+    }
+
+    public function testBuild(): void
+    {
+        $request = static::createRequest();
+        $requestOptions = $request->build(['code' => 'foo']);
+
+        static::assertSame('GET', $requestOptions->getMethod());
+        static::assertSame(AccessToken::URL, $requestOptions->getUrl());
+        static::assertSame([
+            'query' => [
+                'appid' => 'test_appid',
+                'secret' => 'test_secret',
+                'grant_type' => 'authorization_code',
+                'code' => 'foo',
+            ],
+        ], $requestOptions->toArray());
+
+        $requestOptions = $request->build(['code' => 'foo', 'using_open_api' => true]);
+        static::assertSame([
+            'query' => [
+                'appid' => 'test_open_appid',
+                'secret' => 'test_open_secret',
+                'grant_type' => 'authorization_code',
+                'code' => 'foo',
+            ],
+        ], $requestOptions->toArray());
     }
 
     public function testSend(): void
@@ -39,46 +65,13 @@ class AccessTokenTest extends TestCase
         ];
 
         $response = ResponseFactory::createMockResponseWithJson($data);
-
-        $httpClient = $this->createMock(HttpClientInterface::class);
-        $httpClient->method('request')->willReturn($response);
+        $httpClient = new MockHttpClient($response);
 
         $request = static::createRequest();
         $request->setHttpClient($httpClient);
 
         $result = $request->send(['code' => 'foo']);
         static::assertSame($data, $result);
-    }
-
-    public function testConfigureRequest(): void
-    {
-        $request = static::createRequest();
-        $requestOptions = new RequestOptions();
-
-        $configureRequestRef = new \ReflectionMethod($request, 'configureRequest');
-        $configureRequestRef->setAccessible(true);
-        $configureRequestRef->invoke($request, $requestOptions, $request->resolve(['code' => 'foo']));
-
-        static::assertSame('GET', $requestOptions->getMethod());
-        static::assertSame(AccessToken::URL, $requestOptions->getUrl());
-        static::assertSame([
-            'query' => [
-                'appid' => 'test_appid',
-                'secret' => 'test_secret',
-                'grant_type' => 'authorization_code',
-                'code' => 'foo',
-            ],
-        ], $requestOptions->toArray());
-
-        $configureRequestRef->invoke($request, $requestOptions, $request->resolve(['code' => 'foo', 'using_open_api' => true]));
-        static::assertSame([
-            'query' => [
-                'appid' => 'test_open_appid',
-                'secret' => 'test_open_secret',
-                'grant_type' => 'authorization_code',
-                'code' => 'foo',
-            ],
-        ], $requestOptions->toArray());
     }
 
     public function testParseResponseException(): void

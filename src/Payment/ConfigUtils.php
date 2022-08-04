@@ -21,26 +21,11 @@ class ConfigUtils
         $this->configuration = $configuration;
     }
 
-    /**
-     * @return array{
-     *  appId: string,
-     *  signType: string,
-     *  timeStamp: string,
-     *  nonceStr: string,
-     *  package: string,
-     *  paySign: string
-     * }
-     */
     public function generate(string $prepayId): array
     {
-        /** @var string */
-        $appid = $this->configuration['appid'];
-        /** @var string */
-        $signType = $this->configuration['sign_type'];
-
         $parameters = [
-            'appId' => $appid,
-            'signType' => $signType,
+            'appId' => $this->configuration['appid'],
+            'signType' => $this->configuration['sign_type'],
             'timeStamp' => GenericUtils::getTimestamp(),
             'nonceStr' => GenericUtils::getNonceStr(),
             'package' => sprintf('prepay_id=%s', $prepayId),

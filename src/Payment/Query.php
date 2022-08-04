@@ -26,9 +26,6 @@ class Query extends AbstractRequest
 
     private Configuration $configuration;
 
-    /**
-     * @var array<string, mixed>
-     */
     private array $defaultOptions;
 
     public function __construct(Configuration $configuration)
@@ -42,7 +39,7 @@ class Query extends AbstractRequest
         ];
     }
 
-    public function configureOptions(OptionsResolver $resolver): void
+    protected function configureOptions(OptionsResolver $resolver): void
     {
         $resolver->setDefaults($this->defaultOptions);
         $resolver->setNormalizer('transaction_id', function (Options $options, ?string $transactionId) {
@@ -92,16 +89,8 @@ class Query extends AbstractRequest
         ;
     }
 
-    protected function parseResponse(ResponseInterface $response)
+    protected function parseResponse(ResponseInterface $response): array
     {
-        /**
-         * @var array{
-         *  return_code?: string,
-         *  return_msg?: string,
-         *  result_code?: string,
-         *  err_code_des?: string
-         * }
-         */
         $result = SerializerUtils::xmlDecode($response->getContent());
 
         $returnCode = (string) ($result['return_code'] ?? '');

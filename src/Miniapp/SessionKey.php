@@ -29,7 +29,7 @@ class SessionKey extends AbstractRequest
         $this->configuration = $configuration;
     }
 
-    public function configureOptions(OptionsResolver $resolver): void
+    protected function configureOptions(OptionsResolver $resolver): void
     {
         $resolver->setRequired('code');
         $resolver->setAllowedTypes('code', 'string');
@@ -57,10 +57,7 @@ class SessionKey extends AbstractRequest
 
         $cacheItem = $this->cachePool->getItem($key);
         if ($cacheItem->isHit()) {
-            /** @var array{ openid: string, session_key: string } */
-            $cacheData = $cacheItem->get();
-
-            return ResponseFactory::createMockResponseWithJson($cacheData);
+            return ResponseFactory::createMockResponseWithJson($cacheItem->get());
         }
 
         $response = parent::sendRequest($request);
@@ -73,24 +70,8 @@ class SessionKey extends AbstractRequest
         return $response;
     }
 
-    /**
-     * @return array{
-     *  openid?: string,
-     *  session_key?: string,
-     *  errcode?: int,
-     *  errmsg?: string
-     * }
-     */
-    public function parseResponse(ResponseInterface $response): array
+    protected function parseResponse(ResponseInterface $response): array
     {
-        /**
-         * @var array{
-         *  openid?: string,
-         *  session_key?: string,
-         *  errcode?: int,
-         *  errmsg?: string
-         * }
-         */
         $result = $response->toArray();
 
         $errcode = (int) ($result['errcode'] ?? 0);

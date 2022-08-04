@@ -7,6 +7,7 @@ namespace Siganushka\ApiClient\Wechat\Miniapp;
 use Siganushka\ApiClient\AbstractRequest;
 use Siganushka\ApiClient\Exception\ParseResponseException;
 use Siganushka\ApiClient\RequestOptions;
+use Siganushka\ApiClient\Wechat\Core\AccessToken;
 use Symfony\Component\OptionsResolver\OptionsResolver;
 use Symfony\Contracts\HttpClient\ResponseInterface;
 
@@ -17,9 +18,16 @@ class Wxacode extends AbstractRequest
 {
     public const URL = 'https://api.weixin.qq.com/wxa/getwxacode';
 
-    public function configureOptions(OptionsResolver $resolver): void
+    protected AccessToken $accessToken;
+
+    public function __construct(AccessToken $accessToken)
     {
-        $resolver->setRequired(['access_token', 'path']);
+        $this->accessToken = $accessToken;
+    }
+
+    protected function configureOptions(OptionsResolver $resolver): void
+    {
+        $resolver->setRequired('path');
         $resolver->setDefined(['env_version', 'width', 'auto_color', 'is_hyaline']);
         $resolver->setDefault('line_color', function (OptionsResolver $lineColorResolver) {
             $lineColorResolver->setDefined(['r', 'g', 'b']);
@@ -28,7 +36,6 @@ class Wxacode extends AbstractRequest
             $lineColorResolver->setAllowedTypes('b', 'int');
         });
 
-        $resolver->setAllowedTypes('access_token', 'string');
         $resolver->setAllowedTypes('path', 'string');
         $resolver->setAllowedTypes('env_version', 'string');
         $resolver->setAllowedTypes('width', 'int');
@@ -41,8 +48,10 @@ class Wxacode extends AbstractRequest
 
     protected function configureRequest(RequestOptions $request, array $options): void
     {
+        $result = $this->accessToken->send();
+
         $query = [
-            'access_token' => $options['access_token'],
+            'access_token' => $result['access_token'],
         ];
 
         $body = [
@@ -67,9 +76,6 @@ class Wxacode extends AbstractRequest
         ;
     }
 
-    /**
-     * @return string 小程序码二进制内容
-     */
     protected function parseResponse(ResponseInterface $response): string
     {
         $headers = $response->getHeaders();
@@ -77,9 +83,6 @@ class Wxacode extends AbstractRequest
             return $response->getContent();
         }
 
-        /**
-         * @var array{ errcode?: int, errmsg?: string }
-         */
         $result = $response->toArray();
 
         $errcode = (int) ($result['errcode'] ?? 0);

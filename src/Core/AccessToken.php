@@ -49,10 +49,7 @@ class AccessToken extends AbstractRequest
 
         $cacheItem = $this->cachePool->getItem($key);
         if ($cacheItem->isHit()) {
-            /** @var array{ access_token: string, expires_in: int } */
-            $cacheData = $cacheItem->get();
-
-            return ResponseFactory::createMockResponseWithJson($cacheData);
+            return ResponseFactory::createMockResponseWithJson($cacheItem->get());
         }
 
         $response = parent::sendRequest($request);
@@ -65,19 +62,8 @@ class AccessToken extends AbstractRequest
         return $response;
     }
 
-    /**
-     * @return array{ access_token?: string, expires_in?: int }
-     */
-    protected function parseResponse(ResponseInterface $response)
+    protected function parseResponse(ResponseInterface $response): array
     {
-        /**
-         * @var array{
-         *  access_token?: string,
-         *  expires_in?: int,
-         *  errcode?: int,
-         *  errmsg?: string
-         * }
-         */
         $result = $response->toArray();
 
         $errcode = (int) ($result['errcode'] ?? 0);

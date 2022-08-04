@@ -16,8 +16,6 @@ if (!isset($_GET['code'])) {
 
     $client = new Client($configuration);
     $client->redirect($options);
-    // dd($client->getRedirectUrl($options));
-
     exit;
 }
 
@@ -26,5 +24,8 @@ $options = [
     'using_open_api' => true,
 ];
 
-$result = $client->send(AccessToken::class, $options);
+$request = new AccessToken($configuration);
+$request->setHttpClient($httpClient);
+
+$result = $request->send($options);
 dd($result);

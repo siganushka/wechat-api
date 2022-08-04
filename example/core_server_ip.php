@@ -6,5 +6,8 @@ use Siganushka\ApiClient\Wechat\Core\ServerIp;
 
 require __DIR__.'/_autoload.php';
 
-$result = $client->send(ServerIp::class);
+$request = new ServerIp($accessToken);
+$request->setHttpClient($httpClient);
+
+$result = $request->send();
 dd($result);

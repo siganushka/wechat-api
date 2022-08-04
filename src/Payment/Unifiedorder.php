@@ -25,10 +25,6 @@ class Unifiedorder extends AbstractRequest
     public const URL2 = 'https://api2.mch.weixin.qq.com/pay/unifiedorder';
 
     private Configuration $configuration;
-
-    /**
-     * @var array<string, mixed>
-     */
     private array $defaultOptions;
 
     public function __construct(Configuration $configuration)
@@ -54,7 +50,7 @@ class Unifiedorder extends AbstractRequest
         ];
     }
 
-    public function configureOptions(OptionsResolver $resolver): void
+    protected function configureOptions(OptionsResolver $resolver): void
     {
         $resolver->setDefaults($this->defaultOptions);
         $resolver->setRequired(['body', 'out_trade_no', 'total_fee', 'trade_type', 'notify_url']);
@@ -123,16 +119,8 @@ class Unifiedorder extends AbstractRequest
         ;
     }
 
-    public function parseResponse(ResponseInterface $response)
+    protected function parseResponse(ResponseInterface $response): array
     {
-        /**
-         * @var array{
-         *  return_code?: string,
-         *  return_msg?: string,
-         *  result_code?: string,
-         *  err_code_des?: string
-         * }
-         */
         $result = SerializerUtils::xmlDecode($response->getContent());
 
         $returnCode = (string) ($result['return_code'] ?? '');

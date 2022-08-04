@@ -6,16 +6,15 @@ namespace Siganushka\ApiClient\Wechat\Tests\Payment;
 
 use PHPUnit\Framework\TestCase;
 use Siganushka\ApiClient\Exception\ParseResponseException;
-use Siganushka\ApiClient\RequestOptions;
 use Siganushka\ApiClient\Response\ResponseFactory;
 use Siganushka\ApiClient\Wechat\Configuration;
 use Siganushka\ApiClient\Wechat\Payment\Unifiedorder;
 use Siganushka\ApiClient\Wechat\SerializerUtils;
 use Siganushka\ApiClient\Wechat\Tests\ConfigurationTest;
+use Symfony\Component\HttpClient\MockHttpClient;
 use Symfony\Component\OptionsResolver\Exception\InvalidOptionsException;
 use Symfony\Component\OptionsResolver\Exception\MissingOptionsException;
 use Symfony\Component\OptionsResolver\Exception\NoConfigurationException;
-use Symfony\Contracts\HttpClient\HttpClientInterface;
 
 class UnifiedorderTest extends TestCase
 {
@@ -42,13 +41,70 @@ class UnifiedorderTest extends TestCase
         static::assertSame('test_notify_url', $resolved['notify_url']);
         static::assertSame('test_out_trade_no', $resolved['out_trade_no']);
         static::assertFalse($resolved['using_slave_api']);
-        static::assertSame([
-            'nonce_str', 'spbill_create_ip', 'openid', 'product_id',
-            'device_info', 'detail', 'attach', 'fee_type', 'time_start',
-            'time_expire', 'goods_tag', 'limit_pay', 'receipt',
-            'profit_sharing', 'scene_info', 'using_slave_api', 'body',
-            'out_trade_no', 'total_fee', 'trade_type', 'notify_url',
-        ], $request->getResolver()->getDefinedOptions());
+    }
+
+    public function testBuild(): void
+    {
+        $options = [
+            'body' => 'test_body',
+            'notify_url' => 'test_notify_url',
+            'out_trade_no' => 'test_out_trade_no',
+            'total_fee' => 1,
+            'trade_type' => 'JSAPI',
+            'openid' => 'test_openid',
+        ];
+
+        $request = static::createRequest();
+        $requestOptions = $request->build($options);
+
+        static::assertSame('POST', $requestOptions->getMethod());
+        static::assertSame(Unifiedorder::URL, $requestOptions->getUrl());
+
+        $body = SerializerUtils::xmlDecode($requestOptions->toArray()['body']);
+        static::assertArrayHasKey('nonce_str', $body);
+        static::assertArrayHasKey('sign', $body);
+        static::assertSame('test_appid', $body['appid']);
+        static::assertSame('test_mchid', $body['mch_id']);
+        static::assertSame('HMAC-SHA256', $body['sign_type']);
+        static::assertSame('test_body', $body['body']);
+        static::assertSame('test_out_trade_no', $body['out_trade_no']);
+        static::assertSame('1', $body['total_fee']);
+        static::assertSame('JSAPI', $body['trade_type']);
+        static::assertSame('test_notify_url', $body['notify_url']);
+        static::assertSame('0.0.0.0', $body['spbill_create_ip']);
+        static::assertSame('test_openid', $body['openid']);
+
+        $requestOptions = $request->build($options + [
+            'product_id' => 'test_product_id',
+            'device_info' => 'test_device_info',
+            'detail' => 'test_detail',
+            'attach' => 'test_attach',
+            'fee_type' => 'CNY',
+            'time_start' => 'test_time_start',
+            'time_expire' => 'test_time_expire',
+            'goods_tag' => 'test_goods_tag',
+            'limit_pay' => 'no_credit',
+            'receipt' => 'Y',
+            'profit_sharing' => 'N',
+            'scene_info' => 'test_scene_info',
+            'using_slave_api' => true,
+        ]);
+
+        static::assertSame(Unifiedorder::URL2, $requestOptions->getUrl());
+
+        $body = SerializerUtils::xmlDecode($requestOptions->toArray()['body']);
+        static::assertSame('test_product_id', $body['product_id']);
+        static::assertSame('test_device_info', $body['device_info']);
+        static::assertSame('test_detail', $body['detail']);
+        static::assertSame('test_attach', $body['attach']);
+        static::assertSame('CNY', $body['fee_type']);
+        static::assertSame('test_time_start', $body['time_start']);
+        static::assertSame('test_time_expire', $body['time_expire']);
+        static::assertSame('test_goods_tag', $body['goods_tag']);
+        static::assertSame('no_credit', $body['limit_pay']);
+        static::assertSame('Y', $body['receipt']);
+        static::assertSame('N', $body['profit_sharing']);
+        static::assertSame('test_scene_info', $body['scene_info']);
     }
 
     public function testSend(): void
@@ -69,116 +125,13 @@ class UnifiedorderTest extends TestCase
 
         $xml = SerializerUtils::xmlEncode($responseData);
         $response = ResponseFactory::createMockResponse($xml);
-
-        $httpClient = $this->createMock(HttpClientInterface::class);
-        $httpClient->method('request')->willReturn($response);
+        $httpClient = new MockHttpClient($response);
 
         $request = static::createRequest();
         $request->setHttpClient($httpClient);
 
         $result = $request->send($options);
         static::assertSame($responseData, $result);
-    }
-
-    public function testConfigureRequest(): void
-    {
-        $options = [
-            'body' => 'test_body',
-            'notify_url' => 'test_notify_url',
-            'out_trade_no' => 'test_out_trade_no',
-            'total_fee' => 1,
-            'trade_type' => 'JSAPI',
-            'openid' => 'test_openid',
-        ];
-
-        $request = static::createRequest();
-        $requestOptions = new RequestOptions();
-
-        $configureRequestRef = new \ReflectionMethod($request, 'configureRequest');
-        $configureRequestRef->setAccessible(true);
-        $configureRequestRef->invoke($request, $requestOptions, $request->resolve($options));
-
-        static::assertSame('POST', $requestOptions->getMethod());
-        static::assertSame(Unifiedorder::URL, $requestOptions->getUrl());
-
-        /**
-         * @var array{
-         *  nonce_str: string,
-         *  sign: string,
-         *  appid: string,
-         *  mch_id: string,
-         *  sign_type: string,
-         *  body: string,
-         *  out_trade_no: string,
-         *  total_fee: string,
-         *  trade_type: string,
-         *  notify_url: string,
-         *  spbill_create_ip: string,
-         *  openid: string
-         * }
-         */
-        $body = SerializerUtils::xmlDecode($requestOptions->toArray()['body']);
-        static::assertArrayHasKey('nonce_str', $body);
-        static::assertArrayHasKey('sign', $body);
-        static::assertSame('test_appid', $body['appid']);
-        static::assertSame('test_mchid', $body['mch_id']);
-        static::assertSame('HMAC-SHA256', $body['sign_type']);
-        static::assertSame('test_body', $body['body']);
-        static::assertSame('test_out_trade_no', $body['out_trade_no']);
-        static::assertSame('1', $body['total_fee']);
-        static::assertSame('JSAPI', $body['trade_type']);
-        static::assertSame('test_notify_url', $body['notify_url']);
-        static::assertSame('0.0.0.0', $body['spbill_create_ip']);
-        static::assertSame('test_openid', $body['openid']);
-
-        $customOptions = [
-            'product_id' => 'test_product_id',
-            'device_info' => 'test_device_info',
-            'detail' => 'test_detail',
-            'attach' => 'test_attach',
-            'fee_type' => 'CNY',
-            'time_start' => 'test_time_start',
-            'time_expire' => 'test_time_expire',
-            'goods_tag' => 'test_goods_tag',
-            'limit_pay' => 'no_credit',
-            'receipt' => 'Y',
-            'profit_sharing' => 'N',
-            'scene_info' => 'test_scene_info',
-            'using_slave_api' => true,
-        ];
-
-        $configureRequestRef->invoke($request, $requestOptions, $request->resolve($options + $customOptions));
-        static::assertSame(Unifiedorder::URL2, $requestOptions->getUrl());
-
-        /**
-         * @var array{
-         *  product_id: string,
-         *  device_info: string,
-         *  detail: string,
-         *  attach: string,
-         *  fee_type: string,
-         *  time_start: string,
-         *  time_expire: string,
-         *  goods_tag: string,
-         *  limit_pay: string,
-         *  receipt: string,
-         *  profit_sharing: string,
-         *  scene_info: string
-         * }
-         */
-        $body = SerializerUtils::xmlDecode($requestOptions->toArray()['body']);
-        static::assertSame('test_product_id', $body['product_id']);
-        static::assertSame('test_device_info', $body['device_info']);
-        static::assertSame('test_detail', $body['detail']);
-        static::assertSame('test_attach', $body['attach']);
-        static::assertSame('CNY', $body['fee_type']);
-        static::assertSame('test_time_start', $body['time_start']);
-        static::assertSame('test_time_expire', $body['time_expire']);
-        static::assertSame('test_goods_tag', $body['goods_tag']);
-        static::assertSame('no_credit', $body['limit_pay']);
-        static::assertSame('Y', $body['receipt']);
-        static::assertSame('N', $body['profit_sharing']);
-        static::assertSame('test_scene_info', $body['scene_info']);
     }
 
     public function testReturnCodeParseResponseException(): void

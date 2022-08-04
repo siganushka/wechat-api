@@ -24,10 +24,6 @@ class Transfer extends AbstractRequest
     public const URL = 'https://api.mch.weixin.qq.com/mmpaymkttransfers/promotion/transfers';
 
     private Configuration $configuration;
-
-    /**
-     * @var array<string, mixed>
-     */
     private array $defaultOptions;
 
     public function __construct(Configuration $configuration)
@@ -45,7 +41,7 @@ class Transfer extends AbstractRequest
         ];
     }
 
-    public function configureOptions(OptionsResolver $resolver): void
+    protected function configureOptions(OptionsResolver $resolver): void
     {
         $resolver->setDefaults($this->defaultOptions);
         $resolver->setRequired(['partner_trade_no', 'openid', 'amount', 'desc']);
@@ -87,30 +83,17 @@ class Transfer extends AbstractRequest
         $signatureUtils = new SignatureUtils($this->configuration);
         $body['sign'] = $signatureUtils->generate($body);
 
-        /** @var string */
-        $certFile = $this->configuration['client_cert_file'];
-        /** @var string */
-        $keyFile = $this->configuration['client_key_file'];
-
         $request
             ->setMethod('POST')
             ->setUrl(static::URL)
             ->setBody(SerializerUtils::xmlEncode($body))
-            ->setLocalCert($certFile)
-            ->setLocalPk($keyFile)
+            ->setLocalCert($this->configuration['client_cert_file'])
+            ->setLocalPk($this->configuration['client_key_file'])
         ;
     }
 
-    public function parseResponse(ResponseInterface $response)
+    protected function parseResponse(ResponseInterface $response): array
     {
-        /**
-         * @var array{
-         *  return_code?: string,
-         *  return_msg?: string,
-         *  result_code?: string,
-         *  err_code_des?: string
-         * }
-         */
         $result = SerializerUtils::xmlDecode($response->getContent());
 
         $returnCode = (string) ($result['return_code'] ?? '');

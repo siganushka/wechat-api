@@ -7,10 +7,6 @@ namespace Siganushka\ApiClient\Wechat\Template;
 class Template
 {
     private string $id;
-
-    /**
-     * @var array<string, array{ value: string, color?: string }>
-     */
     private array $data = [];
 
     public function __construct(string $id)
@@ -23,9 +19,6 @@ class Template
         return $this->id;
     }
 
-    /**
-     * @return array<string, array{ value: string, color?: string }>
-     */
     public function getData(): array
     {
         return $this->data;

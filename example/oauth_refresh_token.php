@@ -11,5 +11,8 @@ $options = [
     // 'using_open_api' => true,
 ];
 
-$result = $client->send(RefreshToken::class, $options);
+$request = new RefreshToken($configuration);
+$request->setHttpClient($httpClient);
+
+$result = $request->send($options);
 dd($result);

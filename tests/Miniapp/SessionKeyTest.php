@@ -6,14 +6,13 @@ namespace Siganushka\ApiClient\Wechat\Tests\Miniapp;
 
 use PHPUnit\Framework\TestCase;
 use Siganushka\ApiClient\Exception\ParseResponseException;
-use Siganushka\ApiClient\RequestOptions;
 use Siganushka\ApiClient\Response\ResponseFactory;
 use Siganushka\ApiClient\Wechat\Miniapp\SessionKey;
 use Siganushka\ApiClient\Wechat\Tests\ConfigurationTest;
 use Symfony\Component\Cache\Adapter\FilesystemAdapter;
+use Symfony\Component\HttpClient\MockHttpClient;
 use Symfony\Component\OptionsResolver\Exception\InvalidOptionsException;
 use Symfony\Component\OptionsResolver\Exception\MissingOptionsException;
-use Symfony\Contracts\HttpClient\HttpClientInterface;
 
 class SessionKeyTest extends TestCase
 {
@@ -23,36 +22,12 @@ class SessionKeyTest extends TestCase
 
         $resolved = $request->resolve(['code' => 'foo']);
         static::assertSame(['code' => 'foo'], $resolved);
-        static::assertSame(['code'], $request->getResolver()->getDefinedOptions());
     }
 
-    public function testSend(): void
-    {
-        $data = [
-            'openid' => 'foo',
-            'session_key' => 'bar',
-        ];
-
-        $response = ResponseFactory::createMockResponseWithJson($data);
-
-        $httpClient = $this->createMock(HttpClientInterface::class);
-        $httpClient->method('request')->willReturn($response);
-
-        $request = static::createRequest();
-        $request->setHttpClient($httpClient);
-
-        $result = $request->send(['code' => 'foo']);
-        static::assertSame($data, $result);
-    }
-
-    public function testConfigureRequest(): void
+    public function testBuild(): void
     {
         $request = static::createRequest();
-        $requestOptions = new RequestOptions();
-
-        $configureRequestRef = new \ReflectionMethod($request, 'configureRequest');
-        $configureRequestRef->setAccessible(true);
-        $configureRequestRef->invoke($request, $requestOptions, $request->resolve(['code' => 'foo']));
+        $requestOptions = $request->build(['code' => 'foo']);
 
         static::assertSame('GET', $requestOptions->getMethod());
         static::assertSame(SessionKey::URL, $requestOptions->getUrl());
@@ -64,6 +39,23 @@ class SessionKeyTest extends TestCase
                 'code' => 'foo',
             ],
         ], $requestOptions->toArray());
+    }
+
+    public function testSend(): void
+    {
+        $data = [
+            'openid' => 'foo',
+            'session_key' => 'bar',
+        ];
+
+        $response = ResponseFactory::createMockResponseWithJson($data);
+        $httpClient = new MockHttpClient($response);
+
+        $request = static::createRequest();
+        $request->setHttpClient($httpClient);
+
+        $result = $request->send(['code' => 'foo']);
+        static::assertSame($data, $result);
     }
 
     public function testParseResponseException(): void

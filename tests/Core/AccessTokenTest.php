@@ -6,12 +6,11 @@ namespace Siganushka\ApiClient\Wechat\Tests\Core;
 
 use PHPUnit\Framework\TestCase;
 use Siganushka\ApiClient\Exception\ParseResponseException;
-use Siganushka\ApiClient\RequestOptions;
 use Siganushka\ApiClient\Response\ResponseFactory;
 use Siganushka\ApiClient\Wechat\Core\AccessToken;
 use Siganushka\ApiClient\Wechat\Tests\ConfigurationTest;
 use Symfony\Component\Cache\Adapter\FilesystemAdapter;
-use Symfony\Contracts\HttpClient\HttpClientInterface;
+use Symfony\Component\HttpClient\MockHttpClient;
 
 class AccessTokenTest extends TestCase
 {
@@ -21,36 +20,12 @@ class AccessTokenTest extends TestCase
 
         $resolved = $request->resolve();
         static::assertSame([], $resolved);
-        static::assertSame([], $request->getResolver()->getDefinedOptions());
     }
 
-    public function testSend(): void
-    {
-        $data = [
-            'access_token' => 'foo',
-            'expires_in' => 1024,
-        ];
-
-        $response = ResponseFactory::createMockResponseWithJson($data);
-
-        $httpClient = $this->createMock(HttpClientInterface::class);
-        $httpClient->method('request')->willReturn($response);
-
-        $request = static::createRequest();
-        $request->setHttpClient($httpClient);
-
-        $result = $request->send();
-        static::assertSame($data, $result);
-    }
-
-    public function testConfigureRequest(): void
+    public function testBuild(): void
     {
         $request = static::createRequest();
-        $requestOptions = new RequestOptions();
-
-        $configureRequestRef = new \ReflectionMethod($request, 'configureRequest');
-        $configureRequestRef->setAccessible(true);
-        $configureRequestRef->invoke($request, $requestOptions, $request->resolve());
+        $requestOptions = $request->build();
 
         static::assertSame('GET', $requestOptions->getMethod());
         static::assertSame(AccessToken::URL, $requestOptions->getUrl());
@@ -61,6 +36,23 @@ class AccessTokenTest extends TestCase
                 'grant_type' => 'client_credential',
             ],
         ], $requestOptions->toArray());
+    }
+
+    public function testSend(): void
+    {
+        $data = [
+            'access_token' => 'foo',
+            'expires_in' => 1024,
+        ];
+
+        $response = ResponseFactory::createMockResponseWithJson($data);
+        $httpClient = new MockHttpClient($response);
+
+        $request = static::createRequest();
+        $request->setHttpClient($httpClient);
+
+        $result = $request->send();
+        static::assertSame($data, $result);
     }
 
     public function testParseResponseException(): void

@@ -6,11 +6,10 @@ namespace Siganushka\ApiClient\Wechat\Tests\OAuth;
 
 use PHPUnit\Framework\TestCase;
 use Siganushka\ApiClient\Exception\ParseResponseException;
-use Siganushka\ApiClient\RequestOptions;
 use Siganushka\ApiClient\Response\ResponseFactory;
 use Siganushka\ApiClient\Wechat\OAuth\CheckToken;
+use Symfony\Component\HttpClient\MockHttpClient;
 use Symfony\Component\OptionsResolver\Exception\MissingOptionsException;
-use Symfony\Contracts\HttpClient\HttpClientInterface;
 
 class CheckTokenTest extends TestCase
 {
@@ -21,7 +20,21 @@ class CheckTokenTest extends TestCase
         $resolved = $request->resolve(['access_token' => 'foo', 'openid' => 'bar']);
         static::assertSame('foo', $resolved['access_token']);
         static::assertSame('bar', $resolved['openid']);
-        static::assertSame(['access_token', 'openid'], $request->getResolver()->getDefinedOptions());
+    }
+
+    public function testBuild(): void
+    {
+        $request = static::createRequest();
+        $requestOptions = $request->build(['access_token' => 'foo', 'openid' => 'bar']);
+
+        static::assertSame('GET', $requestOptions->getMethod());
+        static::assertSame(CheckToken::URL, $requestOptions->getUrl());
+        static::assertSame([
+            'query' => [
+                'access_token' => 'foo',
+                'openid' => 'bar',
+            ],
+        ], $requestOptions->toArray());
     }
 
     public function testSend(): void
@@ -32,34 +45,13 @@ class CheckTokenTest extends TestCase
         ];
 
         $response = ResponseFactory::createMockResponseWithJson($data);
-
-        $httpClient = $this->createMock(HttpClientInterface::class);
-        $httpClient->method('request')->willReturn($response);
+        $httpClient = new MockHttpClient($response);
 
         $request = static::createRequest();
         $request->setHttpClient($httpClient);
 
         $result = $request->send(['access_token' => 'foo', 'openid' => 'bar']);
         static::assertSame($data, $result);
-    }
-
-    public function testConfigureRequest(): void
-    {
-        $request = static::createRequest();
-        $requestOptions = new RequestOptions();
-
-        $configureRequestRef = new \ReflectionMethod($request, 'configureRequest');
-        $configureRequestRef->setAccessible(true);
-        $configureRequestRef->invoke($request, $requestOptions, $request->resolve(['access_token' => 'foo', 'openid' => 'bar']));
-
-        static::assertSame('GET', $requestOptions->getMethod());
-        static::assertSame(CheckToken::URL, $requestOptions->getUrl());
-        static::assertSame([
-            'query' => [
-                'access_token' => 'foo',
-                'openid' => 'bar',
-            ],
-        ], $requestOptions->toArray());
     }
 
     public function testParseResponseException(): void

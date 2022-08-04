@@ -7,7 +7,6 @@ namespace Siganushka\ApiClient\Wechat\Core;
 use Siganushka\ApiClient\AbstractRequest;
 use Siganushka\ApiClient\Exception\ParseResponseException;
 use Siganushka\ApiClient\RequestOptions;
-use Symfony\Component\OptionsResolver\OptionsResolver;
 use Symfony\Contracts\HttpClient\ResponseInterface;
 
 /**
@@ -17,16 +16,19 @@ class ServerIp extends AbstractRequest
 {
     public const URL = 'https://api.weixin.qq.com/cgi-bin/get_api_domain_ip';
 
-    public function configureOptions(OptionsResolver $resolver): void
+    private AccessToken $accessToken;
+
+    public function __construct(AccessToken $accessToken)
     {
-        $resolver->setRequired('access_token');
-        $resolver->setAllowedTypes('access_token', 'string');
+        $this->accessToken = $accessToken;
     }
 
     protected function configureRequest(RequestOptions $request, array $options): void
     {
+        $result = $this->accessToken->send();
+
         $query = [
-            'access_token' => $options['access_token'],
+            'access_token' => $result['access_token'],
         ];
 
         $request
@@ -36,18 +38,8 @@ class ServerIp extends AbstractRequest
         ;
     }
 
-    /**
-     * @return array<int, string>
-     */
-    protected function parseResponse(ResponseInterface $response)
+    protected function parseResponse(ResponseInterface $response): array
     {
-        /**
-         * @var array{
-         *  ip_list?: array<int, string>,
-         *  errcode?: int,
-         *  errmsg?: string
-         * }
-         */
         $result = $response->toArray();
 
         $errcode = (int) ($result['errcode'] ?? 0);

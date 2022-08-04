@@ -21,9 +21,6 @@ class SignatureUtils
         $this->configuration = $configuration;
     }
 
-    /**
-     * @param array<string, mixed> $parameters
-     */
     public function generate(array $parameters): string
     {
         if (null === $this->configuration['mchkey']) {
@@ -36,34 +33,24 @@ class SignatureUtils
         $signature = http_build_query($parameters);
         $signature = urldecode($signature);
 
-        /** @var string */
-        $mchkey = $this->configuration['mchkey'];
-
         $signature = ('HMAC-SHA256' === $this->configuration['sign_type'])
-            ? hash_hmac('sha256', $signature, $mchkey)
+            ? hash_hmac('sha256', $signature, $this->configuration['mchkey'])
             : hash('md5', $signature);
 
         return strtoupper($signature);
     }
 
-    /**
-     * @param array<string, mixed> $parameters
-     */
     public function check(array $parameters, string $sign): bool
     {
         return 0 === strcmp($sign, $this->generate($parameters));
     }
 
-    /**
-     * @param array<string, mixed> $parameters
-     */
     public function checkParameters(array $parameters, string $signName = 'sign'): bool
     {
         if (!isset($parameters[$signName])) {
             return false;
         }
 
-        /** @var string */
         $sign = $parameters[$signName];
         unset($parameters[$signName]);
 

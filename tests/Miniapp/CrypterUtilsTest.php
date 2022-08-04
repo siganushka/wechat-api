@@ -51,9 +51,6 @@ class CrypterUtilsTest extends TestCase
         CrypterUtils::decrypt('tiihtNczf5v6AKRyjwEUhQ==', 'test', 'r7BXXKkLb8qrSNn05n0qiA==');
     }
 
-    /**
-     * @return array<int, array<mixed>>
-     */
     public function getEncryptedDataProvider(): array
     {
         return [

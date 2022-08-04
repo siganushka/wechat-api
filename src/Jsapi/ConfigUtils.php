@@ -6,6 +6,7 @@ namespace Siganushka\ApiClient\Wechat\Jsapi;
 
 use Siganushka\ApiClient\Wechat\Configuration;
 use Siganushka\ApiClient\Wechat\GenericUtils;
+use Siganushka\ApiClient\Wechat\Ticket\Ticket;
 
 /**
  * Wechat jsapi config utils class.
@@ -15,28 +16,20 @@ use Siganushka\ApiClient\Wechat\GenericUtils;
 class ConfigUtils
 {
     private Configuration $configuration;
+    private Ticket $ticket;
 
-    public function __construct(Configuration $configuration)
+    public function __construct(Configuration $configuration, Ticket $ticket)
     {
         $this->configuration = $configuration;
+        $this->ticket = $ticket;
     }
 
-    /**
-     * @param array<int, string> $apis
-     *
-     * @return array{
-     *  appId: string,
-     *  nonceStr: string,
-     *  timestamp: string,
-     *  signature: non-empty-string,
-     *  jsApiList: array<int, string>,
-     *  debug: bool
-     * }
-     */
-    public function generate(string $ticket, array $apis = [], bool $debug = false): array
+    public function generate(array $apis = [], bool $debug = false): array
     {
+        $result = $this->ticket->send();
+
         $parameters = [
-            'jsapi_ticket' => $ticket,
+            'jsapi_ticket' => $result['ticket'],
             'timestamp' => GenericUtils::getTimestamp(),
             'noncestr' => GenericUtils::getNonceStr(),
             'url' => GenericUtils::getCurrentUrl(),
@@ -47,11 +40,8 @@ class ConfigUtils
         $signature = urldecode($signature);
         $signature = sha1($signature);
 
-        /** @var string */
-        $appid = $this->configuration['appid'];
-
         $config = [
-            'appId' => $appid,
+            'appId' => $this->configuration['appid'],
             'nonceStr' => $parameters['noncestr'],
             'timestamp' => $parameters['timestamp'],
             'signature' => $signature,

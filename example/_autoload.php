@@ -2,24 +2,8 @@
 
 declare(strict_types=1);
 
-use Siganushka\ApiClient\RequestClient;
-use Siganushka\ApiClient\RequestRegistry;
 use Siganushka\ApiClient\Wechat\Configuration;
 use Siganushka\ApiClient\Wechat\Core\AccessToken;
-use Siganushka\ApiClient\Wechat\Core\CallbackIp;
-use Siganushka\ApiClient\Wechat\Core\ServerIp;
-use Siganushka\ApiClient\Wechat\Extension\AccessTokenExtension;
-use Siganushka\ApiClient\Wechat\Miniapp\Qrcode;
-use Siganushka\ApiClient\Wechat\Miniapp\SessionKey;
-use Siganushka\ApiClient\Wechat\Miniapp\Wxacode;
-use Siganushka\ApiClient\Wechat\Miniapp\WxacodeUnlimited;
-use Siganushka\ApiClient\Wechat\OAuth\AccessToken as OAuthAccessToken;
-use Siganushka\ApiClient\Wechat\OAuth\CheckToken;
-use Siganushka\ApiClient\Wechat\OAuth\RefreshToken;
-use Siganushka\ApiClient\Wechat\OAuth\UserInfo;
-use Siganushka\ApiClient\Wechat\Payment\Transfer;
-use Siganushka\ApiClient\Wechat\Payment\Unifiedorder;
-use Siganushka\ApiClient\Wechat\Template\Message;
 use Siganushka\ApiClient\Wechat\Ticket\Ticket;
 use Symfony\Component\Cache\Adapter\FilesystemAdapter;
 use Symfony\Component\ErrorHandler\Debug;
@@ -55,28 +39,8 @@ $configuration = new Configuration([
     'client_key_file' => WECHAT_CLIENT_KEY,
 ]);
 
-$requests = [
-    $accessToken = new AccessToken($cachePool, $configuration),
-    new ServerIp(),
-    new CallbackIp(),
-    new SessionKey($cachePool, $configuration),
-    new Wxacode(),
-    new WxacodeUnlimited(),
-    new Qrcode(),
-    new Transfer($configuration),
-    new Unifiedorder($configuration),
-    new OAuthAccessToken($configuration),
-    new UserInfo(),
-    new RefreshToken($configuration),
-    new Ticket($cachePool),
-    new CheckToken(),
-    new Message(),
-];
+$accessToken = new AccessToken($cachePool, $configuration);
+$accessToken->setHttpClient($httpClient);
 
-$registry = new RequestRegistry($httpClient, $requests);
-
-$extensions = [
-    new AccessTokenExtension($httpClient, $accessToken),
-];
-
-$client = new RequestClient($registry, $extensions);
+$ticket = new Ticket($cachePool, $accessToken);
+$ticket->setHttpClient($httpClient);

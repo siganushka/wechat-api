@@ -24,10 +24,6 @@ class Refund extends AbstractRequest
     public const URL = 'https://api.mch.weixin.qq.com/secapi/pay/refund';
 
     private Configuration $configuration;
-
-    /**
-     * @var array<string, mixed>
-     */
     private array $defaultOptions;
 
     public function __construct(Configuration $configuration)
@@ -44,7 +40,7 @@ class Refund extends AbstractRequest
         ];
     }
 
-    public function configureOptions(OptionsResolver $resolver): void
+    protected function configureOptions(OptionsResolver $resolver): void
     {
         $resolver->setDefaults($this->defaultOptions);
         $resolver->setRequired(['out_refund_no', 'total_fee', 'refund_fee']);
@@ -98,16 +94,8 @@ class Refund extends AbstractRequest
         ;
     }
 
-    protected function parseResponse(ResponseInterface $response)
+    protected function parseResponse(ResponseInterface $response): array
     {
-        /**
-         * @var array{
-         *  return_code?: string,
-         *  return_msg?: string,
-         *  result_code?: string,
-         *  err_code_des?: string
-         * }
-         */
         $result = SerializerUtils::xmlDecode($response->getContent());
 
         $returnCode = (string) ($result['return_code'] ?? '');

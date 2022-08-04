@@ -4,18 +4,20 @@ declare(strict_types=1);
 
 namespace Siganushka\ApiClient\Wechat\Tests\Jsapi;
 
-use PHPUnit\Framework\TestCase;
 use Siganushka\ApiClient\Wechat\Jsapi\ConfigUtils;
+use Siganushka\ApiClient\Wechat\Tests\BaseTest;
 use Siganushka\ApiClient\Wechat\Tests\ConfigurationTest;
 
-class ConfigUtilsTest extends TestCase
+class ConfigUtilsTest extends BaseTest
 {
     public function testGenerate(): void
     {
         $configuration = ConfigurationTest::createConfiguration();
-        $configUtils = new ConfigUtils($configuration);
+        $ticket = $this->createMockTicket();
 
-        $configs = $configUtils->generate('foo');
+        $configUtils = new ConfigUtils($configuration, $ticket);
+
+        $configs = $configUtils->generate();
         static::assertArrayHasKey('nonceStr', $configs);
         static::assertArrayHasKey('timestamp', $configs);
         static::assertArrayHasKey('signature', $configs);
@@ -24,7 +26,7 @@ class ConfigUtilsTest extends TestCase
         static::assertSame([], $configs['jsApiList']);
         static::assertFalse($configs['debug']);
 
-        $configs = $configUtils->generate('foo', ['test_api'], true);
+        $configs = $configUtils->generate(['test_api'], true);
         static::assertSame(['test_api'], $configs['jsApiList']);
         static::assertTrue($configs['debug']);
     }

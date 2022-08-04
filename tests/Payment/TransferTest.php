@@ -6,16 +6,15 @@ namespace Siganushka\ApiClient\Wechat\Tests\Payment;
 
 use PHPUnit\Framework\TestCase;
 use Siganushka\ApiClient\Exception\ParseResponseException;
-use Siganushka\ApiClient\RequestOptions;
 use Siganushka\ApiClient\Response\ResponseFactory;
 use Siganushka\ApiClient\Wechat\Configuration;
 use Siganushka\ApiClient\Wechat\Payment\Transfer;
 use Siganushka\ApiClient\Wechat\SerializerUtils;
 use Siganushka\ApiClient\Wechat\Tests\ConfigurationTest;
+use Symfony\Component\HttpClient\MockHttpClient;
 use Symfony\Component\OptionsResolver\Exception\InvalidOptionsException;
 use Symfony\Component\OptionsResolver\Exception\MissingOptionsException;
 use Symfony\Component\OptionsResolver\Exception\NoConfigurationException;
-use Symfony\Contracts\HttpClient\HttpClientInterface;
 
 class TransferTest extends TestCase
 {
@@ -37,20 +36,54 @@ class TransferTest extends TestCase
         static::assertSame('test_openid', $resolved['openid']);
         static::assertSame(1, $resolved['amount']);
         static::assertSame('test_desc', $resolved['desc']);
-        static::assertSame([
-            'nonce_str',
-            'check_name',
-            'device_info',
-            're_user_name',
-            'spbill_create_ip',
-            'scene',
-            'brand_id',
-            'finder_template_id',
-            'partner_trade_no',
-            'openid',
-            'amount',
-            'desc',
-        ], $request->getResolver()->getDefinedOptions());
+    }
+
+    public function testBuild(): void
+    {
+        $options = [
+            'partner_trade_no' => 'test_partner_trade_no',
+            'openid' => 'test_openid',
+            'amount' => 1,
+            'desc' => 'test_desc',
+        ];
+
+        $request = static::createRequest();
+        $requestOptions = $request->build($options);
+
+        static::assertSame('POST', $requestOptions->getMethod());
+        static::assertSame(Transfer::URL, $requestOptions->getUrl());
+
+        $configuration = ConfigurationTest::createConfiguration();
+        static::assertSame($configuration['client_cert_file'], $requestOptions->toArray()['local_cert']);
+        static::assertSame($configuration['client_key_file'], $requestOptions->toArray()['local_pk']);
+
+        $body = SerializerUtils::xmlDecode($requestOptions->toArray()['body']);
+        static::assertArrayHasKey('nonce_str', $body);
+        static::assertArrayHasKey('sign', $body);
+        static::assertSame('NO_CHECK', $body['check_name']);
+        static::assertSame('test_partner_trade_no', $body['partner_trade_no']);
+        static::assertSame('test_openid', $body['openid']);
+        static::assertSame('test_appid', $body['mch_appid']);
+        static::assertSame('test_mchid', $body['mchid']);
+        static::assertSame('1', $body['amount']);
+        static::assertSame('test_desc', $body['desc']);
+
+        $requestOptions = $request->build($options + [
+            'device_info' => 'test_device_info',
+            're_user_name' => 'test_re_user_name',
+            'spbill_create_ip' => 'test_spbill_create_ip',
+            'scene' => 'test_scene',
+            'brand_id' => 'test_brand_id',
+            'finder_template_id' => 'test_finder_template_id',
+        ]);
+
+        $body = SerializerUtils::xmlDecode($requestOptions->toArray()['body']);
+        static::assertSame('test_device_info', $body['device_info']);
+        static::assertSame('test_re_user_name', $body['re_user_name']);
+        static::assertSame('test_spbill_create_ip', $body['spbill_create_ip']);
+        static::assertSame('test_scene', $body['scene']);
+        static::assertSame('test_brand_id', $body['brand_id']);
+        static::assertSame('test_finder_template_id', $body['finder_template_id']);
     }
 
     public function testSend(): void
@@ -68,92 +101,13 @@ class TransferTest extends TestCase
         ];
 
         $response = ResponseFactory::createMockResponse(SerializerUtils::xmlEncode($responseData));
-
-        $httpClient = $this->createMock(HttpClientInterface::class);
-        $httpClient->method('request')->willReturn($response);
+        $httpClient = new MockHttpClient($response);
 
         $request = static::createRequest();
         $request->setHttpClient($httpClient);
 
         $result = $request->send($options);
         static::assertSame($responseData, $result);
-    }
-
-    public function testConfigureRequest(): void
-    {
-        $options = [
-            'partner_trade_no' => 'test_partner_trade_no',
-            'openid' => 'test_openid',
-            'amount' => 1,
-            'desc' => 'test_desc',
-        ];
-
-        $request = static::createRequest();
-        $requestOptions = new RequestOptions();
-
-        $configureRequestRef = new \ReflectionMethod($request, 'configureRequest');
-        $configureRequestRef->setAccessible(true);
-        $configureRequestRef->invoke($request, $requestOptions, $request->resolve($options));
-
-        static::assertSame('POST', $requestOptions->getMethod());
-        static::assertSame(Transfer::URL, $requestOptions->getUrl());
-
-        $configuration = ConfigurationTest::createConfiguration();
-        static::assertSame($configuration['client_cert_file'], $requestOptions->toArray()['local_cert']);
-        static::assertSame($configuration['client_key_file'], $requestOptions->toArray()['local_pk']);
-
-        /**
-         * @var array{
-         *  nonce_str: string,
-         *  sign: string,
-         *  check_name: string,
-         *  partner_trade_no: string,
-         *  openid: string,
-         *  mch_appid: string,
-         *  mchid: string,
-         *  amount: string,
-         *  desc: string
-         * }
-         */
-        $body = SerializerUtils::xmlDecode($requestOptions->toArray()['body']);
-        static::assertArrayHasKey('nonce_str', $body);
-        static::assertArrayHasKey('sign', $body);
-        static::assertSame('NO_CHECK', $body['check_name']);
-        static::assertSame('test_partner_trade_no', $body['partner_trade_no']);
-        static::assertSame('test_openid', $body['openid']);
-        static::assertSame('test_appid', $body['mch_appid']);
-        static::assertSame('test_mchid', $body['mchid']);
-        static::assertSame('1', $body['amount']);
-        static::assertSame('test_desc', $body['desc']);
-
-        $customOptions = [
-            'device_info' => 'test_device_info',
-            're_user_name' => 'test_re_user_name',
-            'spbill_create_ip' => 'test_spbill_create_ip',
-            'scene' => 'test_scene',
-            'brand_id' => 'test_brand_id',
-            'finder_template_id' => 'test_finder_template_id',
-        ];
-
-        $configureRequestRef->invoke($request, $requestOptions, $request->resolve($options + $customOptions));
-
-        /**
-         * @var array{
-         *  device_info: string,
-         *  re_user_name: string,
-         *  spbill_create_ip: string,
-         *  scene: string,
-         *  brand_id: string,
-         *  finder_template_id: string
-         * }
-         */
-        $body = SerializerUtils::xmlDecode($requestOptions->toArray()['body']);
-        static::assertSame('test_device_info', $body['device_info']);
-        static::assertSame('test_re_user_name', $body['re_user_name']);
-        static::assertSame('test_spbill_create_ip', $body['spbill_create_ip']);
-        static::assertSame('test_scene', $body['scene']);
-        static::assertSame('test_brand_id', $body['brand_id']);
-        static::assertSame('test_finder_template_id', $body['finder_template_id']);
     }
 
     public function testReturnCodeParseResponseException(): void

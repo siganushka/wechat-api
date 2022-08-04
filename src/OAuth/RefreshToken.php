@@ -26,7 +26,7 @@ class RefreshToken extends AbstractRequest
         $this->configuration = $configuration;
     }
 
-    public function configureOptions(OptionsResolver $resolver): void
+    protected function configureOptions(OptionsResolver $resolver): void
     {
         $resolver->setRequired('refresh_token');
         $resolver->setDefault('using_open_api', false);
@@ -55,32 +55,8 @@ class RefreshToken extends AbstractRequest
         ;
     }
 
-    /**
-     * @return array{
-     *  access_token: string,
-     *  expires_in: int,
-     *  refresh_token: string,
-     *  openid: string,
-     *  scope: string,
-     *  unionid?: string,
-     *  errcode?: int,
-     *  errmsg?: string
-     * }
-     */
-    public function parseResponse(ResponseInterface $response): array
+    protected function parseResponse(ResponseInterface $response): array
     {
-        /**
-         * @var array{
-         *  access_token: string,
-         *  expires_in: int,
-         *  refresh_token: string,
-         *  openid: string,
-         *  scope: string,
-         *  unionid?: string,
-         *  errcode?: int,
-         *  errmsg?: string
-         * }
-         */
         $result = $response->toArray();
 
         $errcode = (int) ($result['errcode'] ?? 0);

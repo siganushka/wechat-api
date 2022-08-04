@@ -13,8 +13,6 @@ class SignatureUtilsTest extends TestCase
 {
     /**
      * @dataProvider getSignatureProvider
-     *
-     * @param array<string, mixed> $parameters
      */
     public function testAll(string $key, array $parameters, string $sign, string $signType = null): void
     {
@@ -44,9 +42,6 @@ class SignatureUtilsTest extends TestCase
         $signatureUtils->generate(['foo' => 'bar']);
     }
 
-    /**
-     * @return array<int, array<mixed>>
-     */
     public function getSignatureProvider(): array
     {
         return [

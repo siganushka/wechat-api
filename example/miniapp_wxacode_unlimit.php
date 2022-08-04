@@ -20,9 +20,12 @@ $options = [
     // 'line_color' => ['r' => 255, 'g' => 255, 'b' => 255],
 ];
 
-$result = $client->send(WxacodeUnlimited::class, $options);
+$request = new WxacodeUnlimited($accessToken);
+$request->setHttpClient($httpClient);
+
+$result = $request->send($options);
 dd($result);
 
-// 显示小程序码
+// // 显示小程序码
 // $base64Content = base64_encode($result);
 // echo sprintf('<img src="data:image/png;base64,%s" />', $base64Content);

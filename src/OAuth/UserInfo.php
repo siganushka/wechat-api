@@ -17,7 +17,7 @@ class UserInfo extends AbstractRequest
 {
     public const URL = 'https://api.weixin.qq.com/sns/userinfo';
 
-    public function configureOptions(OptionsResolver $resolver): void
+    protected function configureOptions(OptionsResolver $resolver): void
     {
         $resolver->setRequired('access_token');
         $resolver->setRequired('openid');
@@ -43,36 +43,8 @@ class UserInfo extends AbstractRequest
         ;
     }
 
-    /**
-     * @return array{
-     *  openid: string,
-     *  nickname: string,
-     *  sex: int,
-     *  province: string,
-     *  city: string,
-     *  country: string,
-     *  headimgurl: string,
-     *  unionid: string,
-     *  errcode?: int,
-     *  errmsg?: string
-     * }
-     */
-    public function parseResponse(ResponseInterface $response): array
+    protected function parseResponse(ResponseInterface $response): array
     {
-        /**
-         * @var array{
-         *  openid: string,
-         *  nickname: string,
-         *  sex: int,
-         *  province: string,
-         *  city: string,
-         *  country: string,
-         *  headimgurl: string,
-         *  unionid: string,
-         *  errcode?: int,
-         *  errmsg?: string
-         * }
-         */
         $result = $response->toArray();
 
         $errcode = (int) ($result['errcode'] ?? 0);

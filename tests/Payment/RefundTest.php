@@ -6,16 +6,15 @@ namespace Siganushka\ApiClient\Wechat\Tests\Payment;
 
 use PHPUnit\Framework\TestCase;
 use Siganushka\ApiClient\Exception\ParseResponseException;
-use Siganushka\ApiClient\RequestOptions;
 use Siganushka\ApiClient\Response\ResponseFactory;
 use Siganushka\ApiClient\Wechat\Configuration;
 use Siganushka\ApiClient\Wechat\Payment\Refund;
 use Siganushka\ApiClient\Wechat\SerializerUtils;
 use Siganushka\ApiClient\Wechat\Tests\ConfigurationTest;
+use Symfony\Component\HttpClient\MockHttpClient;
 use Symfony\Component\OptionsResolver\Exception\InvalidOptionsException;
 use Symfony\Component\OptionsResolver\Exception\MissingOptionsException;
 use Symfony\Component\OptionsResolver\Exception\NoConfigurationException;
-use Symfony\Contracts\HttpClient\HttpClientInterface;
 
 class RefundTest extends TestCase
 {
@@ -38,18 +37,55 @@ class RefundTest extends TestCase
         static::assertSame('test_out_refund_no', $resolved['out_refund_no']);
         static::assertSame(12, $resolved['total_fee']);
         static::assertSame(10, $resolved['refund_fee']);
-        static::assertSame([
-            'nonce_str',
-            'transaction_id',
-            'out_trade_no',
-            'refund_fee_type',
-            'refund_desc',
-            'refund_account',
-            'notify_url',
-            'out_refund_no',
-            'total_fee',
-            'refund_fee',
-        ], $request->getResolver()->getDefinedOptions());
+    }
+
+    public function testBuild(): void
+    {
+        $options = [
+            'transaction_id' => 'test_transaction_id',
+            'out_trade_no' => 'test_out_trade_no',
+            'out_refund_no' => 'test_out_refund_no',
+            'total_fee' => 12,
+            'refund_fee' => 10,
+        ];
+
+        $request = static::createRequest();
+        $requestOptions = $request->build($options);
+
+        static::assertSame('POST', $requestOptions->getMethod());
+        static::assertSame(Refund::URL, $requestOptions->getUrl());
+
+        $body = SerializerUtils::xmlDecode($requestOptions->toArray()['body']);
+
+        static::assertArrayHasKey('nonce_str', $body);
+        static::assertArrayHasKey('sign', $body);
+        static::assertSame('test_appid', $body['appid']);
+        static::assertSame('test_mchid', $body['mch_id']);
+        static::assertSame('HMAC-SHA256', $body['sign_type']);
+        static::assertSame('test_transaction_id', $body['transaction_id']);
+
+        $requestOptions = $request->build([
+            'out_trade_no' => 'test_out_trade_no',
+            'out_refund_no' => 'test_out_refund_no',
+            'total_fee' => 12,
+            'refund_fee' => 10,
+            'refund_fee_type' => 'CNY',
+            'refund_desc' => 'test_refund_desc',
+            'refund_account' => 'REFUND_SOURCE_UNSETTLED_FUNDS',
+            'notify_url' => 'test_notify_url',
+        ]);
+
+        $body = SerializerUtils::xmlDecode($requestOptions->toArray()['body']);
+        static::assertArrayHasKey('nonce_str', $body);
+        static::assertArrayHasKey('sign', $body);
+        static::assertSame('test_appid', $body['appid']);
+        static::assertSame('test_mchid', $body['mch_id']);
+        static::assertSame('HMAC-SHA256', $body['sign_type']);
+        static::assertSame('test_out_trade_no', $body['out_trade_no']);
+        static::assertSame('CNY', $body['refund_fee_type']);
+        static::assertSame('test_refund_desc', $body['refund_desc']);
+        static::assertSame('REFUND_SOURCE_UNSETTLED_FUNDS', $body['refund_account']);
+        static::assertSame('test_notify_url', $body['notify_url']);
     }
 
     public function testSend(): void
@@ -69,94 +105,13 @@ class RefundTest extends TestCase
 
         $xml = SerializerUtils::xmlEncode($responseData);
         $response = ResponseFactory::createMockResponse($xml);
-
-        $httpClient = $this->createMock(HttpClientInterface::class);
-        $httpClient->method('request')->willReturn($response);
+        $httpClient = new MockHttpClient($response);
 
         $request = static::createRequest();
         $request->setHttpClient($httpClient);
 
         $result = $request->send($options);
         static::assertSame($responseData, $result);
-    }
-
-    public function testConfigureRequest(): void
-    {
-        $options = [
-            'transaction_id' => 'test_transaction_id',
-            'out_trade_no' => 'test_out_trade_no',
-            'out_refund_no' => 'test_out_refund_no',
-            'total_fee' => 12,
-            'refund_fee' => 10,
-        ];
-
-        $request = static::createRequest();
-        $requestOptions = new RequestOptions();
-
-        $configureRequestRef = new \ReflectionMethod($request, 'configureRequest');
-        $configureRequestRef->setAccessible(true);
-        $configureRequestRef->invoke($request, $requestOptions, $request->resolve($options));
-
-        static::assertSame('POST', $requestOptions->getMethod());
-        static::assertSame(Refund::URL, $requestOptions->getUrl());
-
-        /**
-         * @var array{
-         *  nonce_str: string,
-         *  sign: string,
-         *  appid: string,
-         *  mch_id: string,
-         *  sign_type: string,
-         *  transaction_id: string
-         * }
-         */
-        $body = SerializerUtils::xmlDecode($requestOptions->toArray()['body']);
-
-        static::assertArrayHasKey('nonce_str', $body);
-        static::assertArrayHasKey('sign', $body);
-        static::assertSame('test_appid', $body['appid']);
-        static::assertSame('test_mchid', $body['mch_id']);
-        static::assertSame('HMAC-SHA256', $body['sign_type']);
-        static::assertSame('test_transaction_id', $body['transaction_id']);
-
-        $customOptions = [
-            'out_trade_no' => 'test_out_trade_no',
-            'out_refund_no' => 'test_out_refund_no',
-            'total_fee' => 12,
-            'refund_fee' => 10,
-            'refund_fee_type' => 'CNY',
-            'refund_desc' => 'test_refund_desc',
-            'refund_account' => 'REFUND_SOURCE_UNSETTLED_FUNDS',
-            'notify_url' => 'test_notify_url',
-        ];
-
-        $configureRequestRef->invoke($request, $requestOptions, $request->resolve($customOptions));
-
-        /**
-         * @var array{
-         *  nonce_str: string,
-         *  sign: string,
-         *  appid: string,
-         *  mch_id: string,
-         *  sign_type: string,
-         *  out_trade_no: string,
-         *  refund_fee_type: string,
-         *  refund_desc: string,
-         *  refund_account: string,
-         *  notify_url: string
-         * }
-         */
-        $body = SerializerUtils::xmlDecode($requestOptions->toArray()['body']);
-        static::assertArrayHasKey('nonce_str', $body);
-        static::assertArrayHasKey('sign', $body);
-        static::assertSame('test_appid', $body['appid']);
-        static::assertSame('test_mchid', $body['mch_id']);
-        static::assertSame('HMAC-SHA256', $body['sign_type']);
-        static::assertSame('test_out_trade_no', $body['out_trade_no']);
-        static::assertSame('CNY', $body['refund_fee_type']);
-        static::assertSame('test_refund_desc', $body['refund_desc']);
-        static::assertSame('REFUND_SOURCE_UNSETTLED_FUNDS', $body['refund_account']);
-        static::assertSame('test_notify_url', $body['notify_url']);
     }
 
     public function testReturnCodeParseResponseException(): void

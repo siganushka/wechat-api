@@ -14,10 +14,9 @@ $options = [
     // 'width' => 200,
 ];
 
-$request = new Qrcode($accessToken);
-$request->setHttpClient($httpClient);
-
+$request = $factory->create(Qrcode::class);
 $result = $request->send($options);
+
 dd($result);
 
 // // 显示小程序码

@@ -18,10 +18,9 @@ $options = [
     // 'line_color' => ['r' => 255, 'g' => 255, 'b' => 255],
 ];
 
-$request = new Wxacode($accessToken);
-$request->setHttpClient($httpClient);
-
+$request = $factory->create(Wxacode::class);
 $result = $request->send($options);
+
 dd($result);
 
 // // 显示小程序码

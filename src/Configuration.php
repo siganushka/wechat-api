@@ -9,50 +9,66 @@ use Symfony\Component\OptionsResolver\Exception\InvalidOptionsException;
 use Symfony\Component\OptionsResolver\Options;
 use Symfony\Component\OptionsResolver\OptionsResolver;
 
-/**
- * Wechat configuration.
- */
 class Configuration extends AbstractConfiguration
 {
     protected function configureOptions(OptionsResolver $resolver): void
     {
-        $resolver->setRequired('appid');
-        $resolver->setRequired('secret');
+        static::apply($resolver);
+    }
 
-        $resolver->setDefaults([
-            'open_appid' => null,
-            'open_secret' => null,
-            'mchid' => null,
-            'mchkey' => null,
-            'client_cert_file' => null,
-            'client_key_file' => null,
-            'sign_type' => 'MD5',
-        ]);
+    public static function apply(OptionsResolver $resolver): void
+    {
+        $resolver
+            ->define('appid')
+            ->required()
+            ->allowedTypes('string')
+        ;
 
-        $resolver->setAllowedTypes('appid', 'string');
-        $resolver->setAllowedTypes('secret', 'string');
-        $resolver->setAllowedTypes('open_appid', ['null', 'string']);
-        $resolver->setAllowedTypes('open_secret', ['null', 'string']);
-        $resolver->setAllowedTypes('mchid', ['null', 'string']);
-        $resolver->setAllowedTypes('mchkey', ['null', 'string']);
-        $resolver->setAllowedTypes('client_cert_file', ['null', 'string']);
-        $resolver->setAllowedTypes('client_key_file', ['null', 'string']);
-        $resolver->setAllowedValues('sign_type', ['MD5', 'HMAC-SHA256']);
+        $resolver
+            ->define('secret')
+            ->required()
+            ->allowedTypes('string')
+        ;
 
-        $resolver->setNormalizer('client_cert_file', function (Options $options, ?string $clientCertFile) {
-            if (null !== $clientCertFile && !is_file($clientCertFile)) {
-                throw new InvalidOptionsException('The option "client_cert_file" file does not exists.');
-            }
+        $resolver
+            ->define('mchid')
+            ->allowedTypes('null', 'string')
+        ;
 
-            return $clientCertFile;
-        });
+        $resolver
+            ->define('mchkey')
+            ->allowedTypes('null', 'string')
+        ;
 
-        $resolver->setNormalizer('client_key_file', function (Options $options, ?string $clientKeyFile) {
-            if (null !== $clientKeyFile && !is_file($clientKeyFile)) {
-                throw new InvalidOptionsException('The option "client_key_file" file does not exists.');
-            }
+        $resolver
+            ->define('mch_client_cert')
+            ->allowedTypes('null', 'string')
+            ->normalize(function (Options $options, ?string $mchClientCert) {
+                if (null !== $mchClientCert && !is_file($mchClientCert)) {
+                    throw new InvalidOptionsException('The option "mch_client_cert" file does not exists.');
+                }
 
-            return $clientKeyFile;
-        });
+                return $mchClientCert;
+            })
+        ;
+
+        $resolver
+            ->define('mch_client_key')
+            ->allowedTypes('null', 'string')
+            ->normalize(function (Options $options, ?string $mchClientKey) {
+                if (null !== $mchClientKey && !is_file($mchClientKey)) {
+                    throw new InvalidOptionsException('The option "mch_client_key" file does not exists.');
+                }
+
+                return $mchClientKey;
+            })
+        ;
+
+        $resolver
+            ->define('sign_type')
+            ->default('MD5')
+            ->allowedTypes('string')
+            ->allowedValues('MD5', 'HMAC-SHA256')
+        ;
     }
 }

@@ -4,37 +4,45 @@ declare(strict_types=1);
 
 namespace Siganushka\ApiClient\Wechat\Payment;
 
-use Siganushka\ApiClient\Wechat\Configuration;
+use Siganushka\ApiClient\OptionsExtendableInterface;
+use Siganushka\ApiClient\OptionsExtendableTrait;
 use Symfony\Component\OptionsResolver\Exception\NoConfigurationException;
+use Symfony\Component\OptionsResolver\OptionsResolver;
 
 /**
  * Wechat payment signature utils class.
  *
  * @see https://pay.weixin.qq.com/wiki/doc/api/jsapi.php?chapter=4_3
  */
-class SignatureUtils
+class SignatureUtils implements OptionsExtendableInterface
 {
-    private Configuration $configuration;
+    use OptionsExtendableTrait;
 
-    public function __construct(Configuration $configuration)
+    protected function configureOptions(OptionsResolver $resolver): void
     {
-        $this->configuration = $configuration;
+        $resolver->setRequired(['mchkey', 'sign_type']);
+    }
+
+    public static function create(): self
+    {
+        return new static();
     }
 
     public function generate(array $parameters): string
     {
-        if (null === $this->configuration['mchkey']) {
+        $resolved = $this->resolve();
+        if (null === $resolved['mchkey']) {
             throw new NoConfigurationException('No configured value for "mchkey" option.');
         }
 
         ksort($parameters);
-        $parameters['key'] = $this->configuration['mchkey'];
+        $parameters['key'] = $resolved['mchkey'];
 
         $signature = http_build_query($parameters);
         $signature = urldecode($signature);
 
-        $signature = ('HMAC-SHA256' === $this->configuration['sign_type'])
-            ? hash_hmac('sha256', $signature, $this->configuration['mchkey'])
+        $signature = ('HMAC-SHA256' === $resolved['sign_type'])
+            ? hash_hmac('sha256', $signature, $resolved['mchkey'])
             : hash('md5', $signature);
 
         return strtoupper($signature);
@@ -43,17 +51,5 @@ class SignatureUtils
     public function check(array $parameters, string $sign): bool
     {
         return 0 === strcmp($sign, $this->generate($parameters));
-    }
-
-    public function checkParameters(array $parameters, string $signName = 'sign'): bool
-    {
-        if (!isset($parameters[$signName])) {
-            return false;
-        }
-
-        $sign = $parameters[$signName];
-        unset($parameters[$signName]);
-
-        return $this->check($parameters, $sign);
     }
 }

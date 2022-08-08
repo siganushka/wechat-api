@@ -7,7 +7,6 @@ namespace Siganushka\ApiClient\Wechat\Template;
 use Siganushka\ApiClient\AbstractRequest;
 use Siganushka\ApiClient\Exception\ParseResponseException;
 use Siganushka\ApiClient\RequestOptions;
-use Siganushka\ApiClient\Wechat\Core\AccessToken;
 use Symfony\Component\OptionsResolver\OptionsResolver;
 use Symfony\Contracts\HttpClient\ResponseInterface;
 
@@ -18,21 +17,15 @@ class Message extends AbstractRequest
 {
     public const URL = 'https://api.weixin.qq.com/cgi-bin/message/template/send';
 
-    private AccessToken $accessToken;
-
-    public function __construct(AccessToken $accessToken)
-    {
-        $this->accessToken = $accessToken;
-    }
-
     protected function configureOptions(OptionsResolver $resolver): void
     {
-        $resolver->setRequired(['touser', 'template']);
+        $resolver->setRequired(['access_token', 'touser', 'template']);
         $resolver->setDefault('url', null);
         $resolver->setDefault('miniprogram', function (OptionsResolver $miniprogramResolver) {
             $miniprogramResolver->setDefined(['appid', 'pagepath']);
         });
 
+        $resolver->setAllowedTypes('access_token', 'string');
         $resolver->setAllowedTypes('touser', 'string');
         $resolver->setAllowedTypes('template', Template::class);
         $resolver->setAllowedTypes('url', ['null', 'string']);
@@ -40,10 +33,8 @@ class Message extends AbstractRequest
 
     protected function configureRequest(RequestOptions $request, array $options): void
     {
-        $result = $this->accessToken->send();
-
         $query = [
-            'access_token' => $result['access_token'],
+            'access_token' => $options['access_token'],
         ];
 
         $body = [

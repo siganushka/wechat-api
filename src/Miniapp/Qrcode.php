@@ -7,7 +7,6 @@ namespace Siganushka\ApiClient\Wechat\Miniapp;
 use Siganushka\ApiClient\AbstractRequest;
 use Siganushka\ApiClient\Exception\ParseResponseException;
 use Siganushka\ApiClient\RequestOptions;
-use Siganushka\ApiClient\Wechat\Core\AccessToken;
 use Symfony\Component\OptionsResolver\OptionsResolver;
 use Symfony\Contracts\HttpClient\ResponseInterface;
 
@@ -18,30 +17,20 @@ class Qrcode extends AbstractRequest
 {
     public const URL = 'https://api.weixin.qq.com/cgi-bin/wxaapp/createwxaqrcode';
 
-    private AccessToken $accessToken;
-
-    public function __construct(AccessToken $accessToken)
-    {
-        $this->accessToken = $accessToken;
-    }
-
     protected function configureOptions(OptionsResolver $resolver): void
     {
-        $result = $this->accessToken->send();
-
-        $resolver->setRequired('path');
+        $resolver->setRequired(['access_token', 'path']);
         $resolver->setDefined('width');
 
+        $resolver->setAllowedTypes('access_token', 'string');
         $resolver->setAllowedTypes('path', 'string');
         $resolver->setAllowedTypes('width', 'int');
     }
 
     protected function configureRequest(RequestOptions $request, array $options): void
     {
-        $result = $this->accessToken->send();
-
         $query = [
-            'access_token' => $result['access_token'],
+            'access_token' => $options['access_token'],
         ];
 
         $body = [

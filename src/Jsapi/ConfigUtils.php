@@ -4,35 +4,50 @@ declare(strict_types=1);
 
 namespace Siganushka\ApiClient\Wechat\Jsapi;
 
-use Siganushka\ApiClient\Wechat\Configuration;
-use Siganushka\ApiClient\Wechat\GenericUtils;
-use Siganushka\ApiClient\Wechat\Ticket\Ticket;
+use Siganushka\ApiClient\OptionsExtendableInterface;
+use Siganushka\ApiClient\OptionsExtendableTrait;
+use Siganushka\ApiClient\Wechat\Utils\GenericUtils;
+use Symfony\Component\OptionsResolver\OptionsResolver;
 
 /**
  * Wechat jsapi config utils class.
  *
  * @see https://developers.weixin.qq.com/doc/offiaccount/OA_Web_Apps/JS-SDK.html
  */
-class ConfigUtils
+class ConfigUtils implements OptionsExtendableInterface
 {
-    private Configuration $configuration;
-    private Ticket $ticket;
+    use OptionsExtendableTrait;
 
-    public function __construct(Configuration $configuration, Ticket $ticket)
+    protected function configureOptions(OptionsResolver $resolver): void
     {
-        $this->configuration = $configuration;
-        $this->ticket = $ticket;
-    }
+        $resolver->setRequired(['appid', 'ticket']);
 
-    public function generate(array $apis = [], bool $debug = false): array
-    {
-        $result = $this->ticket->send();
-
-        $parameters = [
-            'jsapi_ticket' => $result['ticket'],
+        $resolver->setDefaults([
             'timestamp' => GenericUtils::getTimestamp(),
             'noncestr' => GenericUtils::getNonceStr(),
             'url' => GenericUtils::getCurrentUrl(),
+            'apis' => [],
+            'debug' => false,
+        ]);
+
+        $resolver->setAllowedTypes('appid', 'string');
+        $resolver->setAllowedTypes('ticket', 'string');
+        $resolver->setAllowedTypes('timestamp', 'string');
+        $resolver->setAllowedTypes('noncestr', 'string');
+        $resolver->setAllowedTypes('url', 'string');
+        $resolver->setAllowedTypes('apis', 'string[]');
+        $resolver->setAllowedTypes('debug', 'bool');
+    }
+
+    public function generate(array $options = []): array
+    {
+        $resolved = $this->resolve($options);
+
+        $parameters = [
+            'jsapi_ticket' => $resolved['ticket'],
+            'timestamp' => $resolved['timestamp'],
+            'noncestr' => $resolved['noncestr'],
+            'url' => $resolved['url'],
         ];
 
         ksort($parameters);
@@ -41,12 +56,12 @@ class ConfigUtils
         $signature = sha1($signature);
 
         $config = [
-            'appId' => $this->configuration['appid'],
-            'nonceStr' => $parameters['noncestr'],
-            'timestamp' => $parameters['timestamp'],
+            'appId' => $resolved['appid'],
+            'nonceStr' => $resolved['noncestr'],
+            'timestamp' => $resolved['timestamp'],
             'signature' => $signature,
-            'jsApiList' => $apis,
-            'debug' => $debug,
+            'jsApiList' => $resolved['apis'],
+            'debug' => $resolved['debug'],
         ];
 
         return $config;

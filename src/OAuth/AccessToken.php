@@ -7,8 +7,6 @@ namespace Siganushka\ApiClient\Wechat\OAuth;
 use Siganushka\ApiClient\AbstractRequest;
 use Siganushka\ApiClient\Exception\ParseResponseException;
 use Siganushka\ApiClient\RequestOptions;
-use Siganushka\ApiClient\Wechat\Configuration;
-use Symfony\Component\OptionsResolver\Exception\NoConfigurationException;
 use Symfony\Component\OptionsResolver\OptionsResolver;
 use Symfony\Contracts\HttpClient\ResponseInterface;
 
@@ -19,36 +17,20 @@ class AccessToken extends AbstractRequest
 {
     public const URL = 'https://api.weixin.qq.com/sns/oauth2/access_token';
 
-    private Configuration $configuration;
-
-    public function __construct(Configuration $configuration)
-    {
-        $this->configuration = $configuration;
-    }
-
     protected function configureOptions(OptionsResolver $resolver): void
     {
-        $resolver->setRequired('code');
-        $resolver->setDefault('using_open_api', false);
+        $resolver->setRequired(['appid', 'secret', 'code']);
 
         $resolver->setAllowedTypes('code', 'string');
-        $resolver->setAllowedTypes('using_open_api', 'bool');
+        $resolver->setAllowedTypes('appid', 'string');
+        $resolver->setAllowedTypes('secret', 'string');
     }
 
     protected function configureRequest(RequestOptions $request, array $options): void
     {
-        $appid = $options['using_open_api'] ? 'open_appid' : 'appid';
-        $secret = $options['using_open_api'] ? 'open_secret' : 'secret';
-
-        foreach ([$appid, $secret] as $optionName) {
-            if (null === $this->configuration[$optionName]) {
-                throw new NoConfigurationException(sprintf('No configured value for "%s" option.', $optionName));
-            }
-        }
-
         $query = [
-            'appid' => $this->configuration[$appid],
-            'secret' => $this->configuration[$secret],
+            'appid' => $options['appid'],
+            'secret' => $options['secret'],
             'grant_type' => 'authorization_code',
             'code' => $options['code'],
         ];

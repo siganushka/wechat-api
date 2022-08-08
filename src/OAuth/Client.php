@@ -4,44 +4,27 @@ declare(strict_types=1);
 
 namespace Siganushka\ApiClient\Wechat\OAuth;
 
-use Siganushka\ApiClient\ConfigurableOptionsInterface;
-use Siganushka\ApiClient\ConfigurableOptionsTrait;
-use Siganushka\ApiClient\Wechat\Configuration;
-use Symfony\Component\OptionsResolver\Exception\NoConfigurationException;
-use Symfony\Component\OptionsResolver\Options;
+use Siganushka\ApiClient\OptionsExtendableInterface;
+use Siganushka\ApiClient\OptionsExtendableTrait;
 use Symfony\Component\OptionsResolver\OptionsResolver;
 
 /**
  * Wechat oauth client class.
  *
  * @see https://developers.weixin.qq.com/doc/offiaccount/OA_Web_Apps/Wechat_webpage_authorization.html
- * @see https://developers.weixin.qq.com/doc/oplatform/Website_App/WeChat_Login/Wechat_Login.html
  */
-class Client implements ConfigurableOptionsInterface
+class Client implements OptionsExtendableInterface
 {
-    use ConfigurableOptionsTrait;
+    use OptionsExtendableTrait;
 
     public const URL = 'https://open.weixin.qq.com/connect/oauth2/authorize';
-    public const URL2 = 'https://open.weixin.qq.com/connect/qrconnect';
-
-    protected Configuration $configuration;
-
-    public function __construct(Configuration $configuration)
-    {
-        $this->configuration = $configuration;
-    }
 
     public function getRedirectUrl(array $options = []): string
     {
         $resolved = $this->resolve($options);
 
-        $appid = $resolved['using_open_api'] ? 'open_appid' : 'appid';
-        if (null === $this->configuration[$appid]) {
-            throw new NoConfigurationException(sprintf('No configured value for "%s" option.', $appid));
-        }
-
         $query = [
-            'appid' => $this->configuration[$appid],
+            'appid' => $resolved['appid'],
             'redirect_uri' => $resolved['redirect_uri'],
             'scope' => $resolved['scope'],
             'response_type' => 'code',
@@ -53,7 +36,7 @@ class Client implements ConfigurableOptionsInterface
 
         ksort($query);
 
-        return ($resolved['using_open_api'] ? static::URL2 : static::URL).'?'.http_build_query($query).'#wechat_redirect';
+        return sprintf('%s?%s#wechat_redirect', static::URL, http_build_query($query));
     }
 
     public function redirect(array $options = []): void
@@ -63,18 +46,15 @@ class Client implements ConfigurableOptionsInterface
 
     protected function configureOptions(OptionsResolver $resolver): void
     {
-        $resolver->setRequired('redirect_uri');
+        $resolver->setRequired(['appid', 'redirect_uri']);
+
         $resolver->setDefault('state', null);
-        $resolver->setDefault('using_open_api', false);
-        $resolver->setDefault('scope', function (Options $options) {
-            return $options['using_open_api'] ? 'snsapi_login' : 'snsapi_base';
-        });
+        $resolver->setDefault('scope', 'snsapi_base');
 
+        $resolver->setAllowedTypes('appid', 'string');
         $resolver->setAllowedTypes('redirect_uri', 'string');
-        $resolver->setAllowedTypes('scope', 'string');
         $resolver->setAllowedTypes('state', ['null', 'string']);
-        $resolver->setAllowedTypes('using_open_api', 'bool');
 
-        $resolver->setAllowedValues('scope', ['snsapi_base', 'snsapi_userinfo', 'snsapi_login']);
+        $resolver->setAllowedValues('scope', ['snsapi_base', 'snsapi_userinfo']);
     }
 }

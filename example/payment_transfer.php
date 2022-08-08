@@ -15,8 +15,7 @@ $options = [
     're_user_name' => 'foo',
 ];
 
-$request = new Transfer($configuration);
-$request->setHttpClient($httpClient);
-
+$request = $factory->create(Transfer::class);
 $result = $request->send($options);
+
 dd($result);

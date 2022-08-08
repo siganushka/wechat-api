@@ -20,10 +20,9 @@ $options = [
     // 'line_color' => ['r' => 255, 'g' => 255, 'b' => 255],
 ];
 
-$request = new WxacodeUnlimited($accessToken);
-$request->setHttpClient($httpClient);
-
+$request = $factory->create(WxacodeUnlimited::class);
 $result = $request->send($options);
+
 dd($result);
 
 // // 显示小程序码

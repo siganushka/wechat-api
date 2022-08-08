@@ -6,8 +6,7 @@ use Siganushka\ApiClient\Wechat\Core\CallbackIp;
 
 require __DIR__.'/_autoload.php';
 
-$request = new CallbackIp($accessToken);
-$request->setHttpClient($httpClient);
-
+$request = $factory->create(CallbackIp::class);
 $result = $request->send();
+
 dd($result);

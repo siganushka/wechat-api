@@ -7,7 +7,6 @@ namespace Siganushka\ApiClient\Wechat\Miniapp;
 use Siganushka\ApiClient\AbstractRequest;
 use Siganushka\ApiClient\Exception\ParseResponseException;
 use Siganushka\ApiClient\RequestOptions;
-use Siganushka\ApiClient\Wechat\Core\AccessToken;
 use Symfony\Component\OptionsResolver\OptionsResolver;
 use Symfony\Contracts\HttpClient\ResponseInterface;
 
@@ -18,16 +17,9 @@ class Wxacode extends AbstractRequest
 {
     public const URL = 'https://api.weixin.qq.com/wxa/getwxacode';
 
-    protected AccessToken $accessToken;
-
-    public function __construct(AccessToken $accessToken)
-    {
-        $this->accessToken = $accessToken;
-    }
-
     protected function configureOptions(OptionsResolver $resolver): void
     {
-        $resolver->setRequired('path');
+        $resolver->setRequired(['access_token', 'path']);
         $resolver->setDefined(['env_version', 'width', 'auto_color', 'is_hyaline']);
         $resolver->setDefault('line_color', function (OptionsResolver $lineColorResolver) {
             $lineColorResolver->setDefined(['r', 'g', 'b']);
@@ -36,6 +28,7 @@ class Wxacode extends AbstractRequest
             $lineColorResolver->setAllowedTypes('b', 'int');
         });
 
+        $resolver->setAllowedTypes('access_token', 'string');
         $resolver->setAllowedTypes('path', 'string');
         $resolver->setAllowedTypes('env_version', 'string');
         $resolver->setAllowedTypes('width', 'int');
@@ -48,10 +41,8 @@ class Wxacode extends AbstractRequest
 
     protected function configureRequest(RequestOptions $request, array $options): void
     {
-        $result = $this->accessToken->send();
-
         $query = [
-            'access_token' => $result['access_token'],
+            'access_token' => $options['access_token'],
         ];
 
         $body = [

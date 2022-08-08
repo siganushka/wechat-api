@@ -2,19 +2,15 @@
 
 declare(strict_types=1);
 
+use Siganushka\ApiClient\RequestFactoryBuilder;
 use Siganushka\ApiClient\Wechat\Configuration;
-use Siganushka\ApiClient\Wechat\Core\AccessToken;
-use Siganushka\ApiClient\Wechat\Ticket\Ticket;
-use Symfony\Component\Cache\Adapter\FilesystemAdapter;
+use Siganushka\ApiClient\Wechat\ConfigurationManager;
+use Siganushka\ApiClient\Wechat\ConfigurationOptions;
+use Siganushka\ApiClient\Wechat\WechatExtension;
 use Symfony\Component\ErrorHandler\Debug;
-use Symfony\Component\HttpClient\HttpClient;
 
-$configFile = __DIR__.'/_config.php';
-if (!is_file($configFile)) {
-    exit('请复制 _config.php.dist 为 _config.php 并填写参数！');
-}
+require __DIR__.'/../vendor/autoload.php';
 
-require $configFile;
 Debug::enable();
 
 if (!function_exists('dd')) {
@@ -25,22 +21,21 @@ if (!function_exists('dd')) {
     }
 }
 
-$httpClient = HttpClient::create();
-$cachePool = new FilesystemAdapter();
+$configFile = __DIR__.'/_config.php';
+if (!is_file($configFile)) {
+    exit('请复制 _config.php.dist 为 _config.php 并填写参数！');
+}
 
-$configuration = new Configuration([
-    'appid' => WECHAT_APPID,
-    'secret' => WECHAT_SECRET,
-    'open_appid' => WECHAT_OPEN_APPID,
-    'open_secret' => WECHAT_OPEN_SECRET,
-    'mchid' => WECHAT_MCHID,
-    'mchkey' => WECHAT_MCHKEY,
-    'client_cert_file' => WECHAT_CLIENT_CERT,
-    'client_key_file' => WECHAT_CLIENT_KEY,
-]);
+$configs = require $configFile;
 
-$accessToken = new AccessToken($cachePool, $configuration);
-$accessToken->setHttpClient($httpClient);
+$configurationManager = new ConfigurationManager('miniapp');
+foreach ($configs as $name => $values) {
+    $configurationManager->set($name, new Configuration($values));
+}
 
-$ticket = new Ticket($cachePool, $accessToken);
-$ticket->setHttpClient($httpClient);
+$configurationOptions = new ConfigurationOptions($configurationManager);
+
+$factory = RequestFactoryBuilder::create()
+    ->addExtension(new WechatExtension($configurationManager))
+    ->getFactory()
+;

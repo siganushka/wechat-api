@@ -16,8 +16,7 @@ $options = [
     // 'sign_type' => 'HMAC-SHA256',
 ];
 
-$request = new Unifiedorder($configuration);
-$request->setHttpClient($httpClient);
-
+$request = $factory->create(Unifiedorder::class);
 $result = $request->send($options);
+
 dd($result);

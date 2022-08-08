@@ -1,6 +1,6 @@
 /vendor/
 /example/_config.php
-/example/cert/*.pem
+/example/cert/*
 /composer.lock
 /.phpunit.result.cache
 /.php-cs-fixer.php

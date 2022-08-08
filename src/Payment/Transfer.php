@@ -7,9 +7,8 @@ namespace Siganushka\ApiClient\Wechat\Payment;
 use Siganushka\ApiClient\AbstractRequest;
 use Siganushka\ApiClient\Exception\ParseResponseException;
 use Siganushka\ApiClient\RequestOptions;
-use Siganushka\ApiClient\Wechat\Configuration;
-use Siganushka\ApiClient\Wechat\GenericUtils;
-use Siganushka\ApiClient\Wechat\SerializerUtils;
+use Siganushka\ApiClient\Wechat\Utils\GenericUtils;
+use Siganushka\ApiClient\Wechat\Utils\SerializerUtils;
 use Symfony\Component\OptionsResolver\Exception\MissingOptionsException;
 use Symfony\Component\OptionsResolver\Exception\NoConfigurationException;
 use Symfony\Component\OptionsResolver\Options;
@@ -23,12 +22,13 @@ class Transfer extends AbstractRequest
 {
     public const URL = 'https://api.mch.weixin.qq.com/mmpaymkttransfers/promotion/transfers';
 
-    private Configuration $configuration;
+    private SignatureUtils $signatureUtils;
     private array $defaultOptions;
 
-    public function __construct(Configuration $configuration)
+    public function __construct(SignatureUtils $signatureUtils = null)
     {
-        $this->configuration = $configuration;
+        $this->signatureUtils = $signatureUtils ?? SignatureUtils::create();
+
         $this->defaultOptions = [
             'nonce_str' => GenericUtils::getNonceStr(),
             'check_name' => 'NO_CHECK',
@@ -44,7 +44,9 @@ class Transfer extends AbstractRequest
     protected function configureOptions(OptionsResolver $resolver): void
     {
         $resolver->setDefaults($this->defaultOptions);
-        $resolver->setRequired(['partner_trade_no', 'openid', 'amount', 'desc']);
+
+        $resolver->setRequired(['appid', 'mchid', 'client_cert_file', 'client_key_file', 'partner_trade_no', 'openid', 'amount', 'desc']);
+
         $resolver->setAllowedTypes('amount', 'int');
         $resolver->setAllowedValues('check_name', ['NO_CHECK', 'FORCE_CHECK']);
 
@@ -59,15 +61,15 @@ class Transfer extends AbstractRequest
 
     protected function configureRequest(RequestOptions $request, array $options): void
     {
-        foreach (['mchid', 'mchkey', 'client_cert_file', 'client_key_file'] as $optionName) {
-            if (null === $this->configuration[$optionName]) {
+        foreach (['mchid', 'client_cert_file', 'client_key_file'] as $optionName) {
+            if (null === $options[$optionName]) {
                 throw new NoConfigurationException(sprintf('No configured value for "%s" option.', $optionName));
             }
         }
 
         $body = [
-            'mch_appid' => $this->configuration['appid'],
-            'mchid' => $this->configuration['mchid'],
+            'mch_appid' => $options['appid'],
+            'mchid' => $options['mchid'],
             'partner_trade_no' => $options['partner_trade_no'],
             'openid' => $options['openid'],
             'amount' => $options['amount'],
@@ -80,15 +82,20 @@ class Transfer extends AbstractRequest
             }
         }
 
-        $signatureUtils = new SignatureUtils($this->configuration);
-        $body['sign'] = $signatureUtils->generate($body);
+        // Extending resolvable from current class
+        foreach ($this->resolvables as $resolvable) {
+            $this->signatureUtils->extend($resolvable);
+        }
+
+        // Generate signature
+        $body['sign'] = $this->signatureUtils->generate($body);
 
         $request
             ->setMethod('POST')
             ->setUrl(static::URL)
             ->setBody(SerializerUtils::xmlEncode($body))
-            ->setLocalCert($this->configuration['client_cert_file'])
-            ->setLocalPk($this->configuration['client_key_file'])
+            ->setLocalCert($options['client_cert_file'])
+            ->setLocalPk($options['client_key_file'])
         ;
     }
 

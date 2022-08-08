@@ -7,9 +7,8 @@ namespace Siganushka\ApiClient\Wechat\Payment;
 use Siganushka\ApiClient\AbstractRequest;
 use Siganushka\ApiClient\Exception\ParseResponseException;
 use Siganushka\ApiClient\RequestOptions;
-use Siganushka\ApiClient\Wechat\Configuration;
-use Siganushka\ApiClient\Wechat\GenericUtils;
-use Siganushka\ApiClient\Wechat\SerializerUtils;
+use Siganushka\ApiClient\Wechat\Utils\GenericUtils;
+use Siganushka\ApiClient\Wechat\Utils\SerializerUtils;
 use Symfony\Component\OptionsResolver\Exception\MissingOptionsException;
 use Symfony\Component\OptionsResolver\Exception\NoConfigurationException;
 use Symfony\Component\OptionsResolver\Options;
@@ -24,12 +23,13 @@ class Unifiedorder extends AbstractRequest
     public const URL = 'https://api.mch.weixin.qq.com/pay/unifiedorder';
     public const URL2 = 'https://api2.mch.weixin.qq.com/pay/unifiedorder';
 
-    private Configuration $configuration;
+    private SignatureUtils $signatureUtils;
     private array $defaultOptions;
 
-    public function __construct(Configuration $configuration)
+    public function __construct(SignatureUtils $signatureUtils = null)
     {
-        $this->configuration = $configuration;
+        $this->signatureUtils = $signatureUtils ?? SignatureUtils::create();
+
         $this->defaultOptions = [
             'nonce_str' => GenericUtils::getNonceStr(),
             'spbill_create_ip' => GenericUtils::getClientIp(),
@@ -53,7 +53,7 @@ class Unifiedorder extends AbstractRequest
     protected function configureOptions(OptionsResolver $resolver): void
     {
         $resolver->setDefaults($this->defaultOptions);
-        $resolver->setRequired(['body', 'out_trade_no', 'total_fee', 'trade_type', 'notify_url']);
+        $resolver->setRequired(['appid', 'mchid', 'sign_type', 'body', 'out_trade_no', 'total_fee', 'trade_type', 'notify_url']);
         $resolver->setAllowedTypes('total_fee', 'int');
         $resolver->setAllowedTypes('using_slave_api', 'bool');
 
@@ -82,16 +82,16 @@ class Unifiedorder extends AbstractRequest
 
     protected function configureRequest(RequestOptions $request, array $options): void
     {
-        foreach (['mchid', 'mchkey'] as $optionName) {
-            if (null === $this->configuration[$optionName]) {
+        foreach (['mchid'] as $optionName) {
+            if (null === $options[$optionName]) {
                 throw new NoConfigurationException(sprintf('No configured value for "%s" option.', $optionName));
             }
         }
 
         $body = [
-            'appid' => $this->configuration['appid'],
-            'mch_id' => $this->configuration['mchid'],
-            'sign_type' => $this->configuration['sign_type'],
+            'appid' => $options['appid'],
+            'mch_id' => $options['mchid'],
+            'sign_type' => $options['sign_type'],
             'body' => $options['body'],
             'out_trade_no' => $options['out_trade_no'],
             'total_fee' => $options['total_fee'],
@@ -106,8 +106,13 @@ class Unifiedorder extends AbstractRequest
             }
         }
 
-        $signatureUtils = new SignatureUtils($this->configuration);
-        $body['sign'] = $signatureUtils->generate($body);
+        // Extending resolvable from current class
+        foreach ($this->resolvables as $resolvable) {
+            $this->signatureUtils->extend($resolvable);
+        }
+
+        // Generate signature
+        $body['sign'] = $this->signatureUtils->generate($body);
 
         $xmlBody = SerializerUtils::xmlEncode($body);
         $apiURL = $options['using_slave_api'] ? static::URL2 : static::URL;

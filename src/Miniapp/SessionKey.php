@@ -9,7 +9,7 @@ use Siganushka\ApiClient\AbstractRequest;
 use Siganushka\ApiClient\Exception\ParseResponseException;
 use Siganushka\ApiClient\RequestOptions;
 use Siganushka\ApiClient\Response\ResponseFactory;
-use Siganushka\ApiClient\Wechat\Configuration;
+use Symfony\Component\Cache\Adapter\FilesystemAdapter;
 use Symfony\Component\OptionsResolver\OptionsResolver;
 use Symfony\Contracts\HttpClient\ResponseInterface;
 
@@ -21,25 +21,26 @@ class SessionKey extends AbstractRequest
     public const URL = 'https://api.weixin.qq.com/sns/jscode2session';
 
     private CacheItemPoolInterface $cachePool;
-    private Configuration $configuration;
 
-    public function __construct(CacheItemPoolInterface $cachePool, Configuration $configuration)
+    public function __construct(CacheItemPoolInterface $cachePool = null)
     {
-        $this->cachePool = $cachePool;
-        $this->configuration = $configuration;
+        $this->cachePool = $cachePool ?? new FilesystemAdapter();
     }
 
     protected function configureOptions(OptionsResolver $resolver): void
     {
-        $resolver->setRequired('code');
+        $resolver->setRequired(['appid', 'secret', 'code']);
+
         $resolver->setAllowedTypes('code', 'string');
+        $resolver->setAllowedTypes('appid', 'string');
+        $resolver->setAllowedTypes('secret', 'string');
     }
 
     protected function configureRequest(RequestOptions $request, array $options): void
     {
         $query = [
-            'appid' => $this->configuration['appid'],
-            'secret' => $this->configuration['secret'],
+            'appid' => $options['appid'],
+            'secret' => $options['secret'],
             'grant_type' => 'authorization_code',
             'code' => $options['code'],
         ];
@@ -53,9 +54,7 @@ class SessionKey extends AbstractRequest
 
     protected function sendRequest(RequestOptions $request): ResponseInterface
     {
-        $key = sprintf('%s_%s', __CLASS__, md5(serialize($request->toArray())));
-
-        $cacheItem = $this->cachePool->getItem($key);
+        $cacheItem = $this->cachePool->getItem((string) $request);
         if ($cacheItem->isHit()) {
             return ResponseFactory::createMockResponseWithJson($cacheItem->get());
         }

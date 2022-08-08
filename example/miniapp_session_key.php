@@ -10,8 +10,7 @@ $options = [
     'code' => '053GLSll2wZij94xpOol2mqhxo4GLSlv',
 ];
 
-$request = new SessionKey($cachePool, $configuration);
-$request->setHttpClient($httpClient);
-
+$request = $factory->create(SessionKey::class);
 $result = $request->send($options);
+
 dd($result);

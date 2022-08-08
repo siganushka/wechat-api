@@ -9,7 +9,7 @@ use Siganushka\ApiClient\AbstractRequest;
 use Siganushka\ApiClient\Exception\ParseResponseException;
 use Siganushka\ApiClient\RequestOptions;
 use Siganushka\ApiClient\Response\ResponseFactory;
-use Siganushka\ApiClient\Wechat\Core\AccessToken;
+use Symfony\Component\Cache\Adapter\FilesystemAdapter;
 use Symfony\Component\OptionsResolver\OptionsResolver;
 use Symfony\Contracts\HttpClient\ResponseInterface;
 
@@ -21,26 +21,25 @@ class Ticket extends AbstractRequest
     public const URL = 'https://api.weixin.qq.com/cgi-bin/ticket/getticket';
 
     private CacheItemPoolInterface $cachePool;
-    private AccessToken $accessToken;
 
-    public function __construct(CacheItemPoolInterface $cachePool, AccessToken $accessToken)
+    public function __construct(CacheItemPoolInterface $cachePool = null)
     {
-        $this->cachePool = $cachePool;
-        $this->accessToken = $accessToken;
+        $this->cachePool = $cachePool ?? new FilesystemAdapter();
     }
 
     protected function configureOptions(OptionsResolver $resolver): void
     {
+        $resolver->setRequired('access_token');
         $resolver->setDefault('type', 'jsapi');
+
+        $resolver->setAllowedTypes('access_token', 'string');
         $resolver->setAllowedValues('type', ['jsapi', 'wx_card']);
     }
 
     protected function configureRequest(RequestOptions $request, array $options): void
     {
-        $result = $this->accessToken->send();
-
         $query = [
-            'access_token' => $result['access_token'],
+            'access_token' => $options['access_token'],
             'type' => $options['type'],
         ];
 
@@ -53,9 +52,7 @@ class Ticket extends AbstractRequest
 
     protected function sendRequest(RequestOptions $request): ResponseInterface
     {
-        $key = sprintf('%s_%s', __CLASS__, md5(serialize($request->toArray())));
-
-        $cacheItem = $this->cachePool->getItem($key);
+        $cacheItem = $this->cachePool->getItem((string) $request);
         if ($cacheItem->isHit()) {
             return ResponseFactory::createMockResponseWithJson($cacheItem->get());
         }

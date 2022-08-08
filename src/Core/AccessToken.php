@@ -10,6 +10,8 @@ use Siganushka\ApiClient\Exception\ParseResponseException;
 use Siganushka\ApiClient\RequestOptions;
 use Siganushka\ApiClient\Response\ResponseFactory;
 use Siganushka\ApiClient\Wechat\Configuration;
+use Symfony\Component\Cache\Adapter\FilesystemAdapter;
+use Symfony\Component\OptionsResolver\OptionsResolver;
 use Symfony\Contracts\HttpClient\ResponseInterface;
 
 /**
@@ -20,19 +22,22 @@ class AccessToken extends AbstractRequest
     public const URL = 'https://api.weixin.qq.com/cgi-bin/token';
 
     private CacheItemPoolInterface $cachePool;
-    private Configuration $configuration;
 
-    public function __construct(CacheItemPoolInterface $cachePool, Configuration $configuration)
+    public function __construct(CacheItemPoolInterface $cachePool = null)
     {
-        $this->cachePool = $cachePool;
-        $this->configuration = $configuration;
+        $this->cachePool = $cachePool ?? new FilesystemAdapter();
+    }
+
+    protected function configureOptions(OptionsResolver $resolver): void
+    {
+        Configuration::apply($resolver);
     }
 
     protected function configureRequest(RequestOptions $request, array $options): void
     {
         $query = [
-            'appid' => $this->configuration['appid'],
-            'secret' => $this->configuration['secret'],
+            'appid' => $options['appid'],
+            'secret' => $options['secret'],
             'grant_type' => 'client_credential',
         ];
 
@@ -45,9 +50,7 @@ class AccessToken extends AbstractRequest
 
     protected function sendRequest(RequestOptions $request): ResponseInterface
     {
-        $key = sprintf('%s_%s', __CLASS__, md5(serialize($request->toArray())));
-
-        $cacheItem = $this->cachePool->getItem($key);
+        $cacheItem = $this->cachePool->getItem((string) $request);
         if ($cacheItem->isHit()) {
             return ResponseFactory::createMockResponseWithJson($cacheItem->get());
         }

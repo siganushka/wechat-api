@@ -3,6 +3,7 @@
 declare(strict_types=1);
 
 use Siganushka\ApiClient\Wechat\Payment\SignatureUtils;
+use Siganushka\ApiClient\Wechat\WechatConfigurationOptions;
 
 require __DIR__.'/_autoload.php';
 
@@ -16,11 +17,11 @@ $parameters = [
     'trade_type' => 'JSAPI',
 ];
 
-$signatureUtils = new SignatureUtils($configuration);
+$signatureUtils = new SignatureUtils();
+$signatureUtils->extend(new WechatConfigurationOptions($configuration));
+
+// 生成签名
 $sign = $signatureUtils->generate($parameters);
 
 // 生成 & 验证签名
 dd($sign, $signatureUtils->check($parameters, $sign));
-
-// 还可以验证参数中的签名是否有效
-// dd($signatureUtils->checkParameters(array_merge($parameters, ['sign' => $sign])));

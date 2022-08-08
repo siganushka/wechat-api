@@ -29,10 +29,8 @@ class WxacodeUnlimited extends Wxacode
 
     protected function configureRequest(RequestOptions $request, array $options): void
     {
-        $result = $this->accessToken->send();
-
         $query = [
-            'access_token' => $result['access_token'],
+            'access_token' => $options['access_token'],
         ];
 
         $body = [

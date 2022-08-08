@@ -7,9 +7,8 @@ namespace Siganushka\ApiClient\Wechat\Payment;
 use Siganushka\ApiClient\AbstractRequest;
 use Siganushka\ApiClient\Exception\ParseResponseException;
 use Siganushka\ApiClient\RequestOptions;
-use Siganushka\ApiClient\Wechat\Configuration;
-use Siganushka\ApiClient\Wechat\GenericUtils;
-use Siganushka\ApiClient\Wechat\SerializerUtils;
+use Siganushka\ApiClient\Wechat\Utils\GenericUtils;
+use Siganushka\ApiClient\Wechat\Utils\SerializerUtils;
 use Symfony\Component\OptionsResolver\Exception\MissingOptionsException;
 use Symfony\Component\OptionsResolver\Exception\NoConfigurationException;
 use Symfony\Component\OptionsResolver\Options;
@@ -24,13 +23,10 @@ class Query extends AbstractRequest
     public const URL = 'https://api.mch.weixin.qq.com/pay/orderquery';
     public const URL2 = 'https://api2.mch.weixin.qq.com/pay/orderquery';
 
-    private Configuration $configuration;
-
     private array $defaultOptions;
 
-    public function __construct(Configuration $configuration)
+    public function __construct()
     {
-        $this->configuration = $configuration;
         $this->defaultOptions = [
             'nonce_str' => GenericUtils::getNonceStr(),
             'transaction_id' => null,

@@ -12,8 +12,7 @@ $options = [
     'openid' => 'oeBlc54IakibieYAIQYgQ5YOFO_U',
 ];
 
-$request = new UserInfo();
-$request->setHttpClient($httpClient);
-
+$request = $factory->create(UserInfo::class);
 $result = $request->send($options);
+
 dd($result);

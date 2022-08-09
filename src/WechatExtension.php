@@ -7,7 +7,7 @@ namespace Siganushka\ApiClient\Wechat;
 use Psr\Cache\CacheItemPoolInterface;
 use Siganushka\ApiClient\RequestExtensionInterface;
 use Siganushka\ApiClient\Wechat\Core\AccessToken;
-use Siganushka\ApiClient\Wechat\Core\AccessTokenOptions;
+use Siganushka\ApiClient\Wechat\Core\AccessTokenExtension;
 use Siganushka\ApiClient\Wechat\Core\CallbackIp;
 use Siganushka\ApiClient\Wechat\Core\ServerIp;
 use Siganushka\ApiClient\Wechat\Miniapp\Qrcode;
@@ -24,18 +24,32 @@ use Siganushka\ApiClient\Wechat\Payment\Transfer;
 use Siganushka\ApiClient\Wechat\Payment\Unifiedorder;
 use Siganushka\ApiClient\Wechat\Template\Message;
 use Siganushka\ApiClient\Wechat\Ticket\Ticket;
-use Siganushka\ApiClient\Wechat\Ticket\TicketOptions;
+use Siganushka\ApiClient\Wechat\Ticket\TicketExtension;
 use Symfony\Component\Cache\Adapter\FilesystemAdapter;
+use Symfony\Component\HttpClient\HttpClient;
+use Symfony\Component\Serializer\Encoder\JsonEncoder;
+use Symfony\Component\Serializer\Encoder\XmlEncoder;
+use Symfony\Component\Serializer\Serializer;
+use Symfony\Component\Serializer\SerializerInterface;
+use Symfony\Contracts\HttpClient\HttpClientInterface;
 
 class WechatExtension implements RequestExtensionInterface
 {
-    private ConfigurationManager $configurationManager;
+    private Configuration $configuration;
+    private HttpClientInterface $httpClient;
     private CacheItemPoolInterface $cachePool;
+    private SerializerInterface $serializer;
 
-    public function __construct(ConfigurationManager $configurationManager, CacheItemPoolInterface $cachePool = null)
+    public function __construct(
+        Configuration $configuration,
+        HttpClientInterface $httpClient = null,
+        CacheItemPoolInterface $cachePool = null,
+        SerializerInterface $serializer = null)
     {
-        $this->configurationManager = $configurationManager;
+        $this->configuration = $configuration;
+        $this->httpClient = $httpClient ?? HttpClient::create();
         $this->cachePool = $cachePool ?? new FilesystemAdapter();
+        $this->serializer = $serializer ?? new Serializer([], [new XmlEncoder(), new JsonEncoder()]);
     }
 
     public function loadRequests(): iterable
@@ -52,21 +66,21 @@ class WechatExtension implements RequestExtensionInterface
             new CheckToken(),
             new RefreshToken(),
             new UserInfo(),
-            new Query(),
-            new Refund(),
-            new Transfer(),
-            new Unifiedorder(),
+            new Query($this->serializer),
+            new Refund($this->serializer),
+            new Transfer($this->serializer),
+            new Unifiedorder($this->serializer),
             new Message(),
             new Ticket($this->cachePool),
         ];
     }
 
-    public function loadRequestOptionsExtensions(): iterable
+    public function loadOptionsExtensions(): iterable
     {
         return [
-            new ConfigurationOptions($this->configurationManager),
-            new AccessTokenOptions($this->configurationManager),
-            new TicketOptions($this->configurationManager),
+            new ConfigurationExtension($this->configuration),
+            new AccessTokenExtension($this->configuration, $this->httpClient, $this->cachePool),
+            new TicketExtension($this->configuration, $this->httpClient, $this->cachePool),
         ];
     }
 }

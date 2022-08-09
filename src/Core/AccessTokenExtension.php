@@ -5,10 +5,10 @@ declare(strict_types=1);
 namespace Siganushka\ApiClient\Wechat\Core;
 
 use Psr\Cache\CacheItemPoolInterface;
-use Siganushka\ApiClient\OptionsResolvableTrait;
-use Siganushka\ApiClient\RequestOptionsExtensionInterface;
-use Siganushka\ApiClient\Wechat\ConfigurationManager;
-use Siganushka\ApiClient\Wechat\ConfigurationOptions;
+use Siganushka\ApiClient\Resolver\ConfigurableOptionsTrait;
+use Siganushka\ApiClient\Resolver\OptionsExtensionInterface;
+use Siganushka\ApiClient\Wechat\Configuration;
+use Siganushka\ApiClient\Wechat\ConfigurationExtension;
 use Siganushka\ApiClient\Wechat\Miniapp\Qrcode;
 use Siganushka\ApiClient\Wechat\Miniapp\Wxacode;
 use Siganushka\ApiClient\Wechat\Miniapp\WxacodeUnlimited;
@@ -19,43 +19,43 @@ use Symfony\Component\HttpClient\HttpClient;
 use Symfony\Component\OptionsResolver\OptionsResolver;
 use Symfony\Contracts\HttpClient\HttpClientInterface;
 
-class AccessTokenOptions implements RequestOptionsExtensionInterface
+class AccessTokenExtension implements OptionsExtensionInterface
 {
-    use OptionsResolvableTrait;
+    use ConfigurableOptionsTrait;
 
-    private ConfigurationManager $configurationManager;
-    private HttpClientInterface $httpClient;
-    private CacheItemPoolInterface $cachePool;
+    protected Configuration $configuration;
+    protected HttpClientInterface $httpClient;
+    protected CacheItemPoolInterface $cachePool;
 
-    public function __construct(ConfigurationManager $configurationManager, HttpClientInterface $httpClient = null, CacheItemPoolInterface $cachePool = null)
+    public function __construct(Configuration $configuration, HttpClientInterface $httpClient = null, CacheItemPoolInterface $cachePool = null)
     {
-        $this->configurationManager = $configurationManager;
+        $this->configuration = $configuration;
         $this->httpClient = $httpClient ?? HttpClient::create();
         $this->cachePool = $cachePool ?? new FilesystemAdapter();
     }
 
     protected function configureOptions(OptionsResolver $resolver): void
     {
-        $configurationOptions = new ConfigurationOptions($this->configurationManager);
+        $configurationException = new ConfigurationExtension($this->configuration);
 
         $request = new AccessToken($this->cachePool);
         $request->setHttpClient($this->httpClient);
-        $request->extend($configurationOptions);
+        $request->extend($configurationException);
 
         $result = $request->send();
         $resolver->setDefault('access_token', $result['access_token']);
     }
 
-    public static function getExtendedRequests(): iterable
+    public static function getExtendedClasses(): iterable
     {
         return [
-            Ticket::class,
             CallbackIp::class,
             ServerIp::class,
             Qrcode::class,
             Wxacode::class,
             WxacodeUnlimited::class,
             Message::class,
+            Ticket::class,
         ];
     }
 }

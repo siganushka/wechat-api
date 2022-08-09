@@ -4,9 +4,10 @@ declare(strict_types=1);
 
 namespace Siganushka\ApiClient\Wechat\Jsapi;
 
-use Siganushka\ApiClient\OptionsExtendableInterface;
-use Siganushka\ApiClient\OptionsExtendableTrait;
-use Siganushka\ApiClient\Wechat\Utils\GenericUtils;
+use Siganushka\ApiClient\Resolver\ExtendableOptionsInterface;
+use Siganushka\ApiClient\Resolver\ExtendableOptionsTrait;
+use Siganushka\ApiClient\Wechat\Configuration;
+use Siganushka\ApiClient\Wechat\GenericUtils;
 use Symfony\Component\OptionsResolver\OptionsResolver;
 
 /**
@@ -14,32 +15,16 @@ use Symfony\Component\OptionsResolver\OptionsResolver;
  *
  * @see https://developers.weixin.qq.com/doc/offiaccount/OA_Web_Apps/JS-SDK.html
  */
-class ConfigUtils implements OptionsExtendableInterface
+class ConfigUtils implements ExtendableOptionsInterface
 {
-    use OptionsExtendableTrait;
+    use ExtendableOptionsTrait;
 
-    protected function configureOptions(OptionsResolver $resolver): void
+    public function generate(array $apis = [], bool $debug = false): array
     {
-        $resolver->setRequired(['appid', 'ticket']);
-
-        $resolver->setDefaults([
-            'timestamp' => GenericUtils::getTimestamp(),
-            'noncestr' => GenericUtils::getNonceStr(),
-            'url' => GenericUtils::getCurrentUrl(),
-            'apis' => [],
-            'debug' => false,
-        ]);
-
-        $resolver->setAllowedTypes('appid', 'string');
-        $resolver->setAllowedTypes('ticket', 'string');
-        $resolver->setAllowedTypes('timestamp', 'string');
-        $resolver->setAllowedTypes('noncestr', 'string');
-        $resolver->setAllowedTypes('url', 'string');
-        $resolver->setAllowedTypes('apis', 'string[]');
-        $resolver->setAllowedTypes('debug', 'bool');
+        return $this->generateFromOptions(compact('apis', 'debug'));
     }
 
-    public function generate(array $options = []): array
+    public function generateFromOptions(array $options = []): array
     {
         $resolved = $this->resolve($options);
 
@@ -57,13 +42,54 @@ class ConfigUtils implements OptionsExtendableInterface
 
         $config = [
             'appId' => $resolved['appid'],
-            'nonceStr' => $resolved['noncestr'],
             'timestamp' => $resolved['timestamp'],
+            'nonceStr' => $resolved['noncestr'],
             'signature' => $signature,
             'jsApiList' => $resolved['apis'],
             'debug' => $resolved['debug'],
         ];
 
         return $config;
+    }
+
+    protected function configureOptions(OptionsResolver $resolver): void
+    {
+        Configuration::apply($resolver);
+
+        $resolver
+            ->define('ticket')
+            ->required()
+            ->allowedTypes('string')
+        ;
+
+        $resolver
+            ->define('timestamp')
+            ->default(GenericUtils::getTimestamp())
+            ->allowedTypes('string')
+        ;
+
+        $resolver
+            ->define('noncestr')
+            ->default(GenericUtils::getNonceStr())
+            ->allowedTypes('string')
+        ;
+
+        $resolver
+            ->define('url')
+            ->default(GenericUtils::getCurrentUrl())
+            ->allowedTypes('string')
+        ;
+
+        $resolver
+            ->define('apis')
+            ->default([])
+            ->allowedTypes('string[]')
+        ;
+
+        $resolver
+            ->define('debug')
+            ->default(false)
+            ->allowedTypes('bool')
+        ;
     }
 }

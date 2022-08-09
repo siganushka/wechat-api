@@ -2,7 +2,7 @@
 
 declare(strict_types=1);
 
-namespace Siganushka\ApiClient\Wechat\Utils;
+namespace Siganushka\ApiClient\Wechat;
 
 class GenericUtils
 {

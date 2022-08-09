@@ -7,12 +7,16 @@ namespace Siganushka\ApiClient\Wechat\Payment;
 use Siganushka\ApiClient\AbstractRequest;
 use Siganushka\ApiClient\Exception\ParseResponseException;
 use Siganushka\ApiClient\RequestOptions;
-use Siganushka\ApiClient\Wechat\Utils\GenericUtils;
-use Siganushka\ApiClient\Wechat\Utils\SerializerUtils;
+use Siganushka\ApiClient\Wechat\Configuration;
+use Siganushka\ApiClient\Wechat\ConfigurationExtension;
+use Siganushka\ApiClient\Wechat\GenericUtils;
 use Symfony\Component\OptionsResolver\Exception\MissingOptionsException;
 use Symfony\Component\OptionsResolver\Exception\NoConfigurationException;
 use Symfony\Component\OptionsResolver\Options;
 use Symfony\Component\OptionsResolver\OptionsResolver;
+use Symfony\Component\Serializer\Encoder\DecoderInterface;
+use Symfony\Component\Serializer\Encoder\EncoderInterface;
+use Symfony\Component\Serializer\SerializerInterface;
 use Symfony\Contracts\HttpClient\ResponseInterface;
 
 /**
@@ -23,12 +27,13 @@ class Unifiedorder extends AbstractRequest
     public const URL = 'https://api.mch.weixin.qq.com/pay/unifiedorder';
     public const URL2 = 'https://api2.mch.weixin.qq.com/pay/unifiedorder';
 
-    private SignatureUtils $signatureUtils;
+    /** @var EncoderInterface|DecoderInterface */
+    private SerializerInterface $serializer;
     private array $defaultOptions;
 
-    public function __construct(SignatureUtils $signatureUtils = null)
+    public function __construct(SerializerInterface $serializer)
     {
-        $this->signatureUtils = $signatureUtils ?? SignatureUtils::create();
+        $this->serializer = $serializer;
 
         $this->defaultOptions = [
             'nonce_str' => GenericUtils::getNonceStr(),
@@ -52,8 +57,10 @@ class Unifiedorder extends AbstractRequest
 
     protected function configureOptions(OptionsResolver $resolver): void
     {
+        Configuration::apply($resolver);
+
         $resolver->setDefaults($this->defaultOptions);
-        $resolver->setRequired(['appid', 'mchid', 'sign_type', 'body', 'out_trade_no', 'total_fee', 'trade_type', 'notify_url']);
+        $resolver->setRequired(['body', 'out_trade_no', 'total_fee', 'trade_type', 'notify_url']);
         $resolver->setAllowedTypes('total_fee', 'int');
         $resolver->setAllowedTypes('using_slave_api', 'bool');
 
@@ -106,27 +113,25 @@ class Unifiedorder extends AbstractRequest
             }
         }
 
-        // Extending resolvable from current class
-        foreach ($this->resolvables as $resolvable) {
-            $this->signatureUtils->extend($resolvable);
+        $signatureUtils = SignatureUtils::create();
+        if (isset($this->extensions[ConfigurationExtension::class])) {
+            $signatureUtils->extend($this->extensions[ConfigurationExtension::class]);
         }
 
         // Generate signature
-        $body['sign'] = $this->signatureUtils->generate($body);
-
-        $xmlBody = SerializerUtils::xmlEncode($body);
-        $apiURL = $options['using_slave_api'] ? static::URL2 : static::URL;
+        $body['sign'] = $signatureUtils->generate($body);
+        $xmlBody = $this->serializer->encode($body, 'xml');
 
         $request
             ->setMethod('POST')
-            ->setUrl($apiURL)
+            ->setUrl($options['using_slave_api'] ? static::URL2 : static::URL)
             ->setBody($xmlBody)
         ;
     }
 
     protected function parseResponse(ResponseInterface $response): array
     {
-        $result = SerializerUtils::xmlDecode($response->getContent());
+        $result = $this->serializer->decode($response->getContent(), 'xml');
 
         $returnCode = (string) ($result['return_code'] ?? '');
         $resultCode = (string) ($result['result_code'] ?? '');

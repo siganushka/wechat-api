@@ -11,6 +11,9 @@ use Symfony\Component\OptionsResolver\OptionsResolver;
 
 class Configuration extends AbstractConfiguration
 {
+    public const SIGN_TYPE_SHA256 = 'HMAC-SHA256';
+    public const SIGN_TYPE_MD5 = 'MD5';
+
     protected function configureOptions(OptionsResolver $resolver): void
     {
         static::apply($resolver);
@@ -32,16 +35,19 @@ class Configuration extends AbstractConfiguration
 
         $resolver
             ->define('mchid')
+            ->default(null)
             ->allowedTypes('null', 'string')
         ;
 
         $resolver
             ->define('mchkey')
+            ->default(null)
             ->allowedTypes('null', 'string')
         ;
 
         $resolver
             ->define('mch_client_cert')
+            ->default(null)
             ->allowedTypes('null', 'string')
             ->normalize(function (Options $options, ?string $mchClientCert) {
                 if (null !== $mchClientCert && !is_file($mchClientCert)) {
@@ -54,6 +60,7 @@ class Configuration extends AbstractConfiguration
 
         $resolver
             ->define('mch_client_key')
+            ->default(null)
             ->allowedTypes('null', 'string')
             ->normalize(function (Options $options, ?string $mchClientKey) {
                 if (null !== $mchClientKey && !is_file($mchClientKey)) {
@@ -66,9 +73,9 @@ class Configuration extends AbstractConfiguration
 
         $resolver
             ->define('sign_type')
-            ->default('MD5')
+            ->default(static::SIGN_TYPE_MD5)
             ->allowedTypes('string')
-            ->allowedValues('MD5', 'HMAC-SHA256')
+            ->allowedValues(static::SIGN_TYPE_MD5, static::SIGN_TYPE_SHA256)
         ;
     }
 }

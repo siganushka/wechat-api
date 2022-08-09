@@ -9,4 +9,4 @@ require __DIR__.'/_autoload.php';
 $request = $factory->create(AccessToken::class);
 $result = $request->send();
 
-dd($result);
+dd($request, $result);

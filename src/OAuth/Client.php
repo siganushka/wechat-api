@@ -4,8 +4,8 @@ declare(strict_types=1);
 
 namespace Siganushka\ApiClient\Wechat\OAuth;
 
-use Siganushka\ApiClient\OptionsExtendableInterface;
-use Siganushka\ApiClient\OptionsExtendableTrait;
+use Siganushka\ApiClient\Resolver\ExtendableOptionsInterface;
+use Siganushka\ApiClient\Resolver\ExtendableOptionsTrait;
 use Symfony\Component\OptionsResolver\OptionsResolver;
 
 /**
@@ -13,9 +13,9 @@ use Symfony\Component\OptionsResolver\OptionsResolver;
  *
  * @see https://developers.weixin.qq.com/doc/offiaccount/OA_Web_Apps/Wechat_webpage_authorization.html
  */
-class Client implements OptionsExtendableInterface
+class Client implements ExtendableOptionsInterface
 {
-    use OptionsExtendableTrait;
+    use ExtendableOptionsTrait;
 
     public const URL = 'https://open.weixin.qq.com/connect/oauth2/authorize';
 

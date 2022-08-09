@@ -2,8 +2,8 @@
 
 declare(strict_types=1);
 
+use Siganushka\ApiClient\Wechat\ConfigurationExtension;
 use Siganushka\ApiClient\Wechat\Payment\SignatureUtils;
-use Siganushka\ApiClient\Wechat\WechatConfigurationOptions;
 
 require __DIR__.'/_autoload.php';
 
@@ -18,7 +18,7 @@ $parameters = [
 ];
 
 $signatureUtils = new SignatureUtils();
-$signatureUtils->extend(new WechatConfigurationOptions($configuration));
+$signatureUtils->extend(new ConfigurationExtension($configuration));
 
 // 生成签名
 $sign = $signatureUtils->generate($parameters);

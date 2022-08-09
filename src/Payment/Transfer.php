@@ -7,12 +7,16 @@ namespace Siganushka\ApiClient\Wechat\Payment;
 use Siganushka\ApiClient\AbstractRequest;
 use Siganushka\ApiClient\Exception\ParseResponseException;
 use Siganushka\ApiClient\RequestOptions;
-use Siganushka\ApiClient\Wechat\Utils\GenericUtils;
-use Siganushka\ApiClient\Wechat\Utils\SerializerUtils;
+use Siganushka\ApiClient\Wechat\Configuration;
+use Siganushka\ApiClient\Wechat\ConfigurationExtension;
+use Siganushka\ApiClient\Wechat\GenericUtils;
 use Symfony\Component\OptionsResolver\Exception\MissingOptionsException;
 use Symfony\Component\OptionsResolver\Exception\NoConfigurationException;
 use Symfony\Component\OptionsResolver\Options;
 use Symfony\Component\OptionsResolver\OptionsResolver;
+use Symfony\Component\Serializer\Encoder\DecoderInterface;
+use Symfony\Component\Serializer\Encoder\EncoderInterface;
+use Symfony\Component\Serializer\SerializerInterface;
 use Symfony\Contracts\HttpClient\ResponseInterface;
 
 /**
@@ -22,12 +26,13 @@ class Transfer extends AbstractRequest
 {
     public const URL = 'https://api.mch.weixin.qq.com/mmpaymkttransfers/promotion/transfers';
 
-    private SignatureUtils $signatureUtils;
+    /** @var EncoderInterface|DecoderInterface */
+    private SerializerInterface $serializer;
     private array $defaultOptions;
 
-    public function __construct(SignatureUtils $signatureUtils = null)
+    public function __construct(SerializerInterface $serializer)
     {
-        $this->signatureUtils = $signatureUtils ?? SignatureUtils::create();
+        $this->serializer = $serializer;
 
         $this->defaultOptions = [
             'nonce_str' => GenericUtils::getNonceStr(),
@@ -43,9 +48,11 @@ class Transfer extends AbstractRequest
 
     protected function configureOptions(OptionsResolver $resolver): void
     {
+        Configuration::apply($resolver);
+
         $resolver->setDefaults($this->defaultOptions);
 
-        $resolver->setRequired(['appid', 'mchid', 'client_cert_file', 'client_key_file', 'partner_trade_no', 'openid', 'amount', 'desc']);
+        $resolver->setRequired(['partner_trade_no', 'openid', 'amount', 'desc']);
 
         $resolver->setAllowedTypes('amount', 'int');
         $resolver->setAllowedValues('check_name', ['NO_CHECK', 'FORCE_CHECK']);
@@ -61,7 +68,7 @@ class Transfer extends AbstractRequest
 
     protected function configureRequest(RequestOptions $request, array $options): void
     {
-        foreach (['mchid', 'client_cert_file', 'client_key_file'] as $optionName) {
+        foreach (['mchid', 'mch_client_cert', 'mch_client_key'] as $optionName) {
             if (null === $options[$optionName]) {
                 throw new NoConfigurationException(sprintf('No configured value for "%s" option.', $optionName));
             }
@@ -82,26 +89,27 @@ class Transfer extends AbstractRequest
             }
         }
 
-        // Extending resolvable from current class
-        foreach ($this->resolvables as $resolvable) {
-            $this->signatureUtils->extend($resolvable);
+        $signatureUtils = SignatureUtils::create();
+        if (isset($this->extensions[ConfigurationExtension::class])) {
+            $signatureUtils->extend($this->extensions[ConfigurationExtension::class]);
         }
 
         // Generate signature
-        $body['sign'] = $this->signatureUtils->generate($body);
+        $body['sign'] = $signatureUtils->generate($body);
+        $xmlBody = $this->serializer->encode($body, 'xml');
 
         $request
             ->setMethod('POST')
             ->setUrl(static::URL)
-            ->setBody(SerializerUtils::xmlEncode($body))
-            ->setLocalCert($options['client_cert_file'])
-            ->setLocalPk($options['client_key_file'])
+            ->setBody($xmlBody)
+            ->setLocalCert($options['mch_client_cert'])
+            ->setLocalPk($options['mch_client_key'])
         ;
     }
 
     protected function parseResponse(ResponseInterface $response): array
     {
-        $result = SerializerUtils::xmlDecode($response->getContent());
+        $result = $this->serializer->decode($response->getContent(), 'xml');
 
         $returnCode = (string) ($result['return_code'] ?? '');
         $resultCode = (string) ($result['result_code'] ?? '');

@@ -10,7 +10,5 @@ $options = [
     'code' => '053GLSll2wZij94xpOol2mqhxo4GLSlv',
 ];
 
-$request = $factory->create(SessionKey::class);
-$result = $request->send($options);
-
+$result = $client->send(SessionKey::class, $options);
 dd($result);

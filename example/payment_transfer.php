@@ -11,11 +11,9 @@ $options = [
     'openid' => 'oaAle41wmUsogcsdUKZF9HJOPf5Q',
     'amount' => 1,
     'desc' => '测试',
-    'check_name' => 'FORCE_CHECK',
-    're_user_name' => 'foo',
+    // 'check_name' => 'FORCE_CHECK',
+    // 're_user_name' => 'foo',
 ];
 
-$request = $factory->create(Transfer::class);
-$result = $request->send($options);
-
+$result = $client->send(Transfer::class, $options);
 dd($result);

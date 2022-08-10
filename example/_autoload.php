@@ -2,7 +2,7 @@
 
 declare(strict_types=1);
 
-use Siganushka\ApiClient\RequestFactoryBuilder;
+use Siganushka\ApiClient\RequestClientBuilder;
 use Siganushka\ApiClient\Wechat\Configuration;
 use Siganushka\ApiClient\Wechat\WechatExtension;
 use Symfony\Component\ErrorHandler\Debug;
@@ -25,11 +25,9 @@ if (!is_file($configFile)) {
 }
 
 $configs = require $configFile;
-
 $configuration = new Configuration($configs['miniapp']);
-// dd($configuration, $configuration->toArray());
 
-$factory = RequestFactoryBuilder::create()
+$client = RequestClientBuilder::create()
     ->addExtension(new WechatExtension($configuration))
-    ->getFactory()
+    ->build()
 ;

@@ -29,57 +29,62 @@ class Query extends AbstractRequest
 
     /** @var EncoderInterface|DecoderInterface */
     private SerializerInterface $serializer;
-    private array $defaultOptions;
 
     public function __construct(SerializerInterface $serializer)
     {
         $this->serializer = $serializer;
-        $this->defaultOptions = [
-            'nonce_str' => GenericUtils::getNonceStr(),
-            'transaction_id' => null,
-            'out_trade_no' => null,
-            'using_slave_api' => false,
-        ];
     }
 
     protected function configureOptions(OptionsResolver $resolver): void
     {
         Configuration::apply($resolver);
 
-        $resolver->setDefaults($this->defaultOptions);
-        $resolver->setNormalizer('transaction_id', function (Options $options, ?string $transactionId) {
-            if (null === $options['out_trade_no'] && null === $transactionId) {
-                throw new MissingOptionsException('The required option "transaction_id" or "out_trade_no" is missing.');
-            }
+        $resolver
+            ->define('transaction_id')
+            ->default(null)
+            ->allowedTypes('null', 'string')
+        ;
 
-            return $transactionId;
-        });
+        $resolver
+            ->define('out_trade_no')
+            ->default(null)
+            ->allowedTypes('null', 'string')
+            ->normalize(function (Options $options, ?string $outTradeNo) {
+                if (null === $options['transaction_id'] && null === $outTradeNo) {
+                    throw new MissingOptionsException('The required option "transaction_id" or "out_trade_no" is missing.');
+                }
+
+                return $outTradeNo;
+            })
+        ;
+
+        $resolver
+            ->define('nonce_str')
+            ->default(GenericUtils::getNonceStr())
+            ->allowedTypes('string')
+        ;
+
+        $resolver
+            ->define('using_slave_api')
+            ->default(false)
+            ->allowedTypes('bool')
+        ;
     }
 
     protected function configureRequest(RequestOptions $request, array $options): void
     {
-        foreach (['mchid', 'mchkey'] as $optionName) {
-            if (null === $options[$optionName]) {
-                throw new NoConfigurationException(sprintf('No configured value for "%s" option.', $optionName));
-            }
+        if (null === $options['mchid']) {
+            throw new NoConfigurationException('No configured value for "mchid" option.');
         }
 
-        $body = [
+        $body = array_filter([
             'appid' => $options['appid'],
             'mch_id' => $options['mchid'],
+            'transaction_id' => $options['transaction_id'],
+            'out_trade_no' => $options['out_trade_no'],
+            'nonce_str' => $options['nonce_str'],
             'sign_type' => $options['sign_type'],
-        ];
-
-        $ignoreOptions = ['using_slave_api'];
-        foreach (array_keys($this->defaultOptions) as $optionName) {
-            if (null !== $options[$optionName] && !\in_array($optionName, $ignoreOptions)) {
-                $body[$optionName] = $options[$optionName];
-            }
-        }
-
-        if (isset($body['out_trade_no']) && isset($body['transaction_id'])) {
-            unset($body['out_trade_no']);
-        }
+        ], fn ($value) => null !== $value);
 
         $signatureUtils = SignatureUtils::create();
         if (isset($this->extensions[ConfigurationExtension::class])) {

@@ -20,11 +20,23 @@ class WxacodeUnlimited extends Wxacode
 
         $resolver->remove('path');
 
-        $resolver->setRequired('scene');
-        $resolver->setDefined(['page', 'check_path']);
-        $resolver->setAllowedTypes('scene', 'string');
-        $resolver->setAllowedTypes('page', 'string');
-        $resolver->setAllowedTypes('check_path', 'bool');
+        $resolver
+            ->define('scene')
+            ->required()
+            ->allowedTypes('string')
+        ;
+
+        $resolver
+            ->define('page')
+            ->default(null)
+            ->allowedTypes('null', 'string')
+        ;
+
+        $resolver
+            ->define('check_path')
+            ->default(null)
+            ->allowedTypes('null', 'bool')
+        ;
     }
 
     protected function configureRequest(RequestOptions $request, array $options): void
@@ -33,19 +45,16 @@ class WxacodeUnlimited extends Wxacode
             'access_token' => $options['access_token'],
         ];
 
-        $body = [
+        $body = array_filter([
             'scene' => $options['scene'],
-        ];
-
-        foreach (['page', 'check_path', 'env_version', 'width', 'auto_color', 'is_hyaline'] as $option) {
-            if (isset($options[$option])) {
-                $body[$option] = $options[$option];
-            }
-        }
-
-        if ($options['line_color']) {
-            $body['line_color'] = $options['line_color'];
-        }
+            'page' => $options['page'],
+            'check_path' => $options['check_path'],
+            'env_version' => $options['env_version'],
+            'width' => $options['width'],
+            'auto_color' => $options['auto_color'],
+            'is_hyaline' => $options['is_hyaline'],
+            'line_color' => $options['line_color_value'],
+        ], fn ($value) => null !== $value);
 
         $request
             ->setMethod('POST')

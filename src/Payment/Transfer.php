@@ -28,42 +28,94 @@ class Transfer extends AbstractRequest
 
     /** @var EncoderInterface|DecoderInterface */
     private SerializerInterface $serializer;
-    private array $defaultOptions;
 
     public function __construct(SerializerInterface $serializer)
     {
         $this->serializer = $serializer;
-
-        $this->defaultOptions = [
-            'nonce_str' => GenericUtils::getNonceStr(),
-            'check_name' => 'NO_CHECK',
-            'device_info' => null,
-            're_user_name' => null,
-            'spbill_create_ip' => null,
-            'scene' => null,
-            'brand_id' => null,
-            'finder_template_id' => null,
-        ];
     }
 
     protected function configureOptions(OptionsResolver $resolver): void
     {
         Configuration::apply($resolver);
 
-        $resolver->setDefaults($this->defaultOptions);
+        $resolver
+            ->define('device_info')
+            ->default(null)
+            ->allowedTypes('null', 'string')
+        ;
 
-        $resolver->setRequired(['partner_trade_no', 'openid', 'amount', 'desc']);
+        $resolver
+            ->define('nonce_str')
+            ->default(GenericUtils::getNonceStr())
+            ->allowedTypes('string')
+        ;
 
-        $resolver->setAllowedTypes('amount', 'int');
-        $resolver->setAllowedValues('check_name', ['NO_CHECK', 'FORCE_CHECK']);
+        $resolver
+            ->define('partner_trade_no')
+            ->required()
+            ->allowedTypes('string')
+        ;
 
-        $resolver->setNormalizer('re_user_name', function (Options $options, ?string $reUserName) {
-            if ('FORCE_CHECK' === $options['check_name'] && null === $reUserName) {
-                throw new MissingOptionsException('The required option "re_user_name" is missing (when "check_name" option is set to "FORCE_CHECK").');
-            }
+        $resolver
+            ->define('openid')
+            ->required()
+            ->allowedTypes('string')
+        ;
 
-            return $reUserName;
-        });
+        $resolver
+            ->define('check_name')
+            ->default('NO_CHECK')
+            ->allowedValues('NO_CHECK', 'FORCE_CHECK')
+        ;
+
+        $resolver
+            ->define('re_user_name')
+            ->default(null)
+            ->allowedTypes('null', 'string')
+            ->normalize(function (Options $options, ?string $reUserName) {
+                if ('FORCE_CHECK' === $options['check_name'] && null === $reUserName) {
+                    throw new MissingOptionsException('The required option "re_user_name" is missing (when "check_name" option is set to "FORCE_CHECK").');
+                }
+
+                return $reUserName;
+            })
+        ;
+
+        $resolver
+            ->define('amount')
+            ->required()
+            ->allowedTypes('int')
+        ;
+
+        $resolver
+            ->define('desc')
+            ->required()
+            ->allowedTypes('string')
+        ;
+
+        $resolver
+            ->define('spbill_create_ip')
+            ->default(null)
+            ->allowedTypes('null', 'string')
+        ;
+
+        $resolver
+            ->define('scene')
+            ->default(null)
+            ->allowedTypes('null', 'string')
+        ;
+
+        $resolver
+            ->define('brand_id')
+            ->default(null)
+            ->allowedTypes('null', 'int')
+        ;
+
+        $resolver
+            ->define('finder_template_id')
+            ->default(null)
+            ->allowedTypes('null', 'string')
+        ;
     }
 
     protected function configureRequest(RequestOptions $request, array $options): void
@@ -74,20 +126,22 @@ class Transfer extends AbstractRequest
             }
         }
 
-        $body = [
+        $body = array_filter([
             'mch_appid' => $options['appid'],
             'mchid' => $options['mchid'],
+            'device_info' => $options['device_info'],
+            'nonce_str' => $options['nonce_str'],
             'partner_trade_no' => $options['partner_trade_no'],
             'openid' => $options['openid'],
+            'check_name' => $options['check_name'],
+            're_user_name' => $options['re_user_name'],
             'amount' => $options['amount'],
             'desc' => $options['desc'],
-        ];
-
-        foreach (array_keys($this->defaultOptions) as $optionName) {
-            if (null !== $options[$optionName]) {
-                $body[$optionName] = $options[$optionName];
-            }
-        }
+            'spbill_create_ip' => $options['spbill_create_ip'],
+            'scene' => $options['scene'],
+            'brand_id' => $options['brand_id'],
+            'finder_template_id' => $options['finder_template_id'],
+        ], fn ($value) => null !== $value);
 
         $signatureUtils = SignatureUtils::create();
         if (isset($this->extensions[ConfigurationExtension::class])) {

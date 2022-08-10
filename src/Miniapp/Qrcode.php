@@ -19,12 +19,23 @@ class Qrcode extends AbstractRequest
 
     protected function configureOptions(OptionsResolver $resolver): void
     {
-        $resolver->setRequired(['access_token', 'path']);
-        $resolver->setDefined('width');
+        $resolver
+            ->define('access_token')
+            ->required()
+            ->allowedTypes('string')
+        ;
 
-        $resolver->setAllowedTypes('access_token', 'string');
-        $resolver->setAllowedTypes('path', 'string');
-        $resolver->setAllowedTypes('width', 'int');
+        $resolver
+            ->define('path')
+            ->required()
+            ->allowedTypes('string')
+        ;
+
+        $resolver
+            ->define('width')
+            ->default(null)
+            ->allowedTypes('null', 'int')
+        ;
     }
 
     protected function configureRequest(RequestOptions $request, array $options): void
@@ -33,13 +44,10 @@ class Qrcode extends AbstractRequest
             'access_token' => $options['access_token'],
         ];
 
-        $body = [
+        $body = array_filter([
             'path' => $options['path'],
-        ];
-
-        if (isset($options['width'])) {
-            $body['width'] = $options['width'];
-        }
+            'width' => $options['width'],
+        ], fn ($value) => null !== $value);
 
         $request
             ->setMethod('POST')

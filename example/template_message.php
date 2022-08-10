@@ -22,9 +22,8 @@ $options = [
     //     'appid' => 'foo',
     //     'pagepath' => 'bar'
     // ],
+    // 'client_msg_id' => uniqid(),
 ];
 
-$request = $factory->create(Message::class);
-$result = $request->send($options);
-
+$result = $client->send(Message::class, $options);
 dd($result);

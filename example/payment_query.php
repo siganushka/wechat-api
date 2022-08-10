@@ -7,11 +7,9 @@ use Siganushka\ApiClient\Wechat\Payment\Query;
 require __DIR__.'/_autoload.php';
 
 $options = [
-    'out_trade_no' => uniqid(),
-    // 'transaction_id' => uniqid(),
+    'transaction_id' => uniqid(),
+    // 'out_trade_no' => uniqid(),
 ];
 
-$request = $factory->create(Query::class);
-$result = $request->send($options);
-
+$result = $client->send(Query::class, $options);
 dd($result);

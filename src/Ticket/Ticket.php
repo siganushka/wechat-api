@@ -29,11 +29,17 @@ class Ticket extends AbstractRequest
 
     protected function configureOptions(OptionsResolver $resolver): void
     {
-        $resolver->setRequired('access_token');
-        $resolver->setDefault('type', 'jsapi');
+        $resolver
+            ->define('access_token')
+            ->required()
+            ->allowedTypes('string')
+        ;
 
-        $resolver->setAllowedTypes('access_token', 'string');
-        $resolver->setAllowedValues('type', ['jsapi', 'wx_card']);
+        $resolver
+            ->define('type')
+            ->default('jsapi')
+            ->allowedValues('jsapi', 'wx_card')
+        ;
     }
 
     protected function configureRequest(RequestOptions $request, array $options): void

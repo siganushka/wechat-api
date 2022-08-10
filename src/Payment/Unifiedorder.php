@@ -29,89 +29,194 @@ class Unifiedorder extends AbstractRequest
 
     /** @var EncoderInterface|DecoderInterface */
     private SerializerInterface $serializer;
-    private array $defaultOptions;
 
     public function __construct(SerializerInterface $serializer)
     {
         $this->serializer = $serializer;
-
-        $this->defaultOptions = [
-            'nonce_str' => GenericUtils::getNonceStr(),
-            'spbill_create_ip' => GenericUtils::getClientIp(),
-            'openid' => null,
-            'product_id' => null,
-            'device_info' => null,
-            'detail' => null,
-            'attach' => null,
-            'fee_type' => null,
-            'time_start' => null,
-            'time_expire' => null,
-            'goods_tag' => null,
-            'limit_pay' => null,
-            'receipt' => null,
-            'profit_sharing' => null,
-            'scene_info' => null,
-            'using_slave_api' => false,
-        ];
     }
 
     protected function configureOptions(OptionsResolver $resolver): void
     {
         Configuration::apply($resolver);
 
-        $resolver->setDefaults($this->defaultOptions);
-        $resolver->setRequired(['body', 'out_trade_no', 'total_fee', 'trade_type', 'notify_url']);
-        $resolver->setAllowedTypes('total_fee', 'int');
-        $resolver->setAllowedTypes('using_slave_api', 'bool');
+        $resolver
+            ->define('device_info')
+            ->default(null)
+            ->allowedTypes('null', 'string')
+        ;
 
-        $resolver->setAllowedValues('fee_type', [null, 'CNY']);
-        $resolver->setAllowedValues('trade_type', [null, 'JSAPI', 'NATIVE', 'APP', 'MWEB']);
-        $resolver->setAllowedValues('limit_pay', [null, 'no_credit']);
-        $resolver->setAllowedValues('receipt', [null, 'Y']);
-        $resolver->setAllowedValues('profit_sharing', [null, 'Y', 'N']);
+        $resolver
+            ->define('nonce_str')
+            ->default(GenericUtils::getNonceStr())
+            ->allowedTypes('string')
+        ;
 
-        $resolver->setNormalizer('openid', function (Options $options, ?string $openid) {
-            if ('JSAPI' === $options['trade_type'] && null === $openid) {
-                throw new MissingOptionsException('The required option "openid" is missing (when "trade_type" option is set to "JSAPI").');
-            }
+        $resolver
+            ->define('body')
+            ->required()
+            ->allowedTypes('string')
+        ;
 
-            return $openid;
-        });
+        $resolver
+            ->define('detail')
+            ->default(null)
+            ->allowedTypes('null', 'string')
+        ;
 
-        $resolver->setNormalizer('product_id', function (Options $options, ?string $productId) {
-            if ('NATIVE' === $options['trade_type'] && null === $productId) {
-                throw new MissingOptionsException('The required option "product_id" is missing (when "trade_type" option is set to "NATIVE").');
-            }
+        $resolver
+            ->define('attach')
+            ->default(null)
+            ->allowedTypes('null', 'string')
+        ;
 
-            return $productId;
-        });
+        $resolver
+            ->define('out_trade_no')
+            ->required()
+            ->allowedTypes('string')
+        ;
+
+        $resolver
+            ->define('fee_type')
+            ->default(null)
+            ->allowedValues(null, 'CNY')
+        ;
+
+        $resolver
+            ->define('total_fee')
+            ->required()
+            ->allowedTypes('int')
+        ;
+
+        $resolver
+            ->define('spbill_create_ip')
+            ->default(GenericUtils::getClientIp())
+            ->allowedTypes('string')
+        ;
+
+        $resolver
+            ->define('time_start')
+            ->default(null)
+            ->allowedTypes('null', \DateTimeInterface::class)
+            ->normalize(function (Options $options, ?\DateTimeInterface $timeStart) {
+                return null === $timeStart ? null : $timeStart->format('YmdHis');
+            })
+        ;
+
+        $resolver
+            ->define('time_expire')
+            ->default(null)
+            ->allowedTypes('null', \DateTimeInterface::class)
+            ->normalize(function (Options $options, ?\DateTimeInterface $timeExpire) {
+                return null === $timeExpire ? null : $timeExpire->format('YmdHis');
+            })
+        ;
+
+        $resolver
+            ->define('goods_tag')
+            ->default(null)
+            ->allowedTypes('null', 'string')
+        ;
+
+        $resolver
+            ->define('notify_url')
+            ->required()
+            ->allowedTypes('string')
+        ;
+
+        $resolver
+            ->define('trade_type')
+            ->required()
+            ->allowedValues('JSAPI', 'NATIVE', 'APP', 'MWEB')
+        ;
+
+        $resolver
+            ->define('product_id')
+            ->default(null)
+            ->allowedTypes('null', 'string')
+            ->normalize(function (Options $options, ?string $productId) {
+                if ('NATIVE' === $options['trade_type'] && null === $productId) {
+                    throw new MissingOptionsException('The required option "product_id" is missing (when "trade_type" option is set to "NATIVE").');
+                }
+
+                return $productId;
+            })
+        ;
+
+        $resolver
+            ->define('limit_pay')
+            ->default(null)
+            ->allowedValues(null, 'no_credit')
+        ;
+
+        $resolver
+            ->define('openid')
+            ->default(null)
+            ->allowedTypes('null', 'string')
+            ->normalize(function (Options $options, ?string $openid) {
+                if ('JSAPI' === $options['trade_type'] && null === $openid) {
+                    throw new MissingOptionsException('The required option "openid" is missing (when "trade_type" option is set to "JSAPI").');
+                }
+
+                return $openid;
+            })
+        ;
+
+        $resolver
+            ->define('receipt')
+            ->default(null)
+            ->allowedValues(null, 'Y')
+        ;
+
+        $resolver
+            ->define('profit_sharing')
+            ->default(null)
+            ->allowedValues(null, 'Y', 'N')
+        ;
+
+        $resolver
+            ->define('scene_info')
+            ->default(null)
+            ->allowedTypes('null', 'string')
+        ;
+
+        $resolver
+            ->define('using_slave_api')
+            ->default(false)
+            ->allowedTypes('bool')
+        ;
     }
 
     protected function configureRequest(RequestOptions $request, array $options): void
     {
-        foreach (['mchid'] as $optionName) {
-            if (null === $options[$optionName]) {
-                throw new NoConfigurationException(sprintf('No configured value for "%s" option.', $optionName));
-            }
+        if (null === $options['mchid']) {
+            throw new NoConfigurationException('No configured value for "mchid" option.');
         }
 
-        $body = [
+        $body = array_filter([
             'appid' => $options['appid'],
             'mch_id' => $options['mchid'],
+            'device_info' => $options['device_info'],
+            'nonce_str' => $options['nonce_str'],
             'sign_type' => $options['sign_type'],
             'body' => $options['body'],
+            'detail' => $options['detail'],
+            'attach' => $options['attach'],
             'out_trade_no' => $options['out_trade_no'],
+            'fee_type' => $options['fee_type'],
             'total_fee' => $options['total_fee'],
-            'trade_type' => $options['trade_type'],
+            'spbill_create_ip' => $options['spbill_create_ip'],
+            'time_start' => $options['time_start'],
+            'time_expire' => $options['time_expire'],
+            'goods_tag' => $options['goods_tag'],
             'notify_url' => $options['notify_url'],
-        ];
-
-        $ignoreOptions = ['using_slave_api'];
-        foreach (array_keys($this->defaultOptions) as $optionName) {
-            if (null !== $options[$optionName] && !\in_array($optionName, $ignoreOptions)) {
-                $body[$optionName] = $options[$optionName];
-            }
-        }
+            'trade_type' => $options['trade_type'],
+            'product_id' => $options['product_id'],
+            'limit_pay' => $options['limit_pay'],
+            'openid' => $options['openid'],
+            'receipt' => $options['receipt'],
+            'profit_sharing' => $options['profit_sharing'],
+            'scene_info' => $options['scene_info'],
+        ], fn ($value) => null !== $value);
 
         $signatureUtils = SignatureUtils::create();
         if (isset($this->extensions[ConfigurationExtension::class])) {

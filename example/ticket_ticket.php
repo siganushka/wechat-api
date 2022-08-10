@@ -6,7 +6,5 @@ use Siganushka\ApiClient\Wechat\Ticket\Ticket;
 
 require __DIR__.'/_autoload.php';
 
-$request = $factory->create(Ticket::class);
-$result = $request->send();
-
+$result = $client->send(Ticket::class);
 dd($result);

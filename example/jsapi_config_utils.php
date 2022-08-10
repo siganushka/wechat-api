@@ -14,21 +14,3 @@ $configUtils->extend(new TicketExtension($configuration));
 
 $config = $configUtils->generate(['chooseImage'], true);
 dd($config);
-
-// 自定义所有参数
-// $configUtils = new ConfigUtils();
-// $config = $configUtils->generateFromOptions([
-//     //（必填）参数，可由 ConfigurationExtension 扩展代替
-//     'appid' => 'foo',
-//     'secret' => 'bar',
-//     //（必填）参数，可由 TicketExtension 扩展代替
-//     'ticket' => 'bar',
-//     // 以下参数均为选填，可手动指定
-//     'timestamp' => (string) time(),
-//     'noncestr' => uniqid(),
-//     'url' => 'http://localhost',
-//     'apis' => ['chooseImage'],
-//     'debug' => true,
-// ]);
-
-// dd($config);

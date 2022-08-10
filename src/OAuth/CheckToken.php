@@ -19,11 +19,17 @@ class CheckToken extends AbstractRequest
 
     protected function configureOptions(OptionsResolver $resolver): void
     {
-        $resolver->setRequired('access_token');
-        $resolver->setRequired('openid');
+        $resolver
+            ->define('access_token')
+            ->required()
+            ->allowedTypes('string')
+        ;
 
-        $resolver->setAllowedTypes('access_token', 'string');
-        $resolver->setAllowedTypes('openid', 'string');
+        $resolver
+            ->define('openid')
+            ->required()
+            ->allowedTypes('string')
+        ;
     }
 
     protected function configureRequest(RequestOptions $request, array $options): void

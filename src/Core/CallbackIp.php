@@ -19,8 +19,11 @@ class CallbackIp extends AbstractRequest
 
     protected function configureOptions(OptionsResolver $resolver): void
     {
-        $resolver->setRequired('access_token');
-        $resolver->setAllowedTypes('access_token', 'string');
+        $resolver
+            ->define('access_token')
+            ->required()
+            ->allowedTypes('string')
+        ;
     }
 
     protected function configureRequest(RequestOptions $request, array $options): void

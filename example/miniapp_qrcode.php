@@ -6,17 +6,12 @@ use Siganushka\ApiClient\Wechat\Miniapp\Qrcode;
 
 require __DIR__.'/_autoload.php';
 
-/**
- * @see https://developers.weixin.qq.com/miniprogram/dev/api-backend/open-api/qr-code/wxacode.createQRCode.html
- */
 $options = [
     'path' => '/index/index',
     // 'width' => 200,
 ];
 
-$request = $factory->create(Qrcode::class);
-$result = $request->send($options);
-
+$result = $client->send(Qrcode::class, $options);
 dd($result);
 
 // // 显示小程序码

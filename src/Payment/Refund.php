@@ -28,68 +28,107 @@ class Refund extends AbstractRequest
 
     /** @var EncoderInterface|DecoderInterface */
     private SerializerInterface $serializer;
-    private array $defaultOptions;
 
     public function __construct(SerializerInterface $serializer)
     {
         $this->serializer = $serializer;
-
-        $this->defaultOptions = [
-            'nonce_str' => GenericUtils::getNonceStr(),
-            'transaction_id' => null,
-            'out_trade_no' => null,
-            'refund_fee_type' => null,
-            'refund_desc' => null,
-            'refund_account' => null,
-            'notify_url' => null,
-        ];
     }
 
     protected function configureOptions(OptionsResolver $resolver): void
     {
         Configuration::apply($resolver);
 
-        $resolver->setDefaults($this->defaultOptions);
-        $resolver->setRequired(['out_refund_no', 'total_fee', 'refund_fee']);
+        $resolver
+            ->define('nonce_str')
+            ->default(GenericUtils::getNonceStr())
+            ->allowedTypes('string')
+        ;
 
-        $resolver->setAllowedTypes('total_fee', 'int');
-        $resolver->setAllowedTypes('refund_fee', 'int');
+        $resolver
+            ->define('transaction_id')
+            ->default(null)
+            ->allowedTypes('null', 'string')
+        ;
 
-        $resolver->setAllowedValues('refund_fee_type', [null, 'CNY']);
-        $resolver->setAllowedValues('refund_account', [null, 'REFUND_SOURCE_UNSETTLED_FUNDS', 'REFUND_SOURCE_RECHARGE_FUNDS']);
+        $resolver
+            ->define('out_trade_no')
+            ->default(null)
+            ->allowedTypes('null', 'string')
+            ->normalize(function (Options $options, ?string $outTradeNo) {
+                if (null === $options['transaction_id'] && null === $outTradeNo) {
+                    throw new MissingOptionsException('The required option "transaction_id" or "out_trade_no" is missing.');
+                }
 
-        $resolver->setNormalizer('transaction_id', function (Options $options, ?string $transactionId) {
-            if (null === $options['out_trade_no'] && null === $transactionId) {
-                throw new MissingOptionsException('The required option "transaction_id" or "out_trade_no" is missing.');
-            }
+                return $outTradeNo;
+            })
+        ;
 
-            return $transactionId;
-        });
+        $resolver
+            ->define('out_refund_no')
+            ->required()
+            ->allowedTypes('string')
+        ;
+
+        $resolver
+            ->define('total_fee')
+            ->required()
+            ->allowedTypes('int')
+        ;
+
+        $resolver
+            ->define('refund_fee')
+            ->required()
+            ->allowedTypes('int')
+        ;
+
+        $resolver
+            ->define('refund_fee_type')
+            ->default(null)
+            ->allowedValues(null, 'CNY')
+        ;
+
+        $resolver
+            ->define('refund_desc')
+            ->default(null)
+            ->allowedTypes('null', 'string')
+        ;
+
+        $resolver
+            ->define('refund_account')
+            ->default(null)
+            ->allowedValues(null, 'REFUND_SOURCE_UNSETTLED_FUNDS', 'REFUND_SOURCE_RECHARGE_FUNDS')
+        ;
+
+        $resolver
+            ->define('notify_url')
+            ->default(null)
+            ->allowedTypes('null', 'string')
+        ;
     }
 
     protected function configureRequest(RequestOptions $request, array $options): void
     {
-        foreach (['mchid', 'mchkey'] as $optionName) {
+        foreach (['mchid', 'mch_client_cert', 'mch_client_key'] as $optionName) {
             if (null === $options[$optionName]) {
                 throw new NoConfigurationException(sprintf('No configured value for "%s" option.', $optionName));
             }
         }
 
-        $body = [
+        $body = array_filter([
             'appid' => $options['appid'],
             'mch_id' => $options['mchid'],
+            'nonce_str' => $options['nonce_str'],
             'sign_type' => $options['sign_type'],
-        ];
-
-        foreach (array_keys($this->defaultOptions) as $optionName) {
-            if (null !== $options[$optionName]) {
-                $body[$optionName] = $options[$optionName];
-            }
-        }
-
-        if (isset($body['out_trade_no']) && isset($body['transaction_id'])) {
-            unset($body['out_trade_no']);
-        }
+            'transaction_id' => $options['transaction_id'],
+            'out_trade_no' => $options['out_trade_no'],
+            'out_refund_no' => $options['out_refund_no'],
+            'total_fee' => $options['total_fee'],
+            'refund_fee' => $options['refund_fee'],
+            'refund_fee_type' => $options['refund_fee_type'],
+            'refund_desc' => $options['refund_desc'],
+            'refund_account' => $options['refund_account'],
+            'notify_url' => $options['notify_url'],
+        ], fn ($value) => null !== $value);
 
         $signatureUtils = SignatureUtils::create();
         if (isset($this->extensions[ConfigurationExtension::class])) {
@@ -104,6 +143,8 @@ class Refund extends AbstractRequest
             ->setMethod('POST')
             ->setUrl(static::URL)
             ->setBody($xmlBody)
+            ->setLocalCert($options['mch_client_cert'])
+            ->setLocalPk($options['mch_client_key'])
         ;
     }
 

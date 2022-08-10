@@ -8,15 +8,12 @@ require __DIR__.'/_autoload.php';
 
 $options = [
     'body' => '测试订单',
-    'notify_url' => '/foo',
+    'notify_url' => 'http://localhost',
     'out_trade_no' => uniqid(),
     'total_fee' => 1,
     'trade_type' => 'JSAPI',
     'openid' => 'oaAle41wmUsogcsdUKZF9HJOPf5Q',
-    // 'sign_type' => 'HMAC-SHA256',
 ];
 
-$request = $factory->create(Unifiedorder::class);
-$result = $request->send($options);
-
+$result = $client->send(Unifiedorder::class, $options);
 dd($result);

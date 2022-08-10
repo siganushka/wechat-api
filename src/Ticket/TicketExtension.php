@@ -9,6 +9,7 @@ use Siganushka\ApiClient\Resolver\ConfigurableOptionsTrait;
 use Siganushka\ApiClient\Resolver\OptionsExtensionInterface;
 use Siganushka\ApiClient\Wechat\Configuration;
 use Siganushka\ApiClient\Wechat\Core\AccessTokenExtension;
+use Siganushka\ApiClient\Wechat\Jsapi\ConfigUtils;
 use Symfony\Component\Cache\Adapter\FilesystemAdapter;
 use Symfony\Component\HttpClient\HttpClient;
 use Symfony\Component\OptionsResolver\OptionsResolver;
@@ -43,6 +44,8 @@ class TicketExtension implements OptionsExtensionInterface
 
     public static function getExtendedClasses(): iterable
     {
-        return [];
+        return [
+            ConfigUtils::class,
+        ];
     }
 }

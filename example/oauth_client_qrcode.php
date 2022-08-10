@@ -12,7 +12,6 @@ require __DIR__.'/_autoload.php';
 if (!isset($_GET['code'])) {
     $options = [
         'redirect_uri' => GenericUtils::getCurrentUrl(),
-        'scope' => 'snsapi_login',
     ];
 
     $qrcode = new Qrcode();
@@ -25,7 +24,5 @@ $options = [
     'code' => $_GET['code'],
 ];
 
-$request = $factory->create(AccessToken::class);
-$result = $request->send($options);
-
+$result = $client->send(AccessToken::class, $options);
 dd($result);

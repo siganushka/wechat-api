@@ -25,7 +25,5 @@ $options = [
     'code' => $_GET['code'],
 ];
 
-$request = $factory->create(AccessToken::class);
-$result = $request->send($options);
-
+$result = $client->send(AccessToken::class, $options);
 dd($result);

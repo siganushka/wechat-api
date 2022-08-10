@@ -7,6 +7,7 @@ namespace Siganushka\ApiClient\Wechat\Miniapp;
 use Siganushka\ApiClient\AbstractRequest;
 use Siganushka\ApiClient\Exception\ParseResponseException;
 use Siganushka\ApiClient\RequestOptions;
+use Symfony\Component\OptionsResolver\Options;
 use Symfony\Component\OptionsResolver\OptionsResolver;
 use Symfony\Contracts\HttpClient\ResponseInterface;
 
@@ -19,24 +20,68 @@ class Wxacode extends AbstractRequest
 
     protected function configureOptions(OptionsResolver $resolver): void
     {
-        $resolver->setRequired(['access_token', 'path']);
-        $resolver->setDefined(['env_version', 'width', 'auto_color', 'is_hyaline']);
-        $resolver->setDefault('line_color', function (OptionsResolver $lineColorResolver) {
-            $lineColorResolver->setDefined(['r', 'g', 'b']);
-            $lineColorResolver->setAllowedTypes('r', 'int');
-            $lineColorResolver->setAllowedTypes('g', 'int');
-            $lineColorResolver->setAllowedTypes('b', 'int');
-        });
+        $resolver
+            ->define('access_token')
+            ->required()
+            ->allowedTypes('string')
+        ;
 
-        $resolver->setAllowedTypes('access_token', 'string');
-        $resolver->setAllowedTypes('path', 'string');
-        $resolver->setAllowedTypes('env_version', 'string');
-        $resolver->setAllowedTypes('width', 'int');
-        $resolver->setAllowedTypes('auto_color', 'bool');
-        $resolver->setAllowedTypes('is_hyaline', 'bool');
-        $resolver->setAllowedTypes('line_color', 'array');
+        $resolver
+            ->define('path')
+            ->required()
+            ->allowedTypes('string')
+        ;
 
-        $resolver->setAllowedValues('env_version', ['release', 'trial', 'develop']);
+        $resolver
+            ->define('env_version')
+            ->default(null)
+            ->allowedValues(null, 'release', 'trial', 'develop')
+        ;
+
+        $resolver
+            ->define('width')
+            ->default(null)
+            ->allowedTypes('null', 'int')
+        ;
+
+        $resolver
+            ->define('is_hyaline')
+            ->default(null)
+            ->allowedTypes('null', 'bool')
+        ;
+
+        $resolver
+            ->define('line_color')
+            ->default(null)
+            ->allowedTypes('null', 'string')
+            ->allowedValues(function (?string $value) {
+                return null === $value || preg_match('/^#[0-9a-f]{6}$/i', $value);
+            })
+        ;
+
+        $resolver
+            ->define('line_color_value')
+            ->default(function (Options $options) {
+                if (null === $options['line_color']) {
+                    return null;
+                }
+
+                return array_map('hexdec', [
+                    'r' => mb_substr($options['line_color'], 1, 2),
+                    'g' => mb_substr($options['line_color'], 3, 2),
+                    'b' => mb_substr($options['line_color'], 5, 2),
+                ]);
+            })
+            ->allowedTypes('null', 'array')
+        ;
+
+        $resolver
+            ->define('auto_color')
+            ->default(function (Options $options) {
+                return null === $options['line_color'] ? null : false;
+            })
+            ->allowedTypes('null', 'bool')
+        ;
     }
 
     protected function configureRequest(RequestOptions $request, array $options): void
@@ -45,19 +90,14 @@ class Wxacode extends AbstractRequest
             'access_token' => $options['access_token'],
         ];
 
-        $body = [
+        $body = array_filter([
             'path' => $options['path'],
-        ];
-
-        foreach (['env_version', 'width', 'auto_color', 'is_hyaline'] as $option) {
-            if (isset($options[$option])) {
-                $body[$option] = $options[$option];
-            }
-        }
-
-        if ($options['line_color']) {
-            $body['line_color'] = $options['line_color'];
-        }
+            'env_version' => $options['env_version'],
+            'width' => $options['width'],
+            'auto_color' => $options['auto_color'],
+            'is_hyaline' => $options['is_hyaline'],
+            'line_color' => $options['line_color_value'],
+        ], fn ($value) => null !== $value);
 
         $request
             ->setMethod('POST')

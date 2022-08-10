@@ -19,13 +19,23 @@ class UserInfo extends AbstractRequest
 
     protected function configureOptions(OptionsResolver $resolver): void
     {
-        $resolver->setRequired('access_token');
-        $resolver->setRequired('openid');
-        $resolver->setDefault('lang', 'zh_CN');
+        $resolver
+            ->define('access_token')
+            ->required()
+            ->allowedTypes('string')
+        ;
 
-        $resolver->setAllowedTypes('access_token', 'string');
-        $resolver->setAllowedTypes('openid', 'string');
-        $resolver->setAllowedTypes('lang', 'string');
+        $resolver
+            ->define('openid')
+            ->required()
+            ->allowedTypes('string')
+        ;
+
+        $resolver
+            ->define('lang')
+            ->default('zh_CN')
+            ->allowedValues('zh_CN', 'zh_TW', 'en')
+        ;
     }
 
     protected function configureRequest(RequestOptions $request, array $options): void

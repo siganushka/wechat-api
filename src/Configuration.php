@@ -74,7 +74,6 @@ class Configuration extends AbstractConfiguration
         $resolver
             ->define('sign_type')
             ->default(static::SIGN_TYPE_MD5)
-            ->allowedTypes('string')
             ->allowedValues(static::SIGN_TYPE_MD5, static::SIGN_TYPE_SHA256)
         ;
     }

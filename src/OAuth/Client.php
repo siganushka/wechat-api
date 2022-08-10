@@ -6,6 +6,7 @@ namespace Siganushka\ApiClient\Wechat\OAuth;
 
 use Siganushka\ApiClient\Resolver\ExtendableOptionsInterface;
 use Siganushka\ApiClient\Resolver\ExtendableOptionsTrait;
+use Siganushka\ApiClient\Wechat\Configuration;
 use Symfony\Component\OptionsResolver\OptionsResolver;
 
 /**
@@ -46,15 +47,24 @@ class Client implements ExtendableOptionsInterface
 
     protected function configureOptions(OptionsResolver $resolver): void
     {
-        $resolver->setRequired(['appid', 'redirect_uri']);
+        Configuration::apply($resolver);
 
-        $resolver->setDefault('state', null);
-        $resolver->setDefault('scope', 'snsapi_base');
+        $resolver
+            ->define('redirect_uri')
+            ->required()
+            ->allowedTypes('string')
+        ;
 
-        $resolver->setAllowedTypes('appid', 'string');
-        $resolver->setAllowedTypes('redirect_uri', 'string');
-        $resolver->setAllowedTypes('state', ['null', 'string']);
+        $resolver
+            ->define('state')
+            ->default(null)
+            ->allowedTypes('null', 'string')
+        ;
 
-        $resolver->setAllowedValues('scope', ['snsapi_base', 'snsapi_userinfo']);
+        $resolver
+            ->define('scope')
+            ->default('snsapi_base')
+            ->allowedValues('snsapi_base', 'snsapi_userinfo')
+        ;
     }
 }

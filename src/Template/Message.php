@@ -19,16 +19,44 @@ class Message extends AbstractRequest
 
     protected function configureOptions(OptionsResolver $resolver): void
     {
-        $resolver->setRequired(['access_token', 'touser', 'template']);
-        $resolver->setDefault('url', null);
-        $resolver->setDefault('miniprogram', function (OptionsResolver $miniprogramResolver) {
-            $miniprogramResolver->setDefined(['appid', 'pagepath']);
-        });
+        $resolver
+            ->define('access_token')
+            ->required()
+            ->allowedTypes('string')
+        ;
 
-        $resolver->setAllowedTypes('access_token', 'string');
-        $resolver->setAllowedTypes('touser', 'string');
-        $resolver->setAllowedTypes('template', Template::class);
-        $resolver->setAllowedTypes('url', ['null', 'string']);
+        $resolver
+            ->define('touser')
+            ->required()
+            ->allowedTypes('string')
+        ;
+
+        $resolver
+            ->define('template')
+            ->required()
+            ->allowedTypes(Template::class)
+        ;
+
+        $resolver
+            ->define('url')
+            ->default(null)
+            ->allowedTypes('null', 'string')
+        ;
+
+        $resolver
+            ->define('miniprogram')
+            ->default(function (OptionsResolver $miniprogramResolver) {
+                $miniprogramResolver->define('appid')->allowedTypes('string');
+                $miniprogramResolver->define('pagepath')->allowedTypes('string');
+            })
+            ->allowedTypes('array')
+        ;
+
+        $resolver
+            ->define('client_msg_id')
+            ->default(null)
+            ->allowedTypes('null', 'string')
+        ;
     }
 
     protected function configureRequest(RequestOptions $request, array $options): void
@@ -37,17 +65,14 @@ class Message extends AbstractRequest
             'access_token' => $options['access_token'],
         ];
 
-        $body = [
+        $body = array_filter([
             'touser' => $options['touser'],
             'template_id' => $options['template']->getId(),
+            'url' => $options['url'],
+            'miniprogram' => $options['miniprogram'],
             'data' => $options['template']->getData(),
-        ];
-
-        foreach (['url', 'miniprogram'] as $field) {
-            if ($options[$field]) {
-                $body[$field] = $options[$field];
-            }
-        }
+            'client_msg_id' => $options['client_msg_id'],
+        ], fn ($value) => null !== $value && [] !== $value);
 
         $request
             ->setMethod('POST')

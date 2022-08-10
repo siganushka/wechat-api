@@ -9,6 +9,7 @@ use Siganushka\ApiClient\AbstractRequest;
 use Siganushka\ApiClient\Exception\ParseResponseException;
 use Siganushka\ApiClient\RequestOptions;
 use Siganushka\ApiClient\Response\ResponseFactory;
+use Siganushka\ApiClient\Wechat\Configuration;
 use Symfony\Component\Cache\Adapter\FilesystemAdapter;
 use Symfony\Component\OptionsResolver\OptionsResolver;
 use Symfony\Contracts\HttpClient\ResponseInterface;
@@ -29,11 +30,13 @@ class SessionKey extends AbstractRequest
 
     protected function configureOptions(OptionsResolver $resolver): void
     {
-        $resolver->setRequired(['appid', 'secret', 'code']);
+        Configuration::apply($resolver);
 
-        $resolver->setAllowedTypes('code', 'string');
-        $resolver->setAllowedTypes('appid', 'string');
-        $resolver->setAllowedTypes('secret', 'string');
+        $resolver
+            ->define('code')
+            ->required()
+            ->allowedTypes('string')
+        ;
     }
 
     protected function configureRequest(RequestOptions $request, array $options): void

@@ -7,6 +7,7 @@ namespace Siganushka\ApiClient\Wechat\Miniapp;
 use Siganushka\ApiClient\AbstractRequest;
 use Siganushka\ApiClient\Exception\ParseResponseException;
 use Siganushka\ApiClient\RequestOptions;
+use Siganushka\ApiClient\Wechat\WechatOptions;
 use Symfony\Component\OptionsResolver\Options;
 use Symfony\Component\OptionsResolver\OptionsResolver;
 use Symfony\Contracts\HttpClient\ResponseInterface;
@@ -20,11 +21,7 @@ class Wxacode extends AbstractRequest
 
     protected function configureOptions(OptionsResolver $resolver): void
     {
-        $resolver
-            ->define('access_token')
-            ->required()
-            ->allowedTypes('string')
-        ;
+        WechatOptions::token($resolver);
 
         $resolver
             ->define('path')
@@ -87,7 +84,7 @@ class Wxacode extends AbstractRequest
     protected function configureRequest(RequestOptions $request, array $options): void
     {
         $query = [
-            'access_token' => $options['access_token'],
+            'access_token' => $options['token'],
         ];
 
         $body = array_filter([

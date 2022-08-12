@@ -7,9 +7,8 @@ namespace Siganushka\ApiClient\Wechat\Payment;
 use Siganushka\ApiClient\AbstractRequest;
 use Siganushka\ApiClient\Exception\ParseResponseException;
 use Siganushka\ApiClient\RequestOptions;
-use Siganushka\ApiClient\Wechat\Configuration;
-use Siganushka\ApiClient\Wechat\ConfigurationExtension;
-use Siganushka\ApiClient\Wechat\GenericUtils;
+use Siganushka\ApiClient\Wechat\ConfigurationOptions;
+use Siganushka\ApiClient\Wechat\WechatOptions;
 use Symfony\Component\OptionsResolver\Exception\MissingOptionsException;
 use Symfony\Component\OptionsResolver\Exception\NoConfigurationException;
 use Symfony\Component\OptionsResolver\Options;
@@ -36,13 +35,12 @@ class Refund extends AbstractRequest
 
     protected function configureOptions(OptionsResolver $resolver): void
     {
-        Configuration::apply($resolver);
-
-        $resolver
-            ->define('nonce_str')
-            ->default(GenericUtils::getNonceStr())
-            ->allowedTypes('string')
-        ;
+        WechatOptions::appid($resolver);
+        WechatOptions::mchid($resolver);
+        WechatOptions::sign_type($resolver);
+        WechatOptions::mch_client_cert($resolver);
+        WechatOptions::mch_client_key($resolver);
+        WechatOptions::nonce_str($resolver);
 
         $resolver
             ->define('transaction_id')
@@ -131,8 +129,8 @@ class Refund extends AbstractRequest
         ], fn ($value) => null !== $value);
 
         $signatureUtils = SignatureUtils::create();
-        if (isset($this->extensions[ConfigurationExtension::class])) {
-            $signatureUtils->extend($this->extensions[ConfigurationExtension::class]);
+        if (isset($this->configurators[ConfigurationOptions::class])) {
+            $signatureUtils->using($this->configurators[ConfigurationOptions::class]);
         }
 
         // Generate signature

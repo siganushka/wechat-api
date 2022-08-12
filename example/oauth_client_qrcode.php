@@ -2,7 +2,7 @@
 
 declare(strict_types=1);
 
-use Siganushka\ApiClient\Wechat\ConfigurationExtension;
+use Siganushka\ApiClient\Wechat\ConfigurationOptions;
 use Siganushka\ApiClient\Wechat\GenericUtils;
 use Siganushka\ApiClient\Wechat\OAuth\AccessToken;
 use Siganushka\ApiClient\Wechat\OAuth\Qrcode;
@@ -15,7 +15,7 @@ if (!isset($_GET['code'])) {
     ];
 
     $qrcode = new Qrcode();
-    $qrcode->extend(new ConfigurationExtension($configuration));
+    $qrcode->using(new ConfigurationOptions($configuration));
     $qrcode->redirect($options);
     exit;
 }

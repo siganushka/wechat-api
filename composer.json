@@ -1,6 +1,8 @@
 {
     "name": "siganushka/wechat-api",
     "description": "Wechat API.",
+    "keywords": ["wechat", "wechat-api", "wechat-sdk", "weixin"],
+    "homepage": "https://github.com/siganushka/wechat-api",
     "type": "library",
     "license": "MIT",
     "authors": [

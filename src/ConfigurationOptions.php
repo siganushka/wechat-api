@@ -4,9 +4,9 @@ declare(strict_types=1);
 
 namespace Siganushka\ApiClient\Wechat;
 
-use Siganushka\ApiClient\Resolver\ConfigurableOptionsTrait;
-use Siganushka\ApiClient\Resolver\OptionsExtensionInterface;
-use Siganushka\ApiClient\Wechat\Core\AccessToken;
+use Siganushka\ApiClient\RequestOptionsExtensionInterface;
+use Siganushka\ApiClient\RequestOptionsExtensionTrait;
+use Siganushka\ApiClient\Wechat\Core\Token;
 use Siganushka\ApiClient\Wechat\Miniapp\SessionKey;
 use Siganushka\ApiClient\Wechat\OAuth\RefreshToken;
 use Siganushka\ApiClient\Wechat\Payment\Query;
@@ -15,9 +15,9 @@ use Siganushka\ApiClient\Wechat\Payment\Transfer;
 use Siganushka\ApiClient\Wechat\Payment\Unifiedorder;
 use Symfony\Component\OptionsResolver\OptionsResolver;
 
-class ConfigurationExtension implements OptionsExtensionInterface
+class ConfigurationOptions implements RequestOptionsExtensionInterface
 {
-    use ConfigurableOptionsTrait;
+    use RequestOptionsExtensionTrait;
 
     private Configuration $configuration;
 
@@ -28,13 +28,17 @@ class ConfigurationExtension implements OptionsExtensionInterface
 
     protected function configureOptions(OptionsResolver $resolver): void
     {
-        $resolver->setDefaults($this->configuration->toArray());
+        foreach ($this->configuration->toArray() as $key => $value) {
+            if ($resolver->isDefined($key)) {
+                $resolver->setDefault($key, $value);
+            }
+        }
     }
 
-    public static function getExtendedClasses(): iterable
+    public static function getExtendedRequests(): array
     {
         return [
-            AccessToken::class,
+            Token::class,
             SessionKey::class,
             RefreshToken::class,
             Query::class,

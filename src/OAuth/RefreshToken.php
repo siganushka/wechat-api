@@ -7,7 +7,7 @@ namespace Siganushka\ApiClient\Wechat\OAuth;
 use Siganushka\ApiClient\AbstractRequest;
 use Siganushka\ApiClient\Exception\ParseResponseException;
 use Siganushka\ApiClient\RequestOptions;
-use Siganushka\ApiClient\Wechat\Configuration;
+use Siganushka\ApiClient\Wechat\WechatOptions;
 use Symfony\Component\OptionsResolver\OptionsResolver;
 use Symfony\Contracts\HttpClient\ResponseInterface;
 
@@ -20,7 +20,7 @@ class RefreshToken extends AbstractRequest
 
     protected function configureOptions(OptionsResolver $resolver): void
     {
-        Configuration::apply($resolver);
+        WechatOptions::appid($resolver);
 
         $resolver
             ->define('refresh_token')

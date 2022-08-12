@@ -14,7 +14,6 @@ class GenericUtilsTest extends TestCase
         static::assertIsString(GenericUtils::getTimestamp());
         static::assertIsString(GenericUtils::getNonceStr());
         static::assertSame('0.0.0.0', GenericUtils::getClientIp());
-        static::assertSame('0.0.0.0', GenericUtils::getClientIp());
         static::assertSame('http://localhost', GenericUtils::getCurrentUrl());
     }
 }

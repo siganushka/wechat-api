@@ -9,15 +9,16 @@ use Siganushka\ApiClient\AbstractRequest;
 use Siganushka\ApiClient\Exception\ParseResponseException;
 use Siganushka\ApiClient\RequestOptions;
 use Siganushka\ApiClient\Response\ResponseFactory;
-use Siganushka\ApiClient\Wechat\Configuration;
+use Siganushka\ApiClient\Wechat\WechatOptions;
 use Symfony\Component\Cache\Adapter\FilesystemAdapter;
 use Symfony\Component\OptionsResolver\OptionsResolver;
+use Symfony\Contracts\HttpClient\HttpClientInterface;
 use Symfony\Contracts\HttpClient\ResponseInterface;
 
 /**
  * @see https://developers.weixin.qq.com/doc/offiaccount/Basic_Information/Get_access_token.html
  */
-class AccessToken extends AbstractRequest
+class Token extends AbstractRequest
 {
     public const URL = 'https://api.weixin.qq.com/cgi-bin/token';
 
@@ -30,7 +31,8 @@ class AccessToken extends AbstractRequest
 
     protected function configureOptions(OptionsResolver $resolver): void
     {
-        Configuration::apply($resolver);
+        WechatOptions::appid($resolver);
+        WechatOptions::secret($resolver);
     }
 
     protected function configureRequest(RequestOptions $request, array $options): void
@@ -48,14 +50,14 @@ class AccessToken extends AbstractRequest
         ;
     }
 
-    protected function sendRequest(RequestOptions $request): ResponseInterface
+    protected function sendRequest(HttpClientInterface $client, RequestOptions $request): ResponseInterface
     {
         $cacheItem = $this->cachePool->getItem((string) $request);
         if ($cacheItem->isHit()) {
             return ResponseFactory::createMockResponseWithJson($cacheItem->get());
         }
 
-        $response = parent::sendRequest($request);
+        $response = parent::sendRequest($client, $request);
         $parsedResponse = $this->parseResponse($response);
 
         $cacheItem->set($parsedResponse);
@@ -72,7 +74,7 @@ class AccessToken extends AbstractRequest
         $errcode = (int) ($result['errcode'] ?? 0);
         $errmsg = (string) ($result['errmsg'] ?? '');
 
-        if (0 === $errcode) {
+        if (0 === $errcode && isset($result['access_token'])) {
             return $result;
         }
 

@@ -5,10 +5,10 @@ declare(strict_types=1);
 namespace Siganushka\ApiClient\Wechat\Core;
 
 use Psr\Cache\CacheItemPoolInterface;
-use Siganushka\ApiClient\Resolver\ConfigurableOptionsTrait;
-use Siganushka\ApiClient\Resolver\OptionsExtensionInterface;
+use Siganushka\ApiClient\RequestOptionsExtensionInterface;
+use Siganushka\ApiClient\RequestOptionsExtensionTrait;
 use Siganushka\ApiClient\Wechat\Configuration;
-use Siganushka\ApiClient\Wechat\ConfigurationExtension;
+use Siganushka\ApiClient\Wechat\ConfigurationOptions;
 use Siganushka\ApiClient\Wechat\Miniapp\Qrcode;
 use Siganushka\ApiClient\Wechat\Miniapp\Wxacode;
 use Siganushka\ApiClient\Wechat\Miniapp\WxacodeUnlimited;
@@ -19,9 +19,9 @@ use Symfony\Component\HttpClient\HttpClient;
 use Symfony\Component\OptionsResolver\OptionsResolver;
 use Symfony\Contracts\HttpClient\HttpClientInterface;
 
-class AccessTokenExtension implements OptionsExtensionInterface
+class TokenOptions implements RequestOptionsExtensionInterface
 {
-    use ConfigurableOptionsTrait;
+    use RequestOptionsExtensionTrait;
 
     protected Configuration $configuration;
     protected HttpClientInterface $httpClient;
@@ -36,17 +36,14 @@ class AccessTokenExtension implements OptionsExtensionInterface
 
     protected function configureOptions(OptionsResolver $resolver): void
     {
-        $configurationException = new ConfigurationExtension($this->configuration);
+        $request = new Token($this->cachePool);
+        $request->using(new ConfigurationOptions($this->configuration));
 
-        $request = new AccessToken($this->cachePool);
-        $request->setHttpClient($this->httpClient);
-        $request->extend($configurationException);
-
-        $result = $request->send();
-        $resolver->setDefault('access_token', $result['access_token']);
+        $result = $request->send($this->httpClient);
+        $resolver->setDefault('token', $result['access_token']);
     }
 
-    public static function getExtendedClasses(): iterable
+    public static function getExtendedRequests(): array
     {
         return [
             CallbackIp::class,

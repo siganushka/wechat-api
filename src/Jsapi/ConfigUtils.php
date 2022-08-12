@@ -4,10 +4,10 @@ declare(strict_types=1);
 
 namespace Siganushka\ApiClient\Wechat\Jsapi;
 
-use Siganushka\ApiClient\Resolver\ExtendableOptionsInterface;
-use Siganushka\ApiClient\Resolver\ExtendableOptionsTrait;
-use Siganushka\ApiClient\Wechat\Configuration;
+use Siganushka\ApiClient\OptionsResolvableInterface;
+use Siganushka\ApiClient\OptionsResolvableTrait;
 use Siganushka\ApiClient\Wechat\GenericUtils;
+use Siganushka\ApiClient\Wechat\WechatOptions;
 use Symfony\Component\OptionsResolver\OptionsResolver;
 
 /**
@@ -15,9 +15,9 @@ use Symfony\Component\OptionsResolver\OptionsResolver;
  *
  * @see https://developers.weixin.qq.com/doc/offiaccount/OA_Web_Apps/JS-SDK.html
  */
-class ConfigUtils implements ExtendableOptionsInterface
+class ConfigUtils implements OptionsResolvableInterface
 {
-    use ExtendableOptionsTrait;
+    use OptionsResolvableTrait;
 
     public function generate(array $apis = [], bool $debug = false): array
     {
@@ -27,11 +27,10 @@ class ConfigUtils implements ExtendableOptionsInterface
     public function generateFromOptions(array $options = []): array
     {
         $resolved = $this->resolve($options);
-
         $parameters = [
             'jsapi_ticket' => $resolved['ticket'],
             'timestamp' => $resolved['timestamp'],
-            'noncestr' => $resolved['noncestr'],
+            'noncestr' => $resolved['nonce_str'],
             'url' => $resolved['url'],
         ];
 
@@ -43,7 +42,7 @@ class ConfigUtils implements ExtendableOptionsInterface
         $config = [
             'appId' => $resolved['appid'],
             'timestamp' => $resolved['timestamp'],
-            'nonceStr' => $resolved['noncestr'],
+            'nonceStr' => $resolved['nonce_str'],
             'signature' => $signature,
             'jsApiList' => $resolved['apis'],
             'debug' => $resolved['debug'],
@@ -54,25 +53,10 @@ class ConfigUtils implements ExtendableOptionsInterface
 
     protected function configureOptions(OptionsResolver $resolver): void
     {
-        Configuration::apply($resolver);
-
-        $resolver
-            ->define('ticket')
-            ->required()
-            ->allowedTypes('string')
-        ;
-
-        $resolver
-            ->define('timestamp')
-            ->default(GenericUtils::getTimestamp())
-            ->allowedTypes('string')
-        ;
-
-        $resolver
-            ->define('noncestr')
-            ->default(GenericUtils::getNonceStr())
-            ->allowedTypes('string')
-        ;
+        WechatOptions::appid($resolver);
+        WechatOptions::ticket($resolver);
+        WechatOptions::timestamp($resolver);
+        WechatOptions::nonce_str($resolver);
 
         $resolver
             ->define('url')

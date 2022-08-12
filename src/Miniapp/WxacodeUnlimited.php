@@ -42,7 +42,7 @@ class WxacodeUnlimited extends Wxacode
     protected function configureRequest(RequestOptions $request, array $options): void
     {
         $query = [
-            'access_token' => $options['access_token'],
+            'access_token' => $options['token'],
         ];
 
         $body = array_filter([

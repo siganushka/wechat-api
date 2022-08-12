@@ -2,15 +2,15 @@
 
 declare(strict_types=1);
 
-use Siganushka\ApiClient\Wechat\ConfigurationExtension;
+use Siganushka\ApiClient\Wechat\ConfigurationOptions;
 use Siganushka\ApiClient\Wechat\Jsapi\ConfigUtils;
-use Siganushka\ApiClient\Wechat\Ticket\TicketExtension;
+use Siganushka\ApiClient\Wechat\Ticket\TicketOptions;
 
 require __DIR__.'/_autoload.php';
 
 $configUtils = new ConfigUtils();
-$configUtils->extend(new ConfigurationExtension($configuration));
-$configUtils->extend(new TicketExtension($configuration));
+$configUtils->using(new ConfigurationOptions($configuration));
+$configUtils->using(new TicketOptions($configuration));
 
 $config = $configUtils->generate(['chooseImage'], true);
 dd($config);

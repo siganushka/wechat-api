@@ -4,26 +4,57 @@ declare(strict_types=1);
 
 namespace Siganushka\ApiClient\Wechat\Tests\Core;
 
+use PHPUnit\Framework\TestCase;
 use Siganushka\ApiClient\Exception\ParseResponseException;
 use Siganushka\ApiClient\Response\ResponseFactory;
 use Siganushka\ApiClient\Wechat\Core\CallbackIp;
-use Siganushka\ApiClient\Wechat\Tests\BaseTest;
 use Symfony\Component\HttpClient\MockHttpClient;
+use Symfony\Component\OptionsResolver\OptionsResolver;
 
-class CallbackIpTest extends BaseTest
+class CallbackIpTest extends TestCase
 {
+    private ?CallbackIp $request = null;
+
+    protected function setUp(): void
+    {
+        $this->request = new CallbackIp();
+    }
+
+    protected function tearDown(): void
+    {
+        $this->request = null;
+    }
+
+    public function testDefinedOptions(): void
+    {
+        $resolver = new OptionsResolver();
+        $this->request->configure($resolver);
+
+        static::assertSame([
+            'token',
+        ], $resolver->getDefinedOptions());
+    }
+
     public function testResolve(): void
     {
-        $request = $this->createRequest();
+        $resolver = new OptionsResolver();
+        $this->request->configure($resolver);
 
-        $resolved = $request->resolve();
-        static::assertSame([], $resolved);
+        static::assertSame([
+            'token' => 'foo',
+        ], $resolver->resolve(['token' => 'foo']));
+
+        $options = TokenOptionsTest::create();
+        $options->configure($resolver);
+
+        static::assertSame([
+            'token' => 'test_token',
+        ], $resolver->resolve());
     }
 
     public function testBuild(): void
     {
-        $request = $this->createRequest();
-        $requestOptions = $request->build();
+        $requestOptions = $this->request->build(['token' => 'foo']);
 
         static::assertSame('GET', $requestOptions->getMethod());
         static::assertSame(CallbackIp::URL, $requestOptions->getUrl());
@@ -41,12 +72,9 @@ class CallbackIpTest extends BaseTest
         ];
 
         $response = ResponseFactory::createMockResponseWithJson($data);
-        $httpClient = new MockHttpClient($response);
+        $client = new MockHttpClient($response);
 
-        $request = $this->createRequest();
-        $request->setHttpClient($httpClient);
-
-        $result = $request->send();
+        $result = $this->request->send($client, ['token' => 'foo']);
         static::assertSame($data['ip_list'], $result);
     }
 
@@ -63,16 +91,8 @@ class CallbackIpTest extends BaseTest
 
         $response = ResponseFactory::createMockResponseWithJson($data);
 
-        $request = $this->createRequest();
-        $parseResponseRef = new \ReflectionMethod($request, 'parseResponse');
+        $parseResponseRef = new \ReflectionMethod($this->request, 'parseResponse');
         $parseResponseRef->setAccessible(true);
-        $parseResponseRef->invoke($request, $response);
-    }
-
-    protected function createRequest(): CallbackIp
-    {
-        $accessToken = $this->createMockAccessToken();
-
-        return new CallbackIp($accessToken);
+        $parseResponseRef->invoke($this->request, $response);
     }
 }

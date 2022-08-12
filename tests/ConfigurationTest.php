@@ -8,40 +8,66 @@ use PHPUnit\Framework\TestCase;
 use Siganushka\ApiClient\Wechat\Configuration;
 use Symfony\Component\OptionsResolver\Exception\InvalidOptionsException;
 use Symfony\Component\OptionsResolver\Exception\MissingOptionsException;
+use Symfony\Component\OptionsResolver\OptionsResolver;
 
 class ConfigurationTest extends TestCase
 {
+    public function testDefinedOptions(): void
+    {
+        $resolver = new OptionsResolver();
+
+        $extension = static::create();
+        $extension->configure($resolver);
+
+        static::assertSame([
+            'appid',
+            'secret',
+            'mchid',
+            'mchkey',
+            'mch_client_cert',
+            'mch_client_key',
+            'sign_type',
+        ], $resolver->getDefinedOptions());
+    }
+
     public function testAll(): void
     {
-        $options = [
-            'appid' => 'test_appid',
-            'secret' => 'test_secret',
-        ];
+        $configuration = static::create([
+            'appid' => 'foo',
+            'secret' => 'bar',
+        ]);
 
-        $configuration = new Configuration($options);
-        static::assertSame($options['appid'], $configuration['appid']);
-        static::assertSame($options['secret'], $configuration['secret']);
-        static::assertNull($configuration['open_appid']);
-        static::assertNull($configuration['open_secret']);
-        static::assertNull($configuration['mchid']);
-        static::assertNull($configuration['mchkey']);
-        static::assertNull($configuration['client_cert_file']);
-        static::assertNull($configuration['client_key_file']);
-        static::assertSame('MD5', $configuration['sign_type']);
+        static::assertTrue($configuration->offsetExists('appid'));
+        static::assertTrue($configuration->offsetExists('secret'));
+        static::assertTrue($configuration->offsetExists('mchid'));
+        static::assertTrue($configuration->offsetExists('mchkey'));
+        static::assertTrue($configuration->offsetExists('mch_client_cert'));
+        static::assertTrue($configuration->offsetExists('mch_client_key'));
+        static::assertTrue($configuration->offsetExists('sign_type'));
+
+        static::assertSame([
+            'mchid' => null,
+            'mchkey' => null,
+            'mch_client_cert' => null,
+            'mch_client_key' => null,
+            'sign_type' => 'MD5',
+            'appid' => 'foo',
+            'secret' => 'bar',
+        ], $configuration->toArray());
     }
 
     public function testCustomOptions(): void
     {
-        $configuration = static::createConfiguration();
-        static::assertSame('test_appid', $configuration['appid']);
-        static::assertSame('test_secret', $configuration['secret']);
-        static::assertSame('test_open_appid', $configuration['open_appid']);
-        static::assertSame('test_open_secret', $configuration['open_secret']);
-        static::assertSame('test_mchid', $configuration['mchid']);
-        static::assertSame('test_mchkey', $configuration['mchkey']);
-        static::assertSame(__DIR__.'/Mock/cert.pem', $configuration['client_cert_file']);
-        static::assertSame(__DIR__.'/Mock/key.pem', $configuration['client_key_file']);
-        static::assertSame('HMAC-SHA256', $configuration['sign_type']);
+        $configuration = static::create();
+        static::assertSame([
+            'mchid' => 'test_mchid',
+            'mchkey' => 'test_mchkey',
+            'mch_client_cert' => __DIR__.'/Mock/cert.pem',
+            'mch_client_key' => __DIR__.'/Mock/key.pem',
+            'sign_type' => 'HMAC-SHA256',
+            'appid' => 'test_appid',
+            'secret' => 'test_secret',
+        ], $configuration->toArray());
     }
 
     public function testAppidMissingOptionsException(): void
@@ -49,7 +75,15 @@ class ConfigurationTest extends TestCase
         $this->expectException(MissingOptionsException::class);
         $this->expectExceptionMessage('The required option "appid" is missing');
 
-        new Configuration(['secret' => 'test_secret']);
+        static::create(['secret' => 'test_secret']);
+    }
+
+    public function testAppidInvalidOptionsException(): void
+    {
+        $this->expectException(InvalidOptionsException::class);
+        $this->expectExceptionMessage('The option "appid" with value 123 is expected to be of type "string", but is of type "int"');
+
+        static::create(['appid' => 123, 'secret' => 'test_secret']);
     }
 
     public function testSecretMissingOptionsException(): void
@@ -57,30 +91,62 @@ class ConfigurationTest extends TestCase
         $this->expectException(MissingOptionsException::class);
         $this->expectExceptionMessage('The required option "secret" is missing');
 
-        new Configuration(['appid' => 'test_appid']);
+        static::create(['appid' => 'test_appid']);
     }
 
-    public function testCertFileInvalidOptionsException(): void
+    public function testSecretInvalidOptionsException(): void
     {
         $this->expectException(InvalidOptionsException::class);
-        $this->expectExceptionMessage('The option "client_cert_file" file does not exists');
+        $this->expectExceptionMessage('The option "secret" with value 123 is expected to be of type "string", but is of type "int"');
 
-        new Configuration([
+        static::create(['appid' => 'test_appid', 'secret' => 123]);
+    }
+
+    public function testMchidInvalidOptionsException(): void
+    {
+        $this->expectException(InvalidOptionsException::class);
+        $this->expectExceptionMessage('The option "mchid" with value 123 is expected to be of type "null" or "string", but is of type "int"');
+
+        static::create([
             'appid' => 'test_appid',
             'secret' => 'test_secret',
-            'client_cert_file' => 'non_existing_file.pem',
+            'mchid' => 123,
         ]);
     }
 
-    public function testKeyFileInvalidOptionsException(): void
+    public function testMchkeyInvalidOptionsException(): void
     {
         $this->expectException(InvalidOptionsException::class);
-        $this->expectExceptionMessage('The option "client_key_file" file does not exists');
+        $this->expectExceptionMessage('The option "mchkey" with value 123 is expected to be of type "null" or "string", but is of type "int"');
 
-        new Configuration([
+        static::create([
             'appid' => 'test_appid',
             'secret' => 'test_secret',
-            'client_key_file' => 'non_existing_file.pem',
+            'mchkey' => 123,
+        ]);
+    }
+
+    public function testClientCertInvalidOptionsException(): void
+    {
+        $this->expectException(InvalidOptionsException::class);
+        $this->expectExceptionMessage('The option "mch_client_cert" file does not exists');
+
+        static::create([
+            'appid' => 'test_appid',
+            'secret' => 'test_secret',
+            'mch_client_cert' => 'non_existing_file.pem',
+        ]);
+    }
+
+    public function testClientKeyInvalidOptionsException(): void
+    {
+        $this->expectException(InvalidOptionsException::class);
+        $this->expectExceptionMessage('The option "mch_client_key" file does not exists');
+
+        static::create([
+            'appid' => 'test_appid',
+            'secret' => 'test_secret',
+            'mch_client_key' => 'non_existing_file.pem',
         ]);
     }
 
@@ -89,27 +155,27 @@ class ConfigurationTest extends TestCase
         $this->expectException(InvalidOptionsException::class);
         $this->expectExceptionMessage('The option "sign_type" with value "invalid_sign_type" is invalid. Accepted values are: "MD5", "HMAC-SHA256"');
 
-        new Configuration([
+        static::create([
             'appid' => 'test_appid',
             'secret' => 'test_secret',
             'sign_type' => 'invalid_sign_type',
         ]);
     }
 
-    public static function createConfiguration(): Configuration
+    public static function create(array $configs = null): Configuration
     {
-        $options = [
-            'appid' => 'test_appid',
-            'secret' => 'test_secret',
-            'open_appid' => 'test_open_appid',
-            'open_secret' => 'test_open_secret',
-            'mchid' => 'test_mchid',
-            'mchkey' => 'test_mchkey',
-            'client_cert_file' => __DIR__.'/Mock/cert.pem',
-            'client_key_file' => __DIR__.'/Mock/key.pem',
-            'sign_type' => 'HMAC-SHA256',
-        ];
+        if (null === $configs) {
+            $configs = [
+                'appid' => 'test_appid',
+                'secret' => 'test_secret',
+                'mchid' => 'test_mchid',
+                'mchkey' => 'test_mchkey',
+                'mch_client_cert' => __DIR__.'/Mock/cert.pem',
+                'mch_client_key' => __DIR__.'/Mock/key.pem',
+                'sign_type' => 'HMAC-SHA256',
+            ];
+        }
 
-        return new Configuration($options);
+        return new Configuration($configs);
     }
 }

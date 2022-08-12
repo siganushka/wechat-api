@@ -7,9 +7,8 @@ namespace Siganushka\ApiClient\Wechat\Payment;
 use Siganushka\ApiClient\AbstractRequest;
 use Siganushka\ApiClient\Exception\ParseResponseException;
 use Siganushka\ApiClient\RequestOptions;
-use Siganushka\ApiClient\Wechat\Configuration;
-use Siganushka\ApiClient\Wechat\ConfigurationExtension;
-use Siganushka\ApiClient\Wechat\GenericUtils;
+use Siganushka\ApiClient\Wechat\ConfigurationOptions;
+use Siganushka\ApiClient\Wechat\WechatOptions;
 use Symfony\Component\OptionsResolver\Exception\MissingOptionsException;
 use Symfony\Component\OptionsResolver\Exception\NoConfigurationException;
 use Symfony\Component\OptionsResolver\Options;
@@ -37,18 +36,17 @@ class Unifiedorder extends AbstractRequest
 
     protected function configureOptions(OptionsResolver $resolver): void
     {
-        Configuration::apply($resolver);
+        WechatOptions::appid($resolver);
+        WechatOptions::mchid($resolver);
+        WechatOptions::sign_type($resolver);
+        WechatOptions::nonce_str($resolver);
+        WechatOptions::client_ip($resolver);
+        WechatOptions::using_slave_url($resolver);
 
         $resolver
             ->define('device_info')
             ->default(null)
             ->allowedTypes('null', 'string')
-        ;
-
-        $resolver
-            ->define('nonce_str')
-            ->default(GenericUtils::getNonceStr())
-            ->allowedTypes('string')
         ;
 
         $resolver
@@ -85,12 +83,6 @@ class Unifiedorder extends AbstractRequest
             ->define('total_fee')
             ->required()
             ->allowedTypes('int')
-        ;
-
-        $resolver
-            ->define('spbill_create_ip')
-            ->default(GenericUtils::getClientIp())
-            ->allowedTypes('string')
         ;
 
         $resolver
@@ -178,12 +170,6 @@ class Unifiedorder extends AbstractRequest
             ->default(null)
             ->allowedTypes('null', 'string')
         ;
-
-        $resolver
-            ->define('using_slave_api')
-            ->default(false)
-            ->allowedTypes('bool')
-        ;
     }
 
     protected function configureRequest(RequestOptions $request, array $options): void
@@ -204,7 +190,7 @@ class Unifiedorder extends AbstractRequest
             'out_trade_no' => $options['out_trade_no'],
             'fee_type' => $options['fee_type'],
             'total_fee' => $options['total_fee'],
-            'spbill_create_ip' => $options['spbill_create_ip'],
+            'spbill_create_ip' => $options['client_ip'],
             'time_start' => $options['time_start'],
             'time_expire' => $options['time_expire'],
             'goods_tag' => $options['goods_tag'],
@@ -219,8 +205,8 @@ class Unifiedorder extends AbstractRequest
         ], fn ($value) => null !== $value);
 
         $signatureUtils = SignatureUtils::create();
-        if (isset($this->extensions[ConfigurationExtension::class])) {
-            $signatureUtils->extend($this->extensions[ConfigurationExtension::class]);
+        if (isset($this->configurators[ConfigurationOptions::class])) {
+            $signatureUtils->using($this->configurators[ConfigurationOptions::class]);
         }
 
         // Generate signature
@@ -229,7 +215,7 @@ class Unifiedorder extends AbstractRequest
 
         $request
             ->setMethod('POST')
-            ->setUrl($options['using_slave_api'] ? static::URL2 : static::URL)
+            ->setUrl($options['using_slave_url'] ? static::URL2 : static::URL)
             ->setBody($xmlBody)
         ;
     }

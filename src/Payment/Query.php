@@ -7,9 +7,8 @@ namespace Siganushka\ApiClient\Wechat\Payment;
 use Siganushka\ApiClient\AbstractRequest;
 use Siganushka\ApiClient\Exception\ParseResponseException;
 use Siganushka\ApiClient\RequestOptions;
-use Siganushka\ApiClient\Wechat\Configuration;
-use Siganushka\ApiClient\Wechat\ConfigurationExtension;
-use Siganushka\ApiClient\Wechat\GenericUtils;
+use Siganushka\ApiClient\Wechat\ConfigurationOptions;
+use Siganushka\ApiClient\Wechat\WechatOptions;
 use Symfony\Component\OptionsResolver\Exception\MissingOptionsException;
 use Symfony\Component\OptionsResolver\Exception\NoConfigurationException;
 use Symfony\Component\OptionsResolver\Options;
@@ -37,7 +36,11 @@ class Query extends AbstractRequest
 
     protected function configureOptions(OptionsResolver $resolver): void
     {
-        Configuration::apply($resolver);
+        WechatOptions::appid($resolver);
+        WechatOptions::mchid($resolver);
+        WechatOptions::sign_type($resolver);
+        WechatOptions::nonce_str($resolver);
+        WechatOptions::using_slave_url($resolver);
 
         $resolver
             ->define('transaction_id')
@@ -57,18 +60,6 @@ class Query extends AbstractRequest
                 return $outTradeNo;
             })
         ;
-
-        $resolver
-            ->define('nonce_str')
-            ->default(GenericUtils::getNonceStr())
-            ->allowedTypes('string')
-        ;
-
-        $resolver
-            ->define('using_slave_api')
-            ->default(false)
-            ->allowedTypes('bool')
-        ;
     }
 
     protected function configureRequest(RequestOptions $request, array $options): void
@@ -87,8 +78,8 @@ class Query extends AbstractRequest
         ], fn ($value) => null !== $value);
 
         $signatureUtils = SignatureUtils::create();
-        if (isset($this->extensions[ConfigurationExtension::class])) {
-            $signatureUtils->extend($this->extensions[ConfigurationExtension::class]);
+        if (isset($this->configurators[ConfigurationOptions::class])) {
+            $signatureUtils->using($this->configurators[ConfigurationOptions::class]);
         }
 
         // Generate signature
@@ -97,7 +88,7 @@ class Query extends AbstractRequest
 
         $request
             ->setMethod('POST')
-            ->setUrl($options['using_slave_api'] ? static::URL2 : static::URL)
+            ->setUrl($options['using_slave_url'] ? static::URL2 : static::URL)
             ->setBody($xmlBody)
         ;
     }

@@ -26,6 +26,7 @@ if (!is_file($configFile)) {
 
 $configs = require $configFile;
 $configuration = new Configuration($configs['miniapp']);
+// dd($configuration);
 
 $client = RequestClientBuilder::create()
     ->addExtension(new WechatExtension($configuration))

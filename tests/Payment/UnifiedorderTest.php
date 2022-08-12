@@ -40,7 +40,7 @@ class UnifiedorderTest extends TestCase
         static::assertSame('test_body', $resolved['body']);
         static::assertSame('test_notify_url', $resolved['notify_url']);
         static::assertSame('test_out_trade_no', $resolved['out_trade_no']);
-        static::assertFalse($resolved['using_slave_api']);
+        static::assertFalse($resolved['using_slave_url']);
     }
 
     public function testBuild(): void
@@ -87,7 +87,7 @@ class UnifiedorderTest extends TestCase
             'receipt' => 'Y',
             'profit_sharing' => 'N',
             'scene_info' => 'test_scene_info',
-            'using_slave_api' => true,
+            'using_slave_url' => true,
         ]);
 
         static::assertSame(Unifiedorder::URL2, $requestOptions->getUrl());

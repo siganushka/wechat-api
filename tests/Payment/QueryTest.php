@@ -30,7 +30,7 @@ class QueryTest extends TestCase
         static::assertArrayHasKey('nonce_str', $resolved);
         static::assertSame('test_out_trade_no', $resolved['out_trade_no']);
         static::assertSame('test_transaction_id', $resolved['transaction_id']);
-        static::assertFalse($resolved['using_slave_api']);
+        static::assertFalse($resolved['using_slave_url']);
     }
 
     public function testBuild(): void
@@ -54,7 +54,7 @@ class QueryTest extends TestCase
         static::assertSame('HMAC-SHA256', $body['sign_type']);
         static::assertSame('test_transaction_id', $body['transaction_id']);
 
-        $requestOptions = $request->build(['out_trade_no' => 'test_out_trade_no', 'using_slave_api' => true]);
+        $requestOptions = $request->build(['out_trade_no' => 'test_out_trade_no', 'using_slave_url' => true]);
         static::assertSame(Query::URL2, $requestOptions->getUrl());
 
         $body = SerializerUtils::xmlDecode($requestOptions->toArray()['body']);

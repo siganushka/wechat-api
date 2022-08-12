@@ -2,25 +2,25 @@
 
 declare(strict_types=1);
 
-namespace Siganushka\ApiClient\Wechat\Tests\Ticket;
+namespace Siganushka\ApiClient\Wechat\Tests\Core;
 
 use PHPUnit\Framework\TestCase;
 use Siganushka\ApiClient\Exception\ParseResponseException;
 use Siganushka\ApiClient\Response\ResponseFactory;
-use Siganushka\ApiClient\Wechat\Tests\Core\TokenOptionsTest;
-use Siganushka\ApiClient\Wechat\Ticket\Ticket;
+use Siganushka\ApiClient\Wechat\Core\Token;
+use Siganushka\ApiClient\Wechat\Tests\ConfigurationOptionsTest;
 use Symfony\Component\HttpClient\MockHttpClient;
 use Symfony\Component\OptionsResolver\Exception\InvalidOptionsException;
 use Symfony\Component\OptionsResolver\Exception\MissingOptionsException;
 use Symfony\Component\OptionsResolver\OptionsResolver;
 
-class TicketTest extends TestCase
+class TokenTest extends TestCase
 {
-    private ?Ticket $request = null;
+    private ?Token $request = null;
 
     protected function setUp(): void
     {
-        $this->request = new Ticket();
+        $this->request = new Token();
     }
 
     protected function tearDown(): void
@@ -34,45 +34,37 @@ class TicketTest extends TestCase
         $this->request->configure($resolver);
 
         static::assertSame([
-            'token',
-            'type',
+            'appid',
+            'secret',
         ], $resolver->getDefinedOptions());
     }
 
     public function testResolve(): void
     {
         static::assertSame([
-            'type' => 'jsapi',
-            'token' => 'foo',
-        ], $this->request->resolve(['token' => 'foo']));
+            'appid' => 'foo',
+            'secret' => 'bar',
+        ], $this->request->resolve(['appid' => 'foo', 'secret' => 'bar']));
 
-        $this->request->using(TokenOptionsTest::create());
+        $this->request->using(ConfigurationOptionsTest::create());
 
         static::assertSame([
-            'type' => 'jsapi',
-            'token' => 'test_token',
+            'appid' => 'test_appid',
+            'secret' => 'test_secret',
         ], $this->request->resolve());
     }
 
     public function testBuild(): void
     {
-        $requestOptions = $this->request->build(['token' => 'foo']);
+        $requestOptions = $this->request->build(['appid' => 'foo', 'secret' => 'bar']);
 
         static::assertSame('GET', $requestOptions->getMethod());
-        static::assertSame(Ticket::URL, $requestOptions->getUrl());
+        static::assertSame(Token::URL, $requestOptions->getUrl());
         static::assertSame([
             'query' => [
-                'access_token' => 'foo',
-                'type' => 'jsapi',
-            ],
-        ], $requestOptions->toArray());
-
-        $requestOptions = $this->request->build(['token' => 'foo', 'type' => 'wx_card']);
-
-        static::assertSame([
-            'query' => [
-                'access_token' => 'foo',
-                'type' => 'wx_card',
+                'appid' => 'foo',
+                'secret' => 'bar',
+                'grant_type' => 'client_credential',
             ],
         ], $requestOptions->toArray());
     }
@@ -80,38 +72,47 @@ class TicketTest extends TestCase
     public function testSend(): void
     {
         $data = [
-            'ticket' => 'test_ticket',
+            'access_token' => 'foo',
+            'expires_in' => 1024,
         ];
 
         $response = ResponseFactory::createMockResponseWithJson($data);
         $client = new MockHttpClient($response);
 
-        $result = $this->request->send($client, ['token' => 'foo']);
+        $result = $this->request->send($client, ['appid' => 'foo', 'secret' => 'bar']);
         static::assertSame($data, $result);
     }
 
-    public function testTokenMissingOptionsException(): void
+    public function testAppidMissingOptionsException(): void
     {
         $this->expectException(MissingOptionsException::class);
-        $this->expectExceptionMessage('The required option "token" is missing');
+        $this->expectExceptionMessage('The required option "appid" is missing');
 
-        $this->request->resolve();
+        $this->request->resolve(['secret' => 'bar']);
     }
 
-    public function testTokenInvalidOptionsException(): void
+    public function testSecretMissingOptionsException(): void
     {
-        $this->expectException(InvalidOptionsException::class);
-        $this->expectExceptionMessage('The option "token" with value 123 is expected to be of type "string", but is of type "int"');
+        $this->expectException(MissingOptionsException::class);
+        $this->expectExceptionMessage('The required option "secret" is missing');
 
-        $this->request->resolve(['token' => 123]);
+        $this->request->resolve(['appid' => 'foo']);
     }
 
-    public function testTypeInvalidOptionsException(): void
+    public function testAppidInvalidOptionsException(): void
     {
         $this->expectException(InvalidOptionsException::class);
-        $this->expectExceptionMessage('The option "type" with value "bar" is invalid. Accepted values are: "jsapi", "wx_card"');
+        $this->expectExceptionMessage('The option "appid" with value 123 is expected to be of type "string", but is of type "int"');
 
-        $this->request->resolve(['token' => 'foo', 'type' => 'bar']);
+        $this->request->resolve(['appid' => 123, 'secret' => 'bar']);
+    }
+
+    public function testSecretInvalidOptionsException(): void
+    {
+        $this->expectException(InvalidOptionsException::class);
+        $this->expectExceptionMessage('The option "secret" with value 123 is expected to be of type "string", but is of type "int"');
+
+        $this->request->resolve(['appid' => 'foo', 'secret' => 123]);
     }
 
     public function testParseResponseException(): void

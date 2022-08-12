@@ -9,8 +9,10 @@ use Siganushka\ApiClient\AbstractRequest;
 use Siganushka\ApiClient\Exception\ParseResponseException;
 use Siganushka\ApiClient\RequestOptions;
 use Siganushka\ApiClient\Response\ResponseFactory;
+use Siganushka\ApiClient\Wechat\WechatOptions;
 use Symfony\Component\Cache\Adapter\FilesystemAdapter;
 use Symfony\Component\OptionsResolver\OptionsResolver;
+use Symfony\Contracts\HttpClient\HttpClientInterface;
 use Symfony\Contracts\HttpClient\ResponseInterface;
 
 /**
@@ -29,11 +31,7 @@ class Ticket extends AbstractRequest
 
     protected function configureOptions(OptionsResolver $resolver): void
     {
-        $resolver
-            ->define('access_token')
-            ->required()
-            ->allowedTypes('string')
-        ;
+        WechatOptions::token($resolver);
 
         $resolver
             ->define('type')
@@ -45,7 +43,7 @@ class Ticket extends AbstractRequest
     protected function configureRequest(RequestOptions $request, array $options): void
     {
         $query = [
-            'access_token' => $options['access_token'],
+            'access_token' => $options['token'],
             'type' => $options['type'],
         ];
 
@@ -56,14 +54,14 @@ class Ticket extends AbstractRequest
         ;
     }
 
-    protected function sendRequest(RequestOptions $request): ResponseInterface
+    protected function sendRequest(HttpClientInterface $client, RequestOptions $request): ResponseInterface
     {
         $cacheItem = $this->cachePool->getItem((string) $request);
         if ($cacheItem->isHit()) {
             return ResponseFactory::createMockResponseWithJson($cacheItem->get());
         }
 
-        $response = parent::sendRequest($request);
+        $response = parent::sendRequest($client, $request);
         $parsedResponse = $this->parseResponse($response);
 
         $cacheItem->set($parsedResponse);
@@ -80,7 +78,7 @@ class Ticket extends AbstractRequest
         $errcode = (int) ($result['errcode'] ?? 0);
         $errmsg = (string) ($result['errmsg'] ?? '');
 
-        if (0 === $errcode) {
+        if (0 === $errcode && isset($result['ticket'])) {
             return $result;
         }
 

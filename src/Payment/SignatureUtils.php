@@ -4,9 +4,9 @@ declare(strict_types=1);
 
 namespace Siganushka\ApiClient\Wechat\Payment;
 
-use Siganushka\ApiClient\Resolver\ExtendableOptionsInterface;
-use Siganushka\ApiClient\Resolver\ExtendableOptionsTrait;
-use Siganushka\ApiClient\Wechat\Configuration;
+use Siganushka\ApiClient\OptionsResolvableInterface;
+use Siganushka\ApiClient\OptionsResolvableTrait;
+use Siganushka\ApiClient\Wechat\WechatOptions;
 use Symfony\Component\OptionsResolver\Exception\NoConfigurationException;
 use Symfony\Component\OptionsResolver\OptionsResolver;
 
@@ -15,9 +15,9 @@ use Symfony\Component\OptionsResolver\OptionsResolver;
  *
  * @see https://pay.weixin.qq.com/wiki/doc/api/jsapi.php?chapter=4_3
  */
-class SignatureUtils implements ExtendableOptionsInterface
+class SignatureUtils implements OptionsResolvableInterface
 {
-    use ExtendableOptionsTrait;
+    use OptionsResolvableTrait;
 
     public static function create(): self
     {
@@ -37,7 +37,7 @@ class SignatureUtils implements ExtendableOptionsInterface
         $signature = http_build_query($parameters);
         $signature = urldecode($signature);
 
-        $signature = (Configuration::SIGN_TYPE_SHA256 === $resolved['sign_type'])
+        $signature = (WechatOptions::SIGN_TYPE_SHA256 === $resolved['sign_type'])
             ? hash_hmac('sha256', $signature, $resolved['mchkey'])
             : hash('md5', $signature);
 
@@ -51,6 +51,7 @@ class SignatureUtils implements ExtendableOptionsInterface
 
     protected function configureOptions(OptionsResolver $resolver): void
     {
-        Configuration::apply($resolver);
+        WechatOptions::mchkey($resolver);
+        WechatOptions::sign_type($resolver);
     }
 }

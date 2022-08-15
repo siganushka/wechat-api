@@ -136,6 +136,15 @@ final class WechatOptions
         ;
     }
 
+    public static function using_config(OptionsResolver $resolver): OptionConfigurator
+    {
+        return $resolver
+            ->define('using_config')
+            ->required()
+            ->allowedTypes('string')
+        ;
+    }
+
     public static function using_slave_url(OptionsResolver $resolver): OptionConfigurator
     {
         return $resolver

@@ -32,7 +32,7 @@ class RefreshTokenTest extends TestCase
 
         static::assertSame('GET', $requestOptions->getMethod());
         static::assertSame(RefreshToken::URL, $requestOptions->getUrl());
-        static::assertSame([
+        static::assertEquals([
             'query' => [
                 'appid' => 'test_appid',
                 'refresh_token' => 'foo',
@@ -41,7 +41,7 @@ class RefreshTokenTest extends TestCase
         ], $requestOptions->toArray());
 
         $requestOptions = $request->build(['refresh_token' => 'foo', 'using_open_api' => true]);
-        static::assertSame([
+        static::assertEquals([
             'query' => [
                 'appid' => 'test_open_appid',
                 'refresh_token' => 'foo',

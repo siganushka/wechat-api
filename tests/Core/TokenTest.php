@@ -28,42 +28,57 @@ class TokenTest extends TestCase
         $this->request = null;
     }
 
-    public function testDefinedOptions(): void
+    public function testConfigure(): void
     {
         $resolver = new OptionsResolver();
         $this->request->configure($resolver);
 
-        static::assertSame([
-            'appid',
-            'secret',
-        ], $resolver->getDefinedOptions());
+        static::assertContains('appid', $resolver->getDefinedOptions());
+        static::assertContains('secret', $resolver->getDefinedOptions());
     }
 
     public function testResolve(): void
     {
-        static::assertSame([
-            'appid' => 'foo',
-            'secret' => 'bar',
-        ], $this->request->resolve(['appid' => 'foo', 'secret' => 'bar']));
+        $resolved = $this->request->resolve(['appid' => 'foo', 'secret' => 'bar']);
+        static::assertArrayNotHasKey('using_config', $resolved);
+        static::assertSame('foo', $resolved['appid']);
+        static::assertSame('bar', $resolved['secret']);
 
         $this->request->using(ConfigurationOptionsTest::create());
 
-        static::assertSame([
-            'appid' => 'test_appid',
-            'secret' => 'test_secret',
-        ], $this->request->resolve());
+        $resolved = $this->request->resolve();
+        static::assertSame('default', $resolved['using_config']);
+        static::assertSame('test_appid', $resolved['appid']);
+        static::assertSame('test_secret', $resolved['secret']);
+
+        $resolved = $this->request->resolve(['using_config' => 'custom']);
+        static::assertSame('custom', $resolved['using_config']);
+        static::assertSame('custom_appid', $resolved['appid']);
+        static::assertSame('custom_secret', $resolved['secret']);
     }
 
     public function testBuild(): void
     {
         $requestOptions = $this->request->build(['appid' => 'foo', 'secret' => 'bar']);
-
         static::assertSame('GET', $requestOptions->getMethod());
         static::assertSame(Token::URL, $requestOptions->getUrl());
-        static::assertSame([
+        static::assertEquals([
             'query' => [
                 'appid' => 'foo',
                 'secret' => 'bar',
+                'grant_type' => 'client_credential',
+            ],
+        ], $requestOptions->toArray());
+
+        $this->request->using(ConfigurationOptionsTest::create());
+
+        $requestOptions = $this->request->build();
+        static::assertSame('GET', $requestOptions->getMethod());
+        static::assertSame(Token::URL, $requestOptions->getUrl());
+        static::assertEquals([
+            'query' => [
+                'appid' => 'test_appid',
+                'secret' => 'test_secret',
                 'grant_type' => 'client_credential',
             ],
         ], $requestOptions->toArray());
@@ -81,6 +96,24 @@ class TokenTest extends TestCase
 
         $result = $this->request->send($client, ['appid' => 'foo', 'secret' => 'bar']);
         static::assertSame($data, $result);
+    }
+
+    public function testSendWithParseResponseException(): void
+    {
+        $this->expectException(ParseResponseException::class);
+        $this->expectExceptionCode(16);
+        $this->expectExceptionMessage('test error');
+
+        $data = [
+            'errcode' => 16,
+            'errmsg' => 'test error',
+        ];
+
+        $response = ResponseFactory::createMockResponseWithJson($data);
+
+        $parseResponseRef = new \ReflectionMethod($this->request, 'parseResponse');
+        $parseResponseRef->setAccessible(true);
+        $parseResponseRef->invoke($this->request, $response);
     }
 
     public function testAppidMissingOptionsException(): void
@@ -113,23 +146,5 @@ class TokenTest extends TestCase
         $this->expectExceptionMessage('The option "secret" with value 123 is expected to be of type "string", but is of type "int"');
 
         $this->request->resolve(['appid' => 'foo', 'secret' => 123]);
-    }
-
-    public function testParseResponseException(): void
-    {
-        $this->expectException(ParseResponseException::class);
-        $this->expectExceptionCode(16);
-        $this->expectExceptionMessage('test error');
-
-        $data = [
-            'errcode' => 16,
-            'errmsg' => 'test error',
-        ];
-
-        $response = ResponseFactory::createMockResponseWithJson($data);
-
-        $parseResponseRef = new \ReflectionMethod($this->request, 'parseResponse');
-        $parseResponseRef->setAccessible(true);
-        $parseResponseRef->invoke($this->request, $response);
     }
 }

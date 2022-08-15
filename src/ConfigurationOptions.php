@@ -13,25 +13,40 @@ use Siganushka\ApiClient\Wechat\Payment\Query;
 use Siganushka\ApiClient\Wechat\Payment\Refund;
 use Siganushka\ApiClient\Wechat\Payment\Transfer;
 use Siganushka\ApiClient\Wechat\Payment\Unifiedorder;
+use Symfony\Component\OptionsResolver\Options;
 use Symfony\Component\OptionsResolver\OptionsResolver;
 
 class ConfigurationOptions implements RequestOptionsExtensionInterface
 {
     use RequestOptionsExtensionTrait;
 
-    private Configuration $configuration;
+    private ConfigurationManager $configurationManager;
 
-    public function __construct(Configuration $configuration)
+    public function __construct(ConfigurationManager $configurationManager)
     {
-        $this->configuration = $configuration;
+        $this->configurationManager = $configurationManager;
     }
 
     protected function configureOptions(OptionsResolver $resolver): void
     {
-        foreach ($this->configuration->toArray() as $key => $value) {
-            if ($resolver->isDefined($key)) {
-                $resolver->setDefault($key, $value);
-            }
+        $defaultName = $this->configurationManager->getDefaultName();
+        $configurations = $this->configurationManager->all();
+
+        WechatOptions::using_config($resolver)
+            ->default($defaultName)
+            ->allowedValues(...array_keys($configurations))
+        ;
+
+        $newResolver = new OptionsResolver();
+        Configuration::apply($newResolver);
+
+        // $definedOptions = array_intersect($resolver->getDefinedOptions(), $newResolver->getDefinedOptions());
+        // unset($newResolver);
+
+        foreach ($newResolver->getDefinedOptions() as $option) {
+            $resolver->setDefault($option, function (Options $options) use ($option) {
+                return $this->configurationManager->get($options['using_config'])[$option] ?? null;
+            });
         }
     }
 

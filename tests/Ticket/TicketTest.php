@@ -33,45 +33,50 @@ class TicketTest extends TestCase
         $resolver = new OptionsResolver();
         $this->request->configure($resolver);
 
-        static::assertSame([
-            'token',
-            'type',
-        ], $resolver->getDefinedOptions());
+        static::assertContains('token', $resolver->getDefinedOptions());
+        static::assertContains('type', $resolver->getDefinedOptions());
     }
 
     public function testResolve(): void
     {
-        static::assertSame([
-            'type' => 'jsapi',
-            'token' => 'foo',
-        ], $this->request->resolve(['token' => 'foo']));
+        $resolved = $this->request->resolve(['token' => 'foo']);
+        static::assertArrayNotHasKey('using_config', $resolved);
+        static::assertSame('foo', $resolved['token']);
+        static::assertSame('jsapi', $resolved['type']);
 
         $this->request->using(TokenOptionsTest::create());
 
-        static::assertSame([
-            'type' => 'jsapi',
-            'token' => 'test_token',
-        ], $this->request->resolve());
+        $resolved = $this->request->resolve();
+        static::assertSame('default', $resolved['using_config']);
+        static::assertSame('test_token_1', $resolved['token']);
+        static::assertSame('jsapi', $resolved['type']);
+
+        $resolved = $this->request->resolve(['using_config' => 'custom', 'type' => 'wx_card']);
+        static::assertSame('custom', $resolved['using_config']);
+        static::assertSame('test_token_2', $resolved['token']);
+        static::assertSame('wx_card', $resolved['type']);
     }
 
     public function testBuild(): void
     {
         $requestOptions = $this->request->build(['token' => 'foo']);
-
         static::assertSame('GET', $requestOptions->getMethod());
         static::assertSame(Ticket::URL, $requestOptions->getUrl());
-        static::assertSame([
+        static::assertEquals([
             'query' => [
                 'access_token' => 'foo',
                 'type' => 'jsapi',
             ],
         ], $requestOptions->toArray());
 
-        $requestOptions = $this->request->build(['token' => 'foo', 'type' => 'wx_card']);
+        $this->request->using(TokenOptionsTest::create());
 
-        static::assertSame([
+        $requestOptions = $this->request->build(['type' => 'wx_card']);
+        static::assertSame('GET', $requestOptions->getMethod());
+        static::assertSame(Ticket::URL, $requestOptions->getUrl());
+        static::assertEquals([
             'query' => [
-                'access_token' => 'foo',
+                'access_token' => 'test_token_1',
                 'type' => 'wx_card',
             ],
         ], $requestOptions->toArray());
@@ -88,6 +93,24 @@ class TicketTest extends TestCase
 
         $result = $this->request->send($client, ['token' => 'foo']);
         static::assertSame($data, $result);
+    }
+
+    public function testSendWithParseResponseException(): void
+    {
+        $this->expectException(ParseResponseException::class);
+        $this->expectExceptionCode(16);
+        $this->expectExceptionMessage('test error');
+
+        $data = [
+            'errcode' => 16,
+            'errmsg' => 'test error',
+        ];
+
+        $response = ResponseFactory::createMockResponseWithJson($data);
+
+        $parseResponseRef = new \ReflectionMethod($this->request, 'parseResponse');
+        $parseResponseRef->setAccessible(true);
+        $parseResponseRef->invoke($this->request, $response);
     }
 
     public function testTokenMissingOptionsException(): void
@@ -112,23 +135,5 @@ class TicketTest extends TestCase
         $this->expectExceptionMessage('The option "type" with value "bar" is invalid. Accepted values are: "jsapi", "wx_card"');
 
         $this->request->resolve(['token' => 'foo', 'type' => 'bar']);
-    }
-
-    public function testParseResponseException(): void
-    {
-        $this->expectException(ParseResponseException::class);
-        $this->expectExceptionCode(16);
-        $this->expectExceptionMessage('test error');
-
-        $data = [
-            'errcode' => 16,
-            'errmsg' => 'test error',
-        ];
-
-        $response = ResponseFactory::createMockResponseWithJson($data);
-
-        $parseResponseRef = new \ReflectionMethod($this->request, 'parseResponse');
-        $parseResponseRef->setAccessible(true);
-        $parseResponseRef->invoke($this->request, $response);
     }
 }

@@ -76,7 +76,7 @@ class Ticket extends AbstractRequest
         $result = $response->toArray();
 
         $errcode = (int) ($result['errcode'] ?? 0);
-        $errmsg = (string) ($result['errmsg'] ?? '');
+        $errmsg = (string) ($result['errmsg'] ?? 'error');
 
         if (0 === $errcode && isset($result['ticket'])) {
             return $result;

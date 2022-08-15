@@ -19,12 +19,7 @@ class ConfigUtils implements OptionsResolvableInterface
 {
     use OptionsResolvableTrait;
 
-    public function generate(array $apis = [], bool $debug = false): array
-    {
-        return $this->generateFromOptions(compact('apis', 'debug'));
-    }
-
-    public function generateFromOptions(array $options = []): array
+    public function generate(array $options = []): array
     {
         $resolved = $this->resolve($options);
         $parameters = [

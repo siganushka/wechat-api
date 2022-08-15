@@ -23,9 +23,12 @@ class ConfigurationManager
         return $this->defaultName;
     }
 
-    public function getDefault(): Configuration
+    /**
+     * @return array<string, Configuration>
+     */
+    public function all(): array
     {
-        return $this->get($this->defaultName);
+        return $this->configurations;
     }
 
     public function has(string $name): bool

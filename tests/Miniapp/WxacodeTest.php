@@ -4,22 +4,22 @@ declare(strict_types=1);
 
 namespace Siganushka\ApiClient\Wechat\Tests\Miniapp;
 
+use PHPUnit\Framework\TestCase;
 use Siganushka\ApiClient\Exception\ParseResponseException;
 use Siganushka\ApiClient\Response\ResponseFactory;
 use Siganushka\ApiClient\Wechat\Miniapp\Wxacode;
-use Siganushka\ApiClient\Wechat\Tests\BaseTest;
 use Symfony\Component\HttpClient\MockHttpClient;
 use Symfony\Component\OptionsResolver\Exception\InvalidOptionsException;
 use Symfony\Component\OptionsResolver\Exception\MissingOptionsException;
 
-class WxacodeTest extends BaseTest
+class WxacodeTest extends TestCase
 {
     public function testResolve(): void
     {
         $request = $this->createRequest();
 
         $resolved = $request->resolve(['path' => '/test']);
-        static::assertSame([
+        static::assertEquals([
             'line_color' => [],
             'path' => '/test',
         ], $resolved);
@@ -33,7 +33,7 @@ class WxacodeTest extends BaseTest
         static::assertSame('POST', $requestOptions->getMethod());
         static::assertSame(Wxacode::URL, $requestOptions->getUrl());
 
-        static::assertSame([
+        static::assertEquals([
             'query' => [
                 'access_token' => 'foo',
             ],
@@ -51,7 +51,7 @@ class WxacodeTest extends BaseTest
             'line_color' => ['r' => 255, 'g' => 255, 'b' => 255],
         ]);
 
-        static::assertSame([
+        static::assertEquals([
             'query' => [
                 'access_token' => 'foo',
             ],

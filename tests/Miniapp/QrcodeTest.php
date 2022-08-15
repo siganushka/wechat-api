@@ -4,22 +4,22 @@ declare(strict_types=1);
 
 namespace Siganushka\ApiClient\Wechat\Tests\Miniapp;
 
+use PHPUnit\Framework\TestCase;
 use Siganushka\ApiClient\Exception\ParseResponseException;
 use Siganushka\ApiClient\Response\ResponseFactory;
 use Siganushka\ApiClient\Wechat\Miniapp\Qrcode;
-use Siganushka\ApiClient\Wechat\Tests\BaseTest;
 use Symfony\Component\HttpClient\MockHttpClient;
 use Symfony\Component\OptionsResolver\Exception\InvalidOptionsException;
 use Symfony\Component\OptionsResolver\Exception\MissingOptionsException;
 
-class QrcodeTest extends BaseTest
+class QrcodeTest extends TestCase
 {
     public function testResolve(): void
     {
         $request = $this->createRequest();
 
         $resolved = $request->resolve(['path' => '/test']);
-        static::assertSame([
+        static::assertEquals([
             'path' => '/test',
         ], $resolved);
     }
@@ -32,7 +32,7 @@ class QrcodeTest extends BaseTest
         static::assertSame('POST', $requestOptions->getMethod());
         static::assertSame(Qrcode::URL, $requestOptions->getUrl());
 
-        static::assertSame([
+        static::assertEquals([
             'query' => [
                 'access_token' => 'foo',
             ],
@@ -46,7 +46,7 @@ class QrcodeTest extends BaseTest
             'width' => 320,
         ]);
 
-        static::assertSame([
+        static::assertEquals([
             'query' => [
                 'access_token' => 'foo',
             ],

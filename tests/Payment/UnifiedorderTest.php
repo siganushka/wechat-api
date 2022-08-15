@@ -15,9 +15,26 @@ use Symfony\Component\HttpClient\MockHttpClient;
 use Symfony\Component\OptionsResolver\Exception\InvalidOptionsException;
 use Symfony\Component\OptionsResolver\Exception\MissingOptionsException;
 use Symfony\Component\OptionsResolver\Exception\NoConfigurationException;
+use Symfony\Component\Serializer\Encoder\JsonEncoder;
+use Symfony\Component\Serializer\Encoder\XmlEncoder;
+use Symfony\Component\Serializer\Serializer;
 
 class UnifiedorderTest extends TestCase
 {
+    private ?Unifiedorder $request = null;
+
+    protected function setUp(): void
+    {
+        $serializer = new Serializer([], [new XmlEncoder(), new JsonEncoder()]);
+
+        $this->request = new Unifiedorder($serializer);
+    }
+
+    protected function tearDown(): void
+    {
+        $this->request = null;
+    }
+
     public function testResolve(): void
     {
         $options = [
@@ -339,7 +356,7 @@ class UnifiedorderTest extends TestCase
         $this->expectException(NoConfigurationException::class);
         $this->expectExceptionMessage('No configured value for "mchkey" option');
 
-        $configuration = new Configuration([
+        $configuration = ConfigurationTest::create([
             'appid' => 'test_appid',
             'secret' => 'test_secret',
             'mchid' => 'test_mchid',
@@ -354,14 +371,5 @@ class UnifiedorderTest extends TestCase
             'trade_type' => 'JSAPI',
             'openid' => 'test_openid',
         ]);
-    }
-
-    public static function createRequest(Configuration $configuration = null): Unifiedorder
-    {
-        if (null === $configuration) {
-            $configuration = ConfigurationTest::createConfiguration();
-        }
-
-        return new Unifiedorder($configuration);
     }
 }

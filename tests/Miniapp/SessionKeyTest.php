@@ -21,7 +21,7 @@ class SessionKeyTest extends TestCase
         $request = static::createRequest();
 
         $resolved = $request->resolve(['code' => 'foo']);
-        static::assertSame(['code' => 'foo'], $resolved);
+        static::assertEquals(['code' => 'foo'], $resolved);
     }
 
     public function testBuild(): void
@@ -31,7 +31,7 @@ class SessionKeyTest extends TestCase
 
         static::assertSame('GET', $requestOptions->getMethod());
         static::assertSame(SessionKey::URL, $requestOptions->getUrl());
-        static::assertSame([
+        static::assertEquals([
             'query' => [
                 'appid' => 'test_appid',
                 'secret' => 'test_secret',

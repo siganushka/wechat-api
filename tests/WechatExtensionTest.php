@@ -13,9 +13,9 @@ class WechatExtensionTest extends TestCase
 {
     public function testAll(): void
     {
-        $configuration = ConfigurationTest::create();
+        $configurationManager = ConfigurationManagerTest::create();
 
-        $extension = new WechatExtension($configuration);
+        $extension = new WechatExtension($configurationManager);
         static::assertCount(17, $extension->loadRequests());
         static::assertCount(3, $extension->loadOptionsExtensions());
 

@@ -35,18 +35,18 @@ use Symfony\Contracts\HttpClient\HttpClientInterface;
 
 class WechatExtension implements RequestExtensionInterface
 {
-    private Configuration $configuration;
+    private ConfigurationManager $configurationManager;
     private HttpClientInterface $httpClient;
     private CacheItemPoolInterface $cachePool;
     private SerializerInterface $serializer;
 
     public function __construct(
-        Configuration $configuration,
+        ConfigurationManager $configurationManager,
         HttpClientInterface $httpClient = null,
         CacheItemPoolInterface $cachePool = null,
         SerializerInterface $serializer = null)
     {
-        $this->configuration = $configuration;
+        $this->configurationManager = $configurationManager;
         $this->httpClient = $httpClient ?? HttpClient::create();
         $this->cachePool = $cachePool ?? new FilesystemAdapter();
         $this->serializer = $serializer ?? new Serializer([], [new XmlEncoder(), new JsonEncoder()]);
@@ -78,9 +78,9 @@ class WechatExtension implements RequestExtensionInterface
     public function loadOptionsExtensions(): array
     {
         return [
-            new ConfigurationOptions($this->configuration),
-            new TokenOptions($this->configuration, $this->httpClient, $this->cachePool),
-            new TicketOptions($this->configuration, $this->httpClient, $this->cachePool),
+            new ConfigurationOptions($this->configurationManager),
+            new TokenOptions($this->configurationManager, $this->httpClient, $this->cachePool),
+            new TicketOptions($this->configurationManager, $this->httpClient, $this->cachePool),
         ];
     }
 }

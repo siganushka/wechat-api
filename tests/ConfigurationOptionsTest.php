@@ -6,82 +6,106 @@ namespace Siganushka\ApiClient\Wechat\Tests;
 
 use PHPUnit\Framework\TestCase;
 use Siganushka\ApiClient\Wechat\Configuration;
+use Siganushka\ApiClient\Wechat\ConfigurationManager;
 use Siganushka\ApiClient\Wechat\ConfigurationOptions;
+use Siganushka\ApiClient\Wechat\Core\Token;
+use Siganushka\ApiClient\Wechat\Miniapp\SessionKey;
+use Siganushka\ApiClient\Wechat\OAuth\RefreshToken;
+use Siganushka\ApiClient\Wechat\Payment\Query;
+use Siganushka\ApiClient\Wechat\Payment\Refund;
+use Siganushka\ApiClient\Wechat\Payment\Unifiedorder;
+use Symfony\Component\OptionsResolver\Exception\InvalidOptionsException;
 use Symfony\Component\OptionsResolver\OptionsResolver;
 
 class ConfigurationOptionsTest extends TestCase
 {
-    public function testDefinedOptions(): void
+    public function testConfigure(): void
     {
         $resolver = new OptionsResolver();
 
-        $options = static::create();
-        $options->configure($resolver);
+        $configurationOptions = static::create();
+        $configurationOptions->configure($resolver);
+        static::assertContains('using_config', $resolver->getDefinedOptions());
 
-        static::assertSame([], $resolver->getDefinedOptions());
-
-        $configuration = ConfigurationTest::create();
-        $configuration->configure($resolver);
-
-        static::assertSame([
-            'appid',
-            'secret',
-            'mchid',
-            'mchkey',
-            'mch_client_cert',
-            'mch_client_key',
-            'sign_type',
-        ], $resolver->getDefinedOptions());
+        Configuration::apply($resolver);
+        static::assertContains('using_config', $resolver->getDefinedOptions());
+        static::assertContains('appid', $resolver->getDefinedOptions());
+        static::assertContains('secret', $resolver->getDefinedOptions());
+        static::assertContains('mchid', $resolver->getDefinedOptions());
+        static::assertContains('mchkey', $resolver->getDefinedOptions());
+        static::assertContains('mch_client_cert', $resolver->getDefinedOptions());
+        static::assertContains('mch_client_key', $resolver->getDefinedOptions());
     }
 
     public function testResolve(): void
     {
         $resolver = new OptionsResolver();
+        Configuration::apply($resolver);
 
-        $configuration = ConfigurationTest::create();
-        $configuration->configure($resolver);
+        $configurationOptions = static::create();
+        $configurationOptions->configure($resolver);
 
-        $options = static::create();
-        $options->configure($resolver);
+        $resolved = $resolver->resolve();
+        static::assertSame('default', $resolved['using_config']);
+        static::assertSame('test_appid', $resolved['appid']);
+        static::assertSame('test_secret', $resolved['secret']);
+        static::assertSame('test_mchid', $resolved['mchid']);
+        static::assertSame('test_mchkey', $resolved['mchkey']);
+        static::assertSame(__DIR__.'/Mock/cert.pem', $resolved['mch_client_cert']);
+        static::assertSame(__DIR__.'/Mock/key.pem', $resolved['mch_client_key']);
 
-        static::assertSame([
-            'mchid' => 'test_mchid',
-            'mchkey' => 'test_mchkey',
-            'mch_client_cert' => __DIR__.'/Mock/cert.pem',
-            'mch_client_key' => __DIR__.'/Mock/key.pem',
-            'sign_type' => 'HMAC-SHA256',
-            'appid' => 'test_appid',
-            'secret' => 'test_secret',
-        ], $resolver->resolve());
+        $resolved = $resolver->resolve(['using_config' => 'custom']);
+        static::assertSame('custom', $resolved['using_config']);
+        static::assertSame('custom_appid', $resolved['appid']);
+        static::assertSame('custom_secret', $resolved['secret']);
+        static::assertNull($resolved['mchid']);
+        static::assertNull($resolved['mchkey']);
+        static::assertNull($resolved['mch_client_cert']);
+        static::assertNull($resolved['mch_client_key']);
+
+        $resolved = $resolver->resolve(['using_config' => 'custom', 'mchid' => 'foo', 'mchkey' => 'bar']);
+        static::assertSame('custom', $resolved['using_config']);
+        static::assertSame('custom_appid', $resolved['appid']);
+        static::assertSame('custom_secret', $resolved['secret']);
+        static::assertSame('foo', $resolved['mchid']);
+        static::assertSame('bar', $resolved['mchkey']);
+        static::assertNull($resolved['mch_client_cert']);
+        static::assertNull($resolved['mch_client_key']);
     }
 
-    public function testCustomOptions(): void
+    public function testGetExtendedRequests(): void
     {
+        $configurationOptions = static::create();
+
+        $extendedRequests = $configurationOptions::getExtendedRequests();
+        static::assertCount(7, $extendedRequests);
+        static::assertContains(Token::class, $extendedRequests);
+        static::assertContains(SessionKey::class, $extendedRequests);
+        static::assertContains(RefreshToken::class, $extendedRequests);
+        static::assertContains(Query::class, $extendedRequests);
+        static::assertContains(Refund::class, $extendedRequests);
+        static::assertContains(Unifiedorder::class, $extendedRequests);
+    }
+
+    public function testUsingConfigInvalidOptionsException(): void
+    {
+        $this->expectException(InvalidOptionsException::class);
+        $this->expectExceptionMessage('The option "using_config" with value "foo" is invalid. Accepted values are: "default", "custom"');
+
         $resolver = new OptionsResolver();
 
-        $configuration = ConfigurationTest::create();
-        $configuration->configure($resolver);
+        $configurationOptions = static::create();
+        $configurationOptions->configure($resolver);
 
-        $options = static::create();
-        $options->configure($resolver);
-
-        static::assertSame([
-            'mchid' => 'test_mchid',
-            'mchkey' => 'test_mchkey',
-            'mch_client_cert' => __DIR__.'/Mock/cert.pem',
-            'mch_client_key' => __DIR__.'/Mock/key.pem',
-            'sign_type' => 'HMAC-SHA256',
-            'appid' => 'foo',
-            'secret' => 'bar',
-        ], $resolver->resolve(['appid' => 'foo', 'secret' => 'bar']));
+        $resolver->resolve(['using_config' => 'foo']);
     }
 
-    public static function create(Configuration $configuration = null): ConfigurationOptions
+    public static function create(ConfigurationManager $configurationManager = null): ConfigurationOptions
     {
-        if (null === $configuration) {
-            $configuration = ConfigurationTest::create();
+        if (null === $configurationManager) {
+            $configurationManager = ConfigurationManagerTest::create();
         }
 
-        return new ConfigurationOptions($configuration);
+        return new ConfigurationOptions($configurationManager);
     }
 }

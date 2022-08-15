@@ -34,7 +34,7 @@ class AccessTokenTest extends TestCase
 
         static::assertSame('GET', $requestOptions->getMethod());
         static::assertSame(AccessToken::URL, $requestOptions->getUrl());
-        static::assertSame([
+        static::assertEquals([
             'query' => [
                 'appid' => 'test_appid',
                 'secret' => 'test_secret',
@@ -44,7 +44,7 @@ class AccessTokenTest extends TestCase
         ], $requestOptions->toArray());
 
         $requestOptions = $request->build(['code' => 'foo', 'using_open_api' => true]);
-        static::assertSame([
+        static::assertEquals([
             'query' => [
                 'appid' => 'test_open_appid',
                 'secret' => 'test_open_secret',

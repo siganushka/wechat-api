@@ -29,7 +29,7 @@ class CheckTokenTest extends TestCase
 
         static::assertSame('GET', $requestOptions->getMethod());
         static::assertSame(CheckToken::URL, $requestOptions->getUrl());
-        static::assertSame([
+        static::assertEquals([
             'query' => [
                 'access_token' => 'foo',
                 'openid' => 'bar',

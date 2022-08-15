@@ -12,62 +12,49 @@ use Symfony\Component\OptionsResolver\OptionsResolver;
 
 class ConfigurationTest extends TestCase
 {
-    public function testDefinedOptions(): void
+    public function testConfigure(): void
     {
         $resolver = new OptionsResolver();
 
-        $extension = static::create();
-        $extension->configure($resolver);
+        $configuration = static::create();
+        $configuration->configure($resolver);
 
-        static::assertSame([
-            'appid',
-            'secret',
-            'mchid',
-            'mchkey',
-            'mch_client_cert',
-            'mch_client_key',
-            'sign_type',
-        ], $resolver->getDefinedOptions());
+        static::assertContains('appid', $resolver->getDefinedOptions());
+        static::assertContains('secret', $resolver->getDefinedOptions());
+        static::assertContains('mchid', $resolver->getDefinedOptions());
+        static::assertContains('mchkey', $resolver->getDefinedOptions());
+        static::assertContains('mch_client_cert', $resolver->getDefinedOptions());
+        static::assertContains('mch_client_key', $resolver->getDefinedOptions());
     }
 
     public function testAll(): void
     {
-        $configuration = static::create([
-            'appid' => 'foo',
-            'secret' => 'bar',
-        ]);
-
+        $configuration = static::create();
         static::assertTrue($configuration->offsetExists('appid'));
         static::assertTrue($configuration->offsetExists('secret'));
         static::assertTrue($configuration->offsetExists('mchid'));
         static::assertTrue($configuration->offsetExists('mchkey'));
         static::assertTrue($configuration->offsetExists('mch_client_cert'));
         static::assertTrue($configuration->offsetExists('mch_client_key'));
-        static::assertTrue($configuration->offsetExists('sign_type'));
 
-        static::assertSame([
-            'mchid' => null,
-            'mchkey' => null,
-            'mch_client_cert' => null,
-            'mch_client_key' => null,
-            'sign_type' => 'MD5',
+        static::assertSame('test_appid', $configuration['appid']);
+        static::assertSame('test_secret', $configuration['secret']);
+        static::assertSame('test_mchid', $configuration['mchid']);
+        static::assertSame('test_mchkey', $configuration['mchkey']);
+        static::assertSame(__DIR__.'/Mock/cert.pem', $configuration['mch_client_cert']);
+        static::assertSame(__DIR__.'/Mock/key.pem', $configuration['mch_client_key']);
+
+        $configuration = static::create([
             'appid' => 'foo',
             'secret' => 'bar',
-        ], $configuration->toArray());
-    }
+        ]);
 
-    public function testCustomOptions(): void
-    {
-        $configuration = static::create();
-        static::assertSame([
-            'mchid' => 'test_mchid',
-            'mchkey' => 'test_mchkey',
-            'mch_client_cert' => __DIR__.'/Mock/cert.pem',
-            'mch_client_key' => __DIR__.'/Mock/key.pem',
-            'sign_type' => 'HMAC-SHA256',
-            'appid' => 'test_appid',
-            'secret' => 'test_secret',
-        ], $configuration->toArray());
+        static::assertSame('foo', $configuration['appid']);
+        static::assertSame('bar', $configuration['secret']);
+        static::assertNull($configuration['mchid']);
+        static::assertNull($configuration['mchkey']);
+        static::assertNull($configuration['mch_client_cert']);
+        static::assertNull($configuration['mch_client_key']);
     }
 
     public function testAppidMissingOptionsException(): void
@@ -129,6 +116,18 @@ class ConfigurationTest extends TestCase
     public function testClientCertInvalidOptionsException(): void
     {
         $this->expectException(InvalidOptionsException::class);
+        $this->expectExceptionMessage('The option "mch_client_cert" with value 123 is expected to be of type "null" or "string", but is of type "int"');
+
+        static::create([
+            'appid' => 'test_appid',
+            'secret' => 'test_secret',
+            'mch_client_cert' => 123,
+        ]);
+    }
+
+    public function testClientCertFileNotFoundException(): void
+    {
+        $this->expectException(InvalidOptionsException::class);
         $this->expectExceptionMessage('The option "mch_client_cert" file does not exists');
 
         static::create([
@@ -141,24 +140,24 @@ class ConfigurationTest extends TestCase
     public function testClientKeyInvalidOptionsException(): void
     {
         $this->expectException(InvalidOptionsException::class);
+        $this->expectExceptionMessage('The option "mch_client_key" with value 123 is expected to be of type "null" or "string", but is of type "int"');
+
+        static::create([
+            'appid' => 'test_appid',
+            'secret' => 'test_secret',
+            'mch_client_key' => 123,
+        ]);
+    }
+
+    public function testClientKeyFileNotFoundException(): void
+    {
+        $this->expectException(InvalidOptionsException::class);
         $this->expectExceptionMessage('The option "mch_client_key" file does not exists');
 
         static::create([
             'appid' => 'test_appid',
             'secret' => 'test_secret',
             'mch_client_key' => 'non_existing_file.pem',
-        ]);
-    }
-
-    public function testSignTypeInvalidOptionsException(): void
-    {
-        $this->expectException(InvalidOptionsException::class);
-        $this->expectExceptionMessage('The option "sign_type" with value "invalid_sign_type" is invalid. Accepted values are: "MD5", "HMAC-SHA256"');
-
-        static::create([
-            'appid' => 'test_appid',
-            'secret' => 'test_secret',
-            'sign_type' => 'invalid_sign_type',
         ]);
     }
 
@@ -172,7 +171,6 @@ class ConfigurationTest extends TestCase
                 'mchkey' => 'test_mchkey',
                 'mch_client_cert' => __DIR__.'/Mock/cert.pem',
                 'mch_client_key' => __DIR__.'/Mock/key.pem',
-                'sign_type' => 'HMAC-SHA256',
             ];
         }
 

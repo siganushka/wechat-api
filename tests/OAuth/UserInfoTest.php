@@ -31,7 +31,7 @@ class UserInfoTest extends TestCase
 
         static::assertSame('GET', $requestOptions->getMethod());
         static::assertSame(UserInfo::URL, $requestOptions->getUrl());
-        static::assertSame([
+        static::assertEquals([
             'query' => [
                 'access_token' => 'foo',
                 'openid' => 'bar',
@@ -40,7 +40,7 @@ class UserInfoTest extends TestCase
         ], $requestOptions->toArray());
 
         $requestOptions = $request->build(['access_token' => 'foo', 'openid' => 'bar', 'lang' => 'en_US']);
-        static::assertSame([
+        static::assertEquals([
             'query' => [
                 'access_token' => 'foo',
                 'openid' => 'bar',

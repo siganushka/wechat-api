@@ -4,109 +4,175 @@ declare(strict_types=1);
 
 namespace Siganushka\ApiClient\Wechat\Tests\Payment;
 
-use PHPUnit\Framework\TestCase;
 use Siganushka\ApiClient\Exception\ParseResponseException;
 use Siganushka\ApiClient\Response\ResponseFactory;
-use Siganushka\ApiClient\Wechat\Configuration;
+use Siganushka\ApiClient\Test\RequestTestCase;
 use Siganushka\ApiClient\Wechat\Payment\Query;
-use Siganushka\ApiClient\Wechat\SerializerUtils;
-use Siganushka\ApiClient\Wechat\Tests\ConfigurationTest;
+use Siganushka\ApiClient\Wechat\Payment\SignatureUtils;
 use Symfony\Component\HttpClient\MockHttpClient;
+use Symfony\Component\OptionsResolver\Exception\InvalidOptionsException;
 use Symfony\Component\OptionsResolver\Exception\MissingOptionsException;
 use Symfony\Component\OptionsResolver\Exception\NoConfigurationException;
+use Symfony\Component\OptionsResolver\OptionsResolver;
+use Symfony\Component\Serializer\Encoder\JsonEncoder;
+use Symfony\Component\Serializer\Encoder\XmlEncoder;
+use Symfony\Component\Serializer\Serializer;
 
-class QueryTest extends TestCase
+class QueryTest extends RequestTestCase
 {
-    public function testResolve(): void
+    public function testConfigure(): void
     {
+        $resolver = new OptionsResolver();
+        $this->request->configure($resolver);
+
+        static::assertSame([
+            'appid',
+            'mchid',
+            'mchkey',
+            'sign_type',
+            'nonce_str',
+            'using_slave_url',
+            'transaction_id',
+            'out_trade_no',
+        ], $resolver->getDefinedOptions());
+
         $options = [
+            'appid' => 'foo',
             'transaction_id' => 'test_transaction_id',
-            'out_trade_no' => 'test_out_trade_no',
         ];
 
-        $request = static::createRequest();
-
-        $resolved = $request->resolve($options);
+        $resolved = $resolver->resolve($options);
+        static::assertSame('foo', $resolved['appid']);
+        static::assertNull($resolved['mchid']);
+        static::assertNull($resolved['mchkey']);
+        static::assertSame('MD5', $resolved['sign_type']);
         static::assertArrayHasKey('nonce_str', $resolved);
-        static::assertSame('test_out_trade_no', $resolved['out_trade_no']);
-        static::assertSame('test_transaction_id', $resolved['transaction_id']);
         static::assertFalse($resolved['using_slave_url']);
+        static::assertSame('test_transaction_id', $resolved['transaction_id']);
+        static::assertNull($resolved['out_trade_no']);
+
+        $resolved = $resolver->resolve([
+            'appid' => 'foo',
+            'mchid' => 'bar',
+            'mchkey' => 'test_mchkey',
+            'sign_type' => 'HMAC-SHA256',
+            'nonce_str' => 'test_nonce_str',
+            'using_slave_url' => true,
+            'transaction_id' => 'test_transaction_id',
+            'out_trade_no' => 'test_out_trade_no',
+        ]);
+
+        static::assertSame('foo', $resolved['appid']);
+        static::assertSame('bar', $resolved['mchid']);
+        static::assertSame('test_mchkey', $resolved['mchkey']);
+        static::assertSame('HMAC-SHA256', $resolved['sign_type']);
+        static::assertSame('test_nonce_str', $resolved['nonce_str']);
+        static::assertTrue($resolved['using_slave_url']);
+        static::assertSame('test_transaction_id', $resolved['transaction_id']);
+        static::assertSame('test_out_trade_no', $resolved['out_trade_no']);
     }
 
     public function testBuild(): void
     {
         $options = [
+            'appid' => 'foo',
+            'mchid' => 'bar',
+            'mchkey' => 'test_mchkey',
+            'nonce_str' => uniqid(),
             'transaction_id' => 'test_transaction_id',
-            'out_trade_no' => 'test_out_trade_no',
         ];
 
-        $request = static::createRequest();
-        $requestOptions = $request->build($options);
-
+        $requestOptions = $this->request->build($options);
         static::assertSame('POST', $requestOptions->getMethod());
         static::assertSame(Query::URL, $requestOptions->getUrl());
 
-        $body = SerializerUtils::xmlDecode($requestOptions->toArray()['body']);
-        static::assertArrayHasKey('nonce_str', $body);
-        static::assertArrayHasKey('sign', $body);
-        static::assertSame('test_appid', $body['appid']);
-        static::assertSame('test_mchid', $body['mch_id']);
-        static::assertSame('HMAC-SHA256', $body['sign_type']);
-        static::assertSame('test_transaction_id', $body['transaction_id']);
+        $body = $this->decodeXML($requestOptions->toArray()['body']);
 
-        $requestOptions = $request->build(['out_trade_no' => 'test_out_trade_no', 'using_slave_url' => true]);
+        $signature = $body['sign'];
+        unset($body['sign']);
+
+        $signatureUtils = SignatureUtils::create();
+        static::assertSame($signature, $signatureUtils->generateFromOptions([
+            'mchkey' => $options['mchkey'],
+            'parameters' => $body,
+        ]));
+
+        static::assertSame([
+            'appid' => $options['appid'],
+            'mch_id' => $options['mchid'],
+            'transaction_id' => $options['transaction_id'],
+            'nonce_str' => $options['nonce_str'],
+            'sign_type' => 'MD5',
+        ], $body);
+
+        $requestOptions = $this->request->build($options + [
+            'sign_type' => 'HMAC-SHA256',
+            'out_trade_no' => 'test_out_trade_no',
+            'using_slave_url' => true,
+        ]);
+
         static::assertSame(Query::URL2, $requestOptions->getUrl());
 
-        $body = SerializerUtils::xmlDecode($requestOptions->toArray()['body']);
-        static::assertArrayHasKey('nonce_str', $body);
-        static::assertArrayHasKey('sign', $body);
-        static::assertSame('test_appid', $body['appid']);
-        static::assertSame('test_mchid', $body['mch_id']);
-        static::assertSame('HMAC-SHA256', $body['sign_type']);
-        static::assertSame('test_out_trade_no', $body['out_trade_no']);
+        $body = $this->decodeXML($requestOptions->toArray()['body']);
+
+        $signature = $body['sign'];
+        unset($body['sign']);
+
+        static::assertSame($signature, $signatureUtils->generateFromOptions([
+            'mchkey' => $options['mchkey'],
+            'sign_type' => 'HMAC-SHA256',
+            'parameters' => $body,
+        ]));
+
+        static::assertSame([
+            'appid' => $options['appid'],
+            'mch_id' => $options['mchid'],
+            'transaction_id' => $options['transaction_id'],
+            'out_trade_no' => 'test_out_trade_no',
+            'nonce_str' => $options['nonce_str'],
+            'sign_type' => 'HMAC-SHA256',
+        ], $body);
     }
 
     public function testSend(): void
     {
         $options = [
+            'appid' => 'foo',
+            'mchid' => 'bar',
+            'mchkey' => 'test_mchkey',
             'transaction_id' => 'test_transaction_id',
-            'out_trade_no' => 'test_out_trade_no',
         ];
 
-        $responseData = [
+        $data = [
             'return_code' => 'SUCCESS',
             'result_code' => 'SUCCESS',
         ];
 
-        $xml = SerializerUtils::xmlEncode($responseData);
+        $xml = $this->encodeXML($data);
         $response = ResponseFactory::createMockResponse($xml);
-        $httpClient = new MockHttpClient($response);
+        $client = new MockHttpClient($response);
 
-        $request = static::createRequest();
-        $request->setHttpClient($httpClient);
-
-        $result = $request->send($options);
-        static::assertSame($responseData, $result);
+        $result = $this->request->send($client, $options);
+        static::assertSame($data, $result);
     }
 
-    public function testReturnCodeParseResponseException(): void
+    public function testParseResponseException(): void
     {
         $this->expectException(ParseResponseException::class);
         $this->expectExceptionCode(0);
         $this->expectExceptionMessage('test_return_msg');
 
-        $responseData = [
+        $data = [
             'return_code' => 'FAIL',
             'return_msg' => 'test_return_msg',
         ];
 
-        $xml = SerializerUtils::xmlEncode($responseData);
+        $xml = $this->encodeXML($data);
         $response = ResponseFactory::createMockResponse($xml);
 
-        $request = static::createRequest();
-        $parseResponseRef = new \ReflectionMethod($request, 'parseResponse');
+        $parseResponseRef = new \ReflectionMethod($this->request, 'parseResponse');
         $parseResponseRef->setAccessible(true);
-        $parseResponseRef->invoke($request, $response);
+        $parseResponseRef->invoke($this->request, $response);
     }
 
     public function testResultCodeParseResponseException(): void
@@ -115,27 +181,38 @@ class QueryTest extends TestCase
         $this->expectExceptionCode(0);
         $this->expectExceptionMessage('test_err_code_des');
 
-        $responseData = [
+        $data = [
             'result_code' => 'FAIL',
             'err_code_des' => 'test_err_code_des',
         ];
 
-        $xml = SerializerUtils::xmlEncode($responseData);
+        $xml = $this->encodeXML($data);
         $response = ResponseFactory::createMockResponse($xml);
 
-        $request = static::createRequest();
-        $parseResponseRef = new \ReflectionMethod($request, 'parseResponse');
+        $parseResponseRef = new \ReflectionMethod($this->request, 'parseResponse');
         $parseResponseRef->setAccessible(true);
-        $parseResponseRef->invoke($request, $response);
+        $parseResponseRef->invoke($this->request, $response);
     }
 
-    public function testMissingOptionsException(): void
+    public function testAppidMissingOptionsException(): void
     {
         $this->expectException(MissingOptionsException::class);
-        $this->expectExceptionMessage('The required option "transaction_id" or "out_trade_no" is missing');
+        $this->expectExceptionMessage('The required option "appid" is missing');
 
-        $request = static::createRequest();
-        $request->resolve();
+        $this->request->build([
+            'transaction_id' => 'test_transaction_id',
+        ]);
+    }
+
+    public function testAppidInvalidOptionsException(): void
+    {
+        $this->expectException(InvalidOptionsException::class);
+        $this->expectExceptionMessage('The option "appid" with value 123 is expected to be of type "string", but is of type "int"');
+
+        $this->request->build([
+            'appid' => 123,
+            'transaction_id' => 'test_transaction_id',
+        ]);
     }
 
     public function testMchidNoConfigurationException(): void
@@ -143,15 +220,9 @@ class QueryTest extends TestCase
         $this->expectException(NoConfigurationException::class);
         $this->expectExceptionMessage('No configured value for "mchid" option');
 
-        $configuration = new Configuration([
-            'appid' => 'test_appid',
-            'secret' => 'test_secret',
-        ]);
-
-        $request = static::createRequest($configuration);
-        $request->send([
+        $this->request->build([
+            'appid' => 'foo',
             'transaction_id' => 'test_transaction_id',
-            'out_trade_no' => 'test_out_trade_no',
         ]);
     }
 
@@ -160,25 +231,27 @@ class QueryTest extends TestCase
         $this->expectException(NoConfigurationException::class);
         $this->expectExceptionMessage('No configured value for "mchkey" option');
 
-        $configuration = new Configuration([
-            'appid' => 'test_appid',
-            'secret' => 'test_secret',
-            'mchid' => 'test_mchid',
-        ]);
-
-        $request = static::createRequest($configuration);
-        $request->send([
+        $this->request->build([
+            'appid' => 'foo',
+            'mchid' => 'bar',
             'transaction_id' => 'test_transaction_id',
-            'out_trade_no' => 'test_out_trade_no',
         ]);
     }
 
-    public static function createRequest(Configuration $configuration = null): Query
+    protected function createRequest(): Query
     {
-        if (null === $configuration) {
-            $configuration = ConfigurationTest::createConfiguration();
-        }
+        $serializer = new Serializer([], [new XmlEncoder(), new JsonEncoder()]);
 
-        return new Query($configuration);
+        return new Query($serializer);
+    }
+
+    protected function encodeXML(array $data): string
+    {
+        return (new XmlEncoder())->encode($data, 'xml');
+    }
+
+    protected function decodeXML(string $data): array
+    {
+        return (new XmlEncoder())->decode($data, 'xml');
     }
 }

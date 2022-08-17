@@ -75,7 +75,7 @@ class Wxacode extends AbstractRequest
         $resolver
             ->define('auto_color')
             ->default(function (Options $options) {
-                return null === $options['line_color'] ? null : false;
+                return null === $options['line_color'] && null === $options['line_color_value'] ? null : false;
             })
             ->allowedTypes('null', 'bool')
         ;

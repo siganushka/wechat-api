@@ -4,8 +4,8 @@ declare(strict_types=1);
 
 namespace Siganushka\ApiClient\Wechat\Payment;
 
-use Siganushka\ApiClient\OptionsResolvableInterface;
-use Siganushka\ApiClient\OptionsResolvableTrait;
+use Siganushka\ApiClient\ConfigurableSubjectInterface;
+use Siganushka\ApiClient\ConfigurableSubjectTrait;
 use Siganushka\ApiClient\Wechat\ConfigurationOptions;
 use Siganushka\ApiClient\Wechat\WechatOptions;
 use Symfony\Component\OptionsResolver\OptionsResolver;
@@ -15,20 +15,27 @@ use Symfony\Component\OptionsResolver\OptionsResolver;
  *
  * @see https://pay.weixin.qq.com/wiki/doc/api/jsapi.php?chapter=7_7&index=6
  */
-class ConfigUtils implements OptionsResolvableInterface
+class ConfigUtils implements ConfigurableSubjectInterface
 {
-    use OptionsResolvableTrait;
+    use ConfigurableSubjectTrait;
 
     public function generate(string $prepayId): array
     {
-        $resolved = $this->resolve();
+        return $this->generateFromOptions(['prepay_id' => $prepayId]);
+    }
 
+    public function generateFromOptions(array $options = []): array
+    {
+        $resolver = new OptionsResolver();
+        $this->configure($resolver);
+
+        $resolved = $resolver->resolve($options);
         $parameters = [
             'appId' => $resolved['appid'],
             'signType' => $resolved['sign_type'],
             'timeStamp' => $resolved['timestamp'],
             'nonceStr' => $resolved['nonce_str'],
-            'package' => sprintf('prepay_id=%s', $prepayId),
+            'package' => sprintf('prepay_id=%s', $resolved['prepay_id']),
         ];
 
         $signatureUtils = SignatureUtils::create();
@@ -37,7 +44,11 @@ class ConfigUtils implements OptionsResolvableInterface
         }
 
         // Generate pay signature
-        $parameters['paySign'] = $signatureUtils->generate($parameters);
+        $parameters['paySign'] = $signatureUtils->generateFromOptions([
+            'mchkey' => $resolved['mchkey'],
+            'sign_type' => $resolved['sign_type'],
+            'parameters' => $parameters,
+        ]);
 
         return $parameters;
     }
@@ -45,8 +56,15 @@ class ConfigUtils implements OptionsResolvableInterface
     protected function configureOptions(OptionsResolver $resolver): void
     {
         WechatOptions::appid($resolver);
+        WechatOptions::mchkey($resolver);
         WechatOptions::sign_type($resolver);
         WechatOptions::timestamp($resolver);
         WechatOptions::nonce_str($resolver);
+
+        $resolver
+            ->define('prepay_id')
+            ->required()
+            ->allowedTypes('string')
+        ;
     }
 }

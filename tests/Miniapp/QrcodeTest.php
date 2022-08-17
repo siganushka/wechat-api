@@ -4,55 +4,63 @@ declare(strict_types=1);
 
 namespace Siganushka\ApiClient\Wechat\Tests\Miniapp;
 
-use PHPUnit\Framework\TestCase;
 use Siganushka\ApiClient\Exception\ParseResponseException;
 use Siganushka\ApiClient\Response\ResponseFactory;
+use Siganushka\ApiClient\Test\RequestTestCase;
 use Siganushka\ApiClient\Wechat\Miniapp\Qrcode;
 use Symfony\Component\HttpClient\MockHttpClient;
 use Symfony\Component\OptionsResolver\Exception\InvalidOptionsException;
 use Symfony\Component\OptionsResolver\Exception\MissingOptionsException;
+use Symfony\Component\OptionsResolver\OptionsResolver;
 
-class QrcodeTest extends TestCase
+class QrcodeTest extends RequestTestCase
 {
-    public function testResolve(): void
+    public function testConfigure(): void
     {
-        $request = $this->createRequest();
+        $resolver = new OptionsResolver();
+        $this->request->configure($resolver);
 
-        $resolved = $request->resolve(['path' => '/test']);
-        static::assertEquals([
-            'path' => '/test',
-        ], $resolved);
+        static::assertSame([
+            'token',
+            'path',
+            'width',
+        ], $resolver->getDefinedOptions());
+
+        static::assertSame([
+            'width' => null,
+            'token' => 'foo',
+            'path' => '/bar',
+        ], $resolver->resolve(['token' => 'foo', 'path' => '/bar']));
+
+        static::assertSame([
+            'width' => 240,
+            'token' => 'foo',
+            'path' => '/bar',
+        ], $resolver->resolve(['token' => 'foo', 'path' => '/bar', 'width' => 240]));
     }
 
     public function testBuild(): void
     {
-        $request = $this->createRequest();
-        $requestOptions = $request->build(['path' => '/test']);
-
+        $requestOptions = $this->request->build(['token' => 'foo', 'path' => '/bar']);
         static::assertSame('POST', $requestOptions->getMethod());
         static::assertSame(Qrcode::URL, $requestOptions->getUrl());
-
-        static::assertEquals([
+        static::assertSame([
             'query' => [
                 'access_token' => 'foo',
             ],
             'json' => [
-                'path' => '/test',
+                'path' => '/bar',
             ],
         ], $requestOptions->toArray());
 
-        $requestOptions = $request->build([
-            'path' => '/index/index',
-            'width' => 320,
-        ]);
-
-        static::assertEquals([
+        $requestOptions = $this->request->build(['token' => 'foo', 'path' => '/bar', 'width' => 240]);
+        static::assertSame([
             'query' => [
                 'access_token' => 'foo',
             ],
             'json' => [
-                'path' => '/index/index',
-                'width' => 320,
+                'path' => '/bar',
+                'width' => 240,
             ],
         ], $requestOptions->toArray());
     }
@@ -67,12 +75,9 @@ class QrcodeTest extends TestCase
         ];
 
         $response = ResponseFactory::createMockResponse($data, $info);
-        $httpClient = new MockHttpClient($response);
+        $client = new MockHttpClient($response);
 
-        $request = $this->createRequest();
-        $request->setHttpClient($httpClient);
-
-        $result = $request->send(['path' => '/test']);
+        $result = $this->request->send($client, ['token' => 'foo', 'path' => '/bar']);
         static::assertSame($data, $result);
     }
 
@@ -95,34 +100,53 @@ class QrcodeTest extends TestCase
 
         $response = ResponseFactory::createMockResponseWithJson($data, $info);
 
-        $request = $this->createRequest();
-        $parseResponseRef = new \ReflectionMethod($request, 'parseResponse');
+        $parseResponseRef = new \ReflectionMethod($this->request, 'parseResponse');
         $parseResponseRef->setAccessible(true);
-        $parseResponseRef->invoke($request, $response);
+        $parseResponseRef->invoke($this->request, $response);
     }
 
-    public function testPathMissingException(): void
+    public function testTokenMissingOptionsException(): void
+    {
+        $this->expectException(MissingOptionsException::class);
+        $this->expectExceptionMessage('The required option "token" is missing');
+
+        $this->request->build(['path' => '/bar']);
+    }
+
+    public function testTokenInvalidOptionsException(): void
+    {
+        $this->expectException(InvalidOptionsException::class);
+        $this->expectExceptionMessage('The option "token" with value 123 is expected to be of type "string", but is of type "int"');
+
+        $this->request->build(['token' => 123, 'path' => '/bar']);
+    }
+
+    public function testPathMissingOptionsException(): void
     {
         $this->expectException(MissingOptionsException::class);
         $this->expectExceptionMessage('The required option "path" is missing');
 
-        $request = $this->createRequest();
-        $request->resolve();
+        $this->request->build(['token' => 'foo']);
     }
 
-    public function testPathInvalidException(): void
+    public function testPathInvalidOptionsException(): void
     {
         $this->expectException(InvalidOptionsException::class);
         $this->expectExceptionMessage('The option "path" with value 123 is expected to be of type "string", but is of type "int"');
 
-        $request = $this->createRequest();
-        $request->resolve(['path' => 123]);
+        $this->request->build(['token' => 'foo', 'path' => 123]);
+    }
+
+    public function testWidthInvalidOptionsException(): void
+    {
+        $this->expectException(InvalidOptionsException::class);
+        $this->expectExceptionMessage('The option "width" with value "test" is expected to be of type "null" or "int", but is of type "string"');
+
+        $this->request->build(['token' => 'foo', 'path' => '/bar', 'width' => 'test']);
     }
 
     protected function createRequest(): Qrcode
     {
-        $accessToken = $this->createMockAccessToken();
-
-        return new Qrcode($accessToken);
+        return new Qrcode();
     }
 }

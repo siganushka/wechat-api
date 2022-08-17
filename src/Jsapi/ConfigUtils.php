@@ -4,8 +4,8 @@ declare(strict_types=1);
 
 namespace Siganushka\ApiClient\Wechat\Jsapi;
 
-use Siganushka\ApiClient\OptionsResolvableInterface;
-use Siganushka\ApiClient\OptionsResolvableTrait;
+use Siganushka\ApiClient\ConfigurableSubjectInterface;
+use Siganushka\ApiClient\ConfigurableSubjectTrait;
 use Siganushka\ApiClient\Wechat\GenericUtils;
 use Siganushka\ApiClient\Wechat\WechatOptions;
 use Symfony\Component\OptionsResolver\OptionsResolver;
@@ -15,13 +15,16 @@ use Symfony\Component\OptionsResolver\OptionsResolver;
  *
  * @see https://developers.weixin.qq.com/doc/offiaccount/OA_Web_Apps/JS-SDK.html
  */
-class ConfigUtils implements OptionsResolvableInterface
+class ConfigUtils implements ConfigurableSubjectInterface
 {
-    use OptionsResolvableTrait;
+    use ConfigurableSubjectTrait;
 
-    public function generate(array $options = []): array
+    public function generate(array $options = [])
     {
-        $resolved = $this->resolve($options);
+        $resolver = new OptionsResolver();
+        $this->configure($resolver);
+
+        $resolved = $resolver->resolve($options);
         $parameters = [
             'jsapi_ticket' => $resolved['ticket'],
             'timestamp' => $resolved['timestamp'],

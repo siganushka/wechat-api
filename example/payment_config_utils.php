@@ -11,7 +11,7 @@ require __DIR__.'/_autoload.php';
 $prepayId = 'wx17175520341037c035b014b2e89c520000';
 
 $configUtils = new ConfigUtils();
-$configUtils->using(new ConfigurationOptions($configuration));
+$configUtils->using(new ConfigurationOptions($configurationManager));
 
 $config = $configUtils->generate($prepayId);
 dd($config);

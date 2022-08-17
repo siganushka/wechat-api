@@ -4,52 +4,47 @@ declare(strict_types=1);
 
 namespace Siganushka\ApiClient\Wechat\Tests\OAuth;
 
-use PHPUnit\Framework\TestCase;
 use Siganushka\ApiClient\Exception\ParseResponseException;
-use Siganushka\ApiClient\RequestOptions;
 use Siganushka\ApiClient\Response\ResponseFactory;
-use Siganushka\ApiClient\Wechat\Configuration;
+use Siganushka\ApiClient\Test\RequestTestCase;
 use Siganushka\ApiClient\Wechat\OAuth\AccessToken;
-use Siganushka\ApiClient\Wechat\Tests\ConfigurationTest;
 use Symfony\Component\HttpClient\MockHttpClient;
 use Symfony\Component\OptionsResolver\Exception\InvalidOptionsException;
 use Symfony\Component\OptionsResolver\Exception\MissingOptionsException;
-use Symfony\Component\OptionsResolver\Exception\NoConfigurationException;
+use Symfony\Component\OptionsResolver\OptionsResolver;
 
-class AccessTokenTest extends TestCase
+class AccessTokenTest extends RequestTestCase
 {
-    public function testResolve(): void
+    public function testConfigure(): void
     {
-        $request = static::createRequest();
+        $resolver = new OptionsResolver();
+        $this->request->configure($resolver);
 
-        $resolved = $request->resolve(['code' => 'foo']);
-        static::assertSame('foo', $resolved['code']);
-        static::assertFalse($resolved['using_open_api']);
+        static::assertSame([
+            'appid',
+            'secret',
+            'code',
+        ], $resolver->getDefinedOptions());
+
+        static::assertSame([
+            'appid' => 'foo',
+            'secret' => 'bar',
+            'code' => 'baz',
+        ], $resolver->resolve(['appid' => 'foo', 'secret' => 'bar', 'code' => 'baz']));
     }
 
     public function testBuild(): void
     {
-        $request = static::createRequest();
-        $requestOptions = $request->build(['code' => 'foo']);
+        $requestOptions = $this->request->build(['appid' => 'foo', 'secret' => 'bar', 'code' => 'baz']);
 
         static::assertSame('GET', $requestOptions->getMethod());
         static::assertSame(AccessToken::URL, $requestOptions->getUrl());
-        static::assertEquals([
+        static::assertSame([
             'query' => [
-                'appid' => 'test_appid',
-                'secret' => 'test_secret',
+                'appid' => 'foo',
+                'secret' => 'bar',
                 'grant_type' => 'authorization_code',
-                'code' => 'foo',
-            ],
-        ], $requestOptions->toArray());
-
-        $requestOptions = $request->build(['code' => 'foo', 'using_open_api' => true]);
-        static::assertEquals([
-            'query' => [
-                'appid' => 'test_open_appid',
-                'secret' => 'test_open_secret',
-                'grant_type' => 'authorization_code',
-                'code' => 'foo',
+                'code' => 'baz',
             ],
         ], $requestOptions->toArray());
     }
@@ -65,12 +60,9 @@ class AccessTokenTest extends TestCase
         ];
 
         $response = ResponseFactory::createMockResponseWithJson($data);
-        $httpClient = new MockHttpClient($response);
+        $client = new MockHttpClient($response);
 
-        $request = static::createRequest();
-        $request->setHttpClient($httpClient);
-
-        $result = $request->send(['code' => 'foo']);
+        $result = $this->request->send($client, ['appid' => 'foo', 'secret' => 'bar', 'code' => 'baz']);
         static::assertSame($data, $result);
     }
 
@@ -87,82 +79,61 @@ class AccessTokenTest extends TestCase
 
         $response = ResponseFactory::createMockResponseWithJson($data);
 
-        $request = static::createRequest();
-        $parseResponseRef = new \ReflectionMethod($request, 'parseResponse');
+        $parseResponseRef = new \ReflectionMethod($this->request, 'parseResponse');
         $parseResponseRef->setAccessible(true);
-        $parseResponseRef->invoke($request, $response);
+        $parseResponseRef->invoke($this->request, $response);
     }
 
-    public function testCodeMissingException(): void
+    public function testAppidMissingOptionsException(): void
+    {
+        $this->expectException(MissingOptionsException::class);
+        $this->expectExceptionMessage('The required option "appid" is missing');
+
+        $this->request->build(['secret' => 'bar', 'code' => 'baz']);
+    }
+
+    public function testAppidInvalidOptionsException(): void
+    {
+        $this->expectException(InvalidOptionsException::class);
+        $this->expectExceptionMessage('The option "appid" with value 123 is expected to be of type "string", but is of type "int"');
+
+        $this->request->build(['appid' => 123, 'secret' => 'bar', 'code' => 'baz']);
+    }
+
+    public function testSecretMissingOptionsException(): void
+    {
+        $this->expectException(MissingOptionsException::class);
+        $this->expectExceptionMessage('The required option "secret" is missing');
+
+        $this->request->build(['appid' => 'foo', 'code' => 'baz']);
+    }
+
+    public function testSecretInvalidOptionsException(): void
+    {
+        $this->expectException(InvalidOptionsException::class);
+        $this->expectExceptionMessage('The option "secret" with value 123 is expected to be of type "string", but is of type "int"');
+
+        $this->request->build(['appid' => 'foo', 'secret' => 123, 'code' => 'baz']);
+    }
+
+    public function testCodeMissingOptionsException(): void
     {
         $this->expectException(MissingOptionsException::class);
         $this->expectExceptionMessage('The required option "code" is missing');
 
-        $request = static::createRequest();
-        $request->resolve();
+        $this->request->build(['appid' => 'foo', 'secret' => 'bar']);
     }
 
-    public function testCodeInvalidException(): void
+    public function testCodeInvalidOptionsException(): void
     {
         $this->expectException(InvalidOptionsException::class);
         $this->expectExceptionMessage('The option "code" with value 123 is expected to be of type "string", but is of type "int"');
 
-        $request = static::createRequest();
-        $request->resolve(['code' => 123]);
+        $this->request->build(['appid' => 'foo', 'secret' => 'bar', 'code' => 123]);
     }
 
-    public function testOpenAppidNoConfigurationException(): void
+    protected function createRequest(): AccessToken
     {
-        $this->expectException(NoConfigurationException::class);
-        $this->expectExceptionMessage('No configured value for "open_appid" option');
-
-        $configuration = new Configuration([
-            'appid' => 'test_appid',
-            'secret' => 'test_secret',
-        ]);
-
-        $request = static::createRequest($configuration);
-        $requestOptions = new RequestOptions();
-
-        $configureRequestRef = new \ReflectionMethod($request, 'configureRequest');
-        $configureRequestRef->setAccessible(true);
-        $configureRequestRef->invoke($request, $requestOptions, $request->resolve(['code' => 'foo', 'using_open_api' => true]));
-    }
-
-    public function testOpenSecretNoConfigurationException(): void
-    {
-        $this->expectException(NoConfigurationException::class);
-        $this->expectExceptionMessage('No configured value for "open_secret" option');
-
-        $configuration = new Configuration([
-            'appid' => 'test_appid',
-            'secret' => 'test_secret',
-            'open_appid' => 'test_open_appid',
-        ]);
-
-        $request = static::createRequest($configuration);
-        $requestOptions = new RequestOptions();
-
-        $configureRequestRef = new \ReflectionMethod($request, 'configureRequest');
-        $configureRequestRef->setAccessible(true);
-        $configureRequestRef->invoke($request, $requestOptions, $request->resolve(['code' => 'foo', 'using_open_api' => true]));
-    }
-
-    public function testUsingOpenApiOptionsException(): void
-    {
-        $this->expectException(InvalidOptionsException::class);
-        $this->expectExceptionMessage('The option "using_open_api" with value 1 is expected to be of type "bool", but is of type "int"');
-
-        $request = static::createRequest();
-        $request->resolve(['code' => 'bar', 'using_open_api' => 1]);
-    }
-
-    public static function createRequest(Configuration $configuration = null): AccessToken
-    {
-        if (null === $configuration) {
-            $configuration = ConfigurationTest::createConfiguration();
-        }
-
-        return new AccessToken($configuration);
+        return new AccessToken();
     }
 }

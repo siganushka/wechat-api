@@ -18,10 +18,10 @@ $parameters = [
 ];
 
 $signatureUtils = new SignatureUtils();
-$signatureUtils->using(new ConfigurationOptions($configuration));
+$signatureUtils->using(new ConfigurationOptions($configurationManager));
 
 // 生成签名
 $sign = $signatureUtils->generate($parameters);
 
 // 生成 & 验证签名
-dd($sign, $signatureUtils->check($parameters, $sign));
+dd($sign, $signatureUtils->check($sign, $parameters));

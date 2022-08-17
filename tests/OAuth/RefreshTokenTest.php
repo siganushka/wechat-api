@@ -4,47 +4,43 @@ declare(strict_types=1);
 
 namespace Siganushka\ApiClient\Wechat\Tests\OAuth;
 
-use PHPUnit\Framework\TestCase;
 use Siganushka\ApiClient\Exception\ParseResponseException;
 use Siganushka\ApiClient\Response\ResponseFactory;
-use Siganushka\ApiClient\Wechat\Configuration;
+use Siganushka\ApiClient\Test\RequestTestCase;
 use Siganushka\ApiClient\Wechat\OAuth\RefreshToken;
-use Siganushka\ApiClient\Wechat\Tests\ConfigurationTest;
 use Symfony\Component\HttpClient\MockHttpClient;
 use Symfony\Component\OptionsResolver\Exception\InvalidOptionsException;
 use Symfony\Component\OptionsResolver\Exception\MissingOptionsException;
+use Symfony\Component\OptionsResolver\OptionsResolver;
 
-class RefreshTokenTest extends TestCase
+class RefreshTokenTest extends RequestTestCase
 {
-    public function testResolve(): void
+    public function testConfigure(): void
     {
-        $request = static::createRequest();
+        $resolver = new OptionsResolver();
+        $this->request->configure($resolver);
 
-        $resolved = $request->resolve(['refresh_token' => 'foo']);
-        static::assertSame('foo', $resolved['refresh_token']);
-        static::assertFalse($resolved['using_open_api']);
+        static::assertSame([
+            'appid',
+            'refresh_token',
+        ], $resolver->getDefinedOptions());
+
+        static::assertSame([
+            'appid' => 'foo',
+            'refresh_token' => 'bar',
+        ], $resolver->resolve(['appid' => 'foo', 'refresh_token' => 'bar']));
     }
 
     public function testBuild(): void
     {
-        $request = static::createRequest();
-        $requestOptions = $request->build(['refresh_token' => 'foo']);
+        $requestOptions = $this->request->build(['appid' => 'foo', 'refresh_token' => 'bar']);
 
         static::assertSame('GET', $requestOptions->getMethod());
         static::assertSame(RefreshToken::URL, $requestOptions->getUrl());
-        static::assertEquals([
+        static::assertSame([
             'query' => [
-                'appid' => 'test_appid',
-                'refresh_token' => 'foo',
-                'grant_type' => 'refresh_token',
-            ],
-        ], $requestOptions->toArray());
-
-        $requestOptions = $request->build(['refresh_token' => 'foo', 'using_open_api' => true]);
-        static::assertEquals([
-            'query' => [
-                'appid' => 'test_open_appid',
-                'refresh_token' => 'foo',
+                'appid' => 'foo',
+                'refresh_token' => 'bar',
                 'grant_type' => 'refresh_token',
             ],
         ], $requestOptions->toArray());
@@ -61,12 +57,9 @@ class RefreshTokenTest extends TestCase
         ];
 
         $response = ResponseFactory::createMockResponseWithJson($data);
-        $httpClient = new MockHttpClient($response);
+        $client = new MockHttpClient($response);
 
-        $request = static::createRequest();
-        $request->setHttpClient($httpClient);
-
-        $result = $request->send(['refresh_token' => 'foo']);
+        $result = $this->request->send($client, ['appid' => 'foo', 'refresh_token' => 'bar']);
         static::assertSame($data, $result);
     }
 
@@ -83,45 +76,47 @@ class RefreshTokenTest extends TestCase
 
         $response = ResponseFactory::createMockResponseWithJson($data);
 
-        $request = static::createRequest();
-        $parseResponseRef = new \ReflectionMethod($request, 'parseResponse');
+        $parseResponseRef = new \ReflectionMethod($this->request, 'parseResponse');
         $parseResponseRef->setAccessible(true);
-        $parseResponseRef->invoke($request, $response);
+        $parseResponseRef->invoke($this->request, $response);
     }
 
-    public function testRefreshTokenMissingException(): void
+    public function testAppidMissingOptionsException(): void
+    {
+        $this->expectException(MissingOptionsException::class);
+        $this->expectExceptionMessage('The required option "appid" is missing');
+
+        $request = static::createRequest();
+        $request->build(['refresh_token' => 'bar']);
+    }
+
+    public function testAppidInvalidOptionsException(): void
+    {
+        $this->expectException(InvalidOptionsException::class);
+        $this->expectExceptionMessage('The option "appid" with value 123 is expected to be of type "string", but is of type "int"');
+
+        $this->request->build(['appid' => 123, 'refresh_token' => 'bar']);
+    }
+
+    public function testRefreshTokenMissingOptionsException(): void
     {
         $this->expectException(MissingOptionsException::class);
         $this->expectExceptionMessage('The required option "refresh_token" is missing');
 
         $request = static::createRequest();
-        $request->resolve();
+        $request->build(['appid' => 'foo']);
     }
 
-    public function testRefreshTokenInvalidException(): void
+    public function testRefreshTokenInvalidOptionsException(): void
     {
         $this->expectException(InvalidOptionsException::class);
         $this->expectExceptionMessage('The option "refresh_token" with value 123 is expected to be of type "string", but is of type "int"');
 
-        $request = static::createRequest();
-        $request->resolve(['refresh_token' => 123]);
+        $this->request->build(['appid' => 'foo', 'refresh_token' => 123]);
     }
 
-    public function testUsingOpenApiOptionsException(): void
+    protected function createRequest(): RefreshToken
     {
-        $this->expectException(InvalidOptionsException::class);
-        $this->expectExceptionMessage('The option "using_open_api" with value 1 is expected to be of type "bool", but is of type "int"');
-
-        $request = static::createRequest();
-        $request->resolve(['refresh_token' => 'bar', 'using_open_api' => 1]);
-    }
-
-    public static function createRequest(Configuration $configuration = null): RefreshToken
-    {
-        if (null === $configuration) {
-            $configuration = ConfigurationTest::createConfiguration();
-        }
-
-        return new RefreshToken($configuration);
+        return new RefreshToken();
     }
 }

@@ -4,8 +4,8 @@ declare(strict_types=1);
 
 namespace Siganushka\ApiClient\Wechat\OAuth;
 
-use Siganushka\ApiClient\OptionsResolvableInterface;
-use Siganushka\ApiClient\OptionsResolvableTrait;
+use Siganushka\ApiClient\ConfigurableSubjectInterface;
+use Siganushka\ApiClient\ConfigurableSubjectTrait;
 use Siganushka\ApiClient\Wechat\WechatOptions;
 use Symfony\Component\OptionsResolver\OptionsResolver;
 
@@ -14,15 +14,18 @@ use Symfony\Component\OptionsResolver\OptionsResolver;
  *
  * @see https://developers.weixin.qq.com/doc/offiaccount/OA_Web_Apps/Wechat_webpage_authorization.html
  */
-class Client implements OptionsResolvableInterface
+class Client implements ConfigurableSubjectInterface
 {
-    use OptionsResolvableTrait;
+    use ConfigurableSubjectTrait;
 
     public const URL = 'https://open.weixin.qq.com/connect/oauth2/authorize';
 
     public function getRedirectUrl(array $options = []): string
     {
-        $resolved = $this->resolve($options);
+        $resolver = new OptionsResolver();
+        $this->configure($resolver);
+
+        $resolved = $resolver->resolve($options);
 
         $query = [
             'appid' => $resolved['appid'],
@@ -38,11 +41,6 @@ class Client implements OptionsResolvableInterface
         ksort($query);
 
         return sprintf('%s?%s#wechat_redirect', static::URL, http_build_query($query));
-    }
-
-    public function redirect(array $options = []): void
-    {
-        header(sprintf('Location: %s', $this->getRedirectUrl($options)));
     }
 
     protected function configureOptions(OptionsResolver $resolver): void

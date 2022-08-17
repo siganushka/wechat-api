@@ -5,40 +5,94 @@ declare(strict_types=1);
 namespace Siganushka\ApiClient\Wechat\Tests\Payment;
 
 use PHPUnit\Framework\TestCase;
-use Siganushka\ApiClient\Wechat\Configuration;
 use Siganushka\ApiClient\Wechat\Payment\ConfigUtils;
 use Siganushka\ApiClient\Wechat\Payment\SignatureUtils;
+use Siganushka\ApiClient\Wechat\Tests\ConfigurationOptionsTest;
+use Symfony\Component\OptionsResolver\OptionsResolver;
 
 class ConfigUtilsTest extends TestCase
 {
-    public function testAll(): void
+    private ?ConfigUtils $configUtils = null;
+
+    protected function setUp(): void
     {
-        $options = [
-            'appid' => 'test_appid',
-            'secret' => 'test_secret',
-            'mchkey' => 'test_mchkey',
-        ];
+        $this->configUtils = new ConfigUtils();
+    }
 
-        $configuration = new Configuration($options);
-        $configUtils = new ConfigUtils($configuration);
+    protected function tearDown(): void
+    {
+        $this->configUtils = null;
+    }
 
-        $payConfig = $configUtils->generate('test_prepay_id');
-        static::assertArrayHasKey('appId', $payConfig);
-        static::assertArrayHasKey('signType', $payConfig);
+    public function testConfigure(): void
+    {
+        $resolver = new OptionsResolver();
+        $this->configUtils->configure($resolver);
+
+        static::assertSame([
+            'appid',
+            'mchkey',
+            'sign_type',
+            'timestamp',
+            'nonce_str',
+            'prepay_id',
+        ], $resolver->getDefinedOptions());
+
+        $resolved = $resolver->resolve(['appid' => 'foo', 'mchkey' => 'bar', 'prepay_id' => 'baz']);
+        static::assertSame('foo', $resolved['appid']);
+        static::assertSame('bar', $resolved['mchkey']);
+        static::assertSame('MD5', $resolved['sign_type']);
+        static::assertArrayHasKey('timestamp', $resolved);
+        static::assertArrayHasKey('nonce_str', $resolved);
+        static::assertSame('baz', $resolved['prepay_id']);
+
+        $resolved = $resolver->resolve([
+            'appid' => 'foo',
+            'mchkey' => 'bar',
+            'sign_type' => 'HMAC-SHA256',
+            'timestamp' => 'test_timestamp',
+            'nonce_str' => 'test_nonce_str',
+            'prepay_id' => 'baz',
+        ]);
+
+        static::assertSame('foo', $resolved['appid']);
+        static::assertSame('bar', $resolved['mchkey']);
+        static::assertSame('HMAC-SHA256', $resolved['sign_type']);
+        static::assertSame('test_timestamp', $resolved['timestamp']);
+        static::assertSame('test_nonce_str', $resolved['nonce_str']);
+        static::assertSame('baz', $resolved['prepay_id']);
+    }
+
+    public function testGenerate(): void
+    {
+        $this->configUtils->using(ConfigurationOptionsTest::create());
+
+        $payConfig = $this->configUtils->generate('baz');
+        static::assertSame('test_appid', $payConfig['appId']);
+        static::assertSame('MD5', $payConfig['signType']);
         static::assertArrayHasKey('timeStamp', $payConfig);
         static::assertArrayHasKey('nonceStr', $payConfig);
-        static::assertArrayHasKey('package', $payConfig);
+        static::assertSame('prepay_id=baz', $payConfig['package']);
         static::assertArrayHasKey('paySign', $payConfig);
-        static::assertSame($configuration['appid'], $payConfig['appId']);
-        static::assertSame($configuration['sign_type'], $payConfig['signType']);
-        static::assertSame('prepay_id=test_prepay_id', $payConfig['package']);
+    }
 
-        $signatureUtils = new SignatureUtils($configuration);
-        static::assertTrue($signatureUtils->checkParameters($payConfig, 'paySign'));
+    public function testGenerateFromOptions(): void
+    {
+        $payConfig = $this->configUtils->generateFromOptions(['appid' => 'foo', 'mchkey' => 'bar', 'prepay_id' => 'baz']);
+        static::assertSame('foo', $payConfig['appId']);
+        static::assertSame('MD5', $payConfig['signType']);
+        static::assertArrayHasKey('timeStamp', $payConfig);
+        static::assertArrayHasKey('nonceStr', $payConfig);
+        static::assertSame('prepay_id=baz', $payConfig['package']);
+        static::assertArrayHasKey('paySign', $payConfig);
 
-        $sign = $payConfig['paySign'];
+        $paySign = $payConfig['paySign'];
         unset($payConfig['paySign']);
 
-        static::assertTrue($signatureUtils->check($payConfig, $sign));
+        $signatureUtils = SignatureUtils::create();
+        static::assertTrue($signatureUtils->checkFromOptions($paySign, [
+            'mchkey' => 'bar',
+            'parameters' => $payConfig,
+        ]));
     }
 }

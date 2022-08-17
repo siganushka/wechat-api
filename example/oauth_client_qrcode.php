@@ -15,8 +15,9 @@ if (!isset($_GET['code'])) {
     ];
 
     $qrcode = new Qrcode();
-    $qrcode->using(new ConfigurationOptions($configuration));
-    $qrcode->redirect($options);
+    $qrcode->using(new ConfigurationOptions($configurationManager));
+
+    header(sprintf('Location: %s', $qrcode->getRedirectUrl($options)));
     exit;
 }
 

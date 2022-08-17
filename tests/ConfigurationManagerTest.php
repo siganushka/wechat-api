@@ -15,7 +15,7 @@ class ConfigurationManagerTest extends TestCase
         $configurationManager = static::create();
 
         static::assertSame('default', $configurationManager->getDefaultName());
-        static::assertEquals(['default', 'custom'], array_keys($configurationManager->all()));
+        static::assertSame(['default', 'custom'], array_keys($configurationManager->all()));
         static::assertTrue($configurationManager->has('default'));
         static::assertTrue($configurationManager->has('custom'));
         static::assertFalse($configurationManager->has('foo'));

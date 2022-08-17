@@ -5,79 +5,62 @@ declare(strict_types=1);
 namespace Siganushka\ApiClient\Wechat\Tests\OAuth;
 
 use PHPUnit\Framework\TestCase;
-use Siganushka\ApiClient\Wechat\Configuration;
 use Siganushka\ApiClient\Wechat\OAuth\Client;
-use Siganushka\ApiClient\Wechat\Tests\ConfigurationTest;
-use Symfony\Component\OptionsResolver\Exception\InvalidOptionsException;
-use Symfony\Component\OptionsResolver\Exception\NoConfigurationException;
+use Symfony\Component\OptionsResolver\OptionsResolver;
 
 class ClientTest extends TestCase
 {
-    public function testAll(): void
+    private ?Client $client = null;
+
+    protected function setUp(): void
     {
-        $options = [
-            'redirect_uri' => 'http://localhost',
-        ];
+        $this->client = new Client();
+    }
 
-        $client = static::createClient();
+    protected function tearDown(): void
+    {
+        $this->client = null;
+    }
 
-        $resolved = $client->resolve($options);
-        static::assertNull($resolved['state']);
-        static::assertFalse($resolved['using_open_api']);
-        static::assertSame('snsapi_base', $resolved['scope']);
-        static::assertSame('http://localhost', $resolved['redirect_uri']);
+    public function testConfigure(): void
+    {
+        $resolver = new OptionsResolver();
+        $this->client->configure($resolver);
 
-        $redirectUrl = $client->getRedirectUrl($options);
+        static::assertSame([
+            'appid',
+            'redirect_uri',
+            'state',
+            'scope',
+        ], $resolver->getDefinedOptions());
+
+        static::assertSame([
+            'state' => null,
+            'scope' => 'snsapi_base',
+            'appid' => 'foo',
+            'redirect_uri' => '/bar',
+        ], $resolver->resolve(['appid' => 'foo', 'redirect_uri' => '/bar']));
+
+        static::assertSame([
+            'state' => 'baz',
+            'scope' => 'snsapi_userinfo',
+            'appid' => 'foo',
+            'redirect_uri' => '/bar',
+        ], $resolver->resolve(['appid' => 'foo', 'redirect_uri' => '/bar', 'state' => 'baz', 'scope' => 'snsapi_userinfo']));
+    }
+
+    public function testGetRedirectUrl(): void
+    {
+        $redirectUrl = $this->client->getRedirectUrl(['appid' => 'foo', 'redirect_uri' => '/bar']);
         static::assertStringStartsWith(Client::URL, $redirectUrl);
         static::assertStringEndsWith('#wechat_redirect', $redirectUrl);
-        static::assertStringContainsString('test_appid', $redirectUrl);
-        static::assertStringContainsString('snsapi_base', $redirectUrl);
-        static::assertStringContainsString(urlencode($options['redirect_uri']), $redirectUrl);
+        static::assertStringContainsString('appid=foo', $redirectUrl);
+        static::assertStringContainsString(urlencode('/bar'), $redirectUrl);
+        static::assertStringContainsString('scope=snsapi_base', $redirectUrl);
+        static::assertStringNotContainsString('state=', $redirectUrl);
 
-        $redirectUrl = $client->getRedirectUrl($options + ['state' => 'foo', 'using_open_api' => true]);
-        static::assertStringStartsWith(Client::URL2, $redirectUrl);
-        static::assertStringEndsWith('#wechat_redirect', $redirectUrl);
-        static::assertStringContainsString('test_open_appid', $redirectUrl);
-        static::assertStringContainsString('snsapi_login', $redirectUrl);
-        static::assertStringContainsString('state', $redirectUrl);
-        static::assertStringContainsString(urlencode($options['redirect_uri']), $redirectUrl);
-    }
-
-    public function testOpenAppidNoConfigurationException(): void
-    {
-        $this->expectException(NoConfigurationException::class);
-        $this->expectExceptionMessage('No configured value for "open_appid" option');
-
-        $configuration = new Configuration([
-            'appid' => 'test_appid',
-            'secret' => 'test_secret',
-        ]);
-
-        $client = static::createClient($configuration);
-        $client->getRedirectUrl([
-            'redirect_uri' => 'http://localhost',
-            'using_open_api' => true,
-        ]);
-    }
-
-    public function testUsingOpenApiOptionsException(): void
-    {
-        $this->expectException(InvalidOptionsException::class);
-        $this->expectExceptionMessage('The option "using_open_api" with value 1 is expected to be of type "bool", but is of type "int"');
-
-        $client = static::createClient();
-        $client->getRedirectUrl([
-            'redirect_uri' => 'http://localhost',
-            'using_open_api' => 1,
-        ]);
-    }
-
-    public static function createClient(Configuration $configuration = null): Client
-    {
-        if (null === $configuration) {
-            $configuration = ConfigurationTest::createConfiguration();
-        }
-
-        return new Client($configuration);
+        $redirectUrl = $this->client->getRedirectUrl(['appid' => 'foo', 'redirect_uri' => '/bar', 'state' => 'baz', 'scope' => 'snsapi_userinfo']);
+        static::assertStringContainsString('scope=snsapi_userinfo', $redirectUrl);
+        static::assertStringContainsString('state=baz', $redirectUrl);
     }
 }

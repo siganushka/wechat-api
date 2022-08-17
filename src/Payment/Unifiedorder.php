@@ -38,6 +38,7 @@ class Unifiedorder extends AbstractRequest
     {
         WechatOptions::appid($resolver);
         WechatOptions::mchid($resolver);
+        WechatOptions::mchkey($resolver);
         WechatOptions::sign_type($resolver);
         WechatOptions::nonce_str($resolver);
         WechatOptions::client_ip($resolver);
@@ -174,8 +175,10 @@ class Unifiedorder extends AbstractRequest
 
     protected function configureRequest(RequestOptions $request, array $options): void
     {
-        if (null === $options['mchid']) {
-            throw new NoConfigurationException('No configured value for "mchid" option.');
+        foreach (['mchid', 'mchkey'] as $optionName) {
+            if (null === $options[$optionName]) {
+                throw new NoConfigurationException(sprintf('No configured value for "%s" option.', $optionName));
+            }
         }
 
         $body = array_filter([
@@ -210,13 +213,16 @@ class Unifiedorder extends AbstractRequest
         }
 
         // Generate signature
-        $body['sign'] = $signatureUtils->generate($body);
-        $xmlBody = $this->serializer->encode($body, 'xml');
+        $body['sign'] = $signatureUtils->generateFromOptions([
+            'mchkey' => $options['mchkey'],
+            'sign_type' => $options['sign_type'],
+            'parameters' => $body,
+        ]);
 
         $request
             ->setMethod('POST')
             ->setUrl($options['using_slave_url'] ? static::URL2 : static::URL)
-            ->setBody($xmlBody)
+            ->setBody($this->serializer->encode($body, 'xml'))
         ;
     }
 

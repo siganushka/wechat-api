@@ -4,130 +4,247 @@ declare(strict_types=1);
 
 namespace Siganushka\ApiClient\Wechat\Tests\Payment;
 
-use PHPUnit\Framework\TestCase;
 use Siganushka\ApiClient\Exception\ParseResponseException;
 use Siganushka\ApiClient\Response\ResponseFactory;
-use Siganushka\ApiClient\Wechat\Configuration;
+use Siganushka\ApiClient\Test\RequestTestCase;
+use Siganushka\ApiClient\Wechat\Payment\SignatureUtils;
 use Siganushka\ApiClient\Wechat\Payment\Transfer;
-use Siganushka\ApiClient\Wechat\SerializerUtils;
-use Siganushka\ApiClient\Wechat\Tests\ConfigurationTest;
+use Siganushka\ApiClient\Wechat\Tests\ConfigurationManagerTest;
 use Symfony\Component\HttpClient\MockHttpClient;
 use Symfony\Component\OptionsResolver\Exception\InvalidOptionsException;
 use Symfony\Component\OptionsResolver\Exception\MissingOptionsException;
 use Symfony\Component\OptionsResolver\Exception\NoConfigurationException;
+use Symfony\Component\OptionsResolver\OptionsResolver;
+use Symfony\Component\Serializer\Encoder\JsonEncoder;
+use Symfony\Component\Serializer\Encoder\XmlEncoder;
+use Symfony\Component\Serializer\Serializer;
 
-class TransferTest extends TestCase
+class TransferTest extends RequestTestCase
 {
-    public function testResolve(): void
+    public function testConfigure(): void
     {
+        $resolver = new OptionsResolver();
+        $this->request->configure($resolver);
+
+        static::assertSame([
+            'appid',
+            'mchid',
+            'mchkey',
+            'mch_client_cert',
+            'mch_client_key',
+            'sign_type',
+            'nonce_str',
+            'client_ip',
+            'device_info',
+            'partner_trade_no',
+            'openid',
+            'check_name',
+            're_user_name',
+            'amount',
+            'desc',
+            'scene',
+            'brand_id',
+            'finder_template_id',
+        ], $resolver->getDefinedOptions());
+
+        $configurationManager = ConfigurationManagerTest::create();
+        $defaultConfig = $configurationManager->get('default');
+
         $options = [
+            'appid' => $defaultConfig['appid'],
+            'nonce_str' => uniqid(),
             'partner_trade_no' => 'test_partner_trade_no',
             'openid' => 'test_openid',
             'amount' => 1,
             'desc' => 'test_desc',
         ];
 
-        $request = static::createRequest();
+        static::assertSame([
+            'mchid' => null,
+            'mchkey' => null,
+            'mch_client_cert' => null,
+            'mch_client_key' => null,
+            'sign_type' => 'MD5',
+            'nonce_str' => $options['nonce_str'],
+            'client_ip' => '0.0.0.0',
+            'device_info' => null,
+            'check_name' => 'NO_CHECK',
+            're_user_name' => null,
+            'scene' => null,
+            'brand_id' => null,
+            'finder_template_id' => null,
+            'appid' => $options['appid'],
+            'partner_trade_no' => 'test_partner_trade_no',
+            'openid' => 'test_openid',
+            'amount' => 1,
+            'desc' => 'test_desc',
+        ], $resolver->resolve($options));
 
-        $resolved = $request->resolve($options);
-        static::assertArrayHasKey('nonce_str', $resolved);
-        static::assertSame('NO_CHECK', $resolved['check_name']);
-        static::assertSame('test_partner_trade_no', $resolved['partner_trade_no']);
-        static::assertSame('test_openid', $resolved['openid']);
-        static::assertSame(1, $resolved['amount']);
-        static::assertSame('test_desc', $resolved['desc']);
+        static::assertSame([
+            'mchid' => $defaultConfig['mchid'],
+            'mchkey' => $defaultConfig['mchkey'],
+            'mch_client_cert' => $defaultConfig['mch_client_cert'],
+            'mch_client_key' => $defaultConfig['mch_client_key'],
+            'sign_type' => 'MD5',
+            'nonce_str' => $options['nonce_str'],
+            'client_ip' => '0.0.0.0',
+            'device_info' => 'test_device_info',
+            'check_name' => 'NO_CHECK',
+            're_user_name' => 'test_re_user_name',
+            'scene' => 'test_scene',
+            'brand_id' => 16,
+            'finder_template_id' => 'test_finder_template_id',
+            'appid' => $options['appid'],
+            'partner_trade_no' => 'test_partner_trade_no',
+            'openid' => 'test_openid',
+            'amount' => 1,
+            'desc' => 'test_desc',
+        ], $resolver->resolve($options + [
+            'mchid' => $defaultConfig['mchid'],
+            'mchkey' => $defaultConfig['mchkey'],
+            'mch_client_cert' => $defaultConfig['mch_client_cert'],
+            'mch_client_key' => $defaultConfig['mch_client_key'],
+            'device_info' => 'test_device_info',
+            're_user_name' => 'test_re_user_name',
+            'scene' => 'test_scene',
+            'brand_id' => 16,
+            'finder_template_id' => 'test_finder_template_id',
+        ]));
     }
 
     public function testBuild(): void
     {
+        $configurationManager = ConfigurationManagerTest::create();
+        $defaultConfig = $configurationManager->get('default');
+
         $options = [
+            'appid' => $defaultConfig['appid'],
+            'mchid' => $defaultConfig['mchid'],
+            'mchkey' => $defaultConfig['mchkey'],
+            'mch_client_cert' => $defaultConfig['mch_client_cert'],
+            'mch_client_key' => $defaultConfig['mch_client_key'],
+            'nonce_str' => uniqid(),
             'partner_trade_no' => 'test_partner_trade_no',
             'openid' => 'test_openid',
             'amount' => 1,
             'desc' => 'test_desc',
         ];
 
-        $request = static::createRequest();
-        $requestOptions = $request->build($options);
-
+        $requestOptions = $this->request->build($options);
         static::assertSame('POST', $requestOptions->getMethod());
         static::assertSame(Transfer::URL, $requestOptions->getUrl());
+        static::assertSame($requestOptions->toArray()['local_cert'], $options['mch_client_cert']);
+        static::assertSame($requestOptions->toArray()['local_pk'], $options['mch_client_key']);
 
-        $configuration = ConfigurationTest::createConfiguration();
-        static::assertSame($configuration['client_cert_file'], $requestOptions->toArray()['local_cert']);
-        static::assertSame($configuration['client_key_file'], $requestOptions->toArray()['local_pk']);
+        $body = $this->decodeXML($requestOptions->toArray()['body']);
 
-        $body = SerializerUtils::xmlDecode($requestOptions->toArray()['body']);
-        static::assertArrayHasKey('nonce_str', $body);
-        static::assertArrayHasKey('sign', $body);
-        static::assertSame('NO_CHECK', $body['check_name']);
-        static::assertSame('test_partner_trade_no', $body['partner_trade_no']);
-        static::assertSame('test_openid', $body['openid']);
-        static::assertSame('test_appid', $body['mch_appid']);
-        static::assertSame('test_mchid', $body['mchid']);
-        static::assertSame('1', $body['amount']);
-        static::assertSame('test_desc', $body['desc']);
+        $signature = $body['sign'];
+        unset($body['sign']);
 
-        $requestOptions = $request->build($options + [
+        $signatureUtils = SignatureUtils::create();
+        static::assertSame($signature, $signatureUtils->generateFromOptions([
+            'mchkey' => $options['mchkey'],
+            'parameters' => $body,
+        ]));
+
+        static::assertSame([
+            'mch_appid' => $options['appid'],
+            'mchid' => $options['mchid'],
+            'nonce_str' => $options['nonce_str'],
+            'partner_trade_no' => $options['partner_trade_no'],
+            'openid' => $options['openid'],
+            'check_name' => 'NO_CHECK',
+            'amount' => (string) $options['amount'],
+            'desc' => $options['desc'],
+            'spbill_create_ip' => '0.0.0.0',
+        ], $body);
+
+        $requestOptions = $this->request->build($options + [
+            'sign_type' => 'HMAC-SHA256',
             'device_info' => 'test_device_info',
             're_user_name' => 'test_re_user_name',
-            'spbill_create_ip' => 'test_spbill_create_ip',
             'scene' => 'test_scene',
-            'brand_id' => 'test_brand_id',
+            'brand_id' => 16,
             'finder_template_id' => 'test_finder_template_id',
         ]);
 
-        $body = SerializerUtils::xmlDecode($requestOptions->toArray()['body']);
-        static::assertSame('test_device_info', $body['device_info']);
-        static::assertSame('test_re_user_name', $body['re_user_name']);
-        static::assertSame('test_spbill_create_ip', $body['spbill_create_ip']);
-        static::assertSame('test_scene', $body['scene']);
-        static::assertSame('test_brand_id', $body['brand_id']);
-        static::assertSame('test_finder_template_id', $body['finder_template_id']);
+        $body = $this->decodeXML($requestOptions->toArray()['body']);
+
+        $signature = $body['sign'];
+        unset($body['sign']);
+
+        static::assertSame($signature, $signatureUtils->generateFromOptions([
+            'mchkey' => $options['mchkey'],
+            'sign_type' => 'HMAC-SHA256',
+            'parameters' => $body,
+        ]));
+
+        static::assertSame([
+            'mch_appid' => $options['appid'],
+            'mchid' => $options['mchid'],
+            'device_info' => 'test_device_info',
+            'nonce_str' => $options['nonce_str'],
+            'partner_trade_no' => $options['partner_trade_no'],
+            'openid' => $options['openid'],
+            'check_name' => 'NO_CHECK',
+            're_user_name' => 'test_re_user_name',
+            'amount' => (string) $options['amount'],
+            'desc' => $options['desc'],
+            'spbill_create_ip' => '0.0.0.0',
+            'scene' => 'test_scene',
+            'brand_id' => '16',
+            'finder_template_id' => 'test_finder_template_id',
+        ], $body);
     }
 
     public function testSend(): void
     {
+        $configurationManager = ConfigurationManagerTest::create();
+        $defaultConfig = $configurationManager->get('default');
+
         $options = [
+            'appid' => $defaultConfig['appid'],
+            'mchid' => $defaultConfig['mchid'],
+            'mchkey' => $defaultConfig['mchkey'],
+            'mch_client_cert' => $defaultConfig['mch_client_cert'],
+            'mch_client_key' => $defaultConfig['mch_client_key'],
+            'nonce_str' => uniqid(),
             'partner_trade_no' => 'test_partner_trade_no',
             'openid' => 'test_openid',
             'amount' => 1,
             'desc' => 'test_desc',
         ];
 
-        $responseData = [
+        $data = [
             'return_code' => 'SUCCESS',
             'result_code' => 'SUCCESS',
         ];
 
-        $response = ResponseFactory::createMockResponse(SerializerUtils::xmlEncode($responseData));
-        $httpClient = new MockHttpClient($response);
+        $xml = $this->encodeXML($data);
+        $response = ResponseFactory::createMockResponse($xml);
+        $client = new MockHttpClient($response);
 
-        $request = static::createRequest();
-        $request->setHttpClient($httpClient);
-
-        $result = $request->send($options);
-        static::assertSame($responseData, $result);
+        $result = $this->request->send($client, $options);
+        static::assertSame($data, $result);
     }
 
-    public function testReturnCodeParseResponseException(): void
+    public function testParseResponseException(): void
     {
         $this->expectException(ParseResponseException::class);
         $this->expectExceptionCode(0);
         $this->expectExceptionMessage('test_return_msg');
 
-        $responseData = [
+        $data = [
             'return_code' => 'FAIL',
             'return_msg' => 'test_return_msg',
         ];
 
-        $xml = SerializerUtils::xmlEncode($responseData);
+        $xml = $this->encodeXML($data);
         $response = ResponseFactory::createMockResponse($xml);
 
-        $request = static::createRequest();
-        $parseResponseRef = new \ReflectionMethod($request, 'parseResponse');
+        $parseResponseRef = new \ReflectionMethod($this->request, 'parseResponse');
         $parseResponseRef->setAccessible(true);
-        $parseResponseRef->invoke($request, $response);
+        $parseResponseRef->invoke($this->request, $response);
     }
 
     public function testResultCodeParseResponseException(): void
@@ -136,69 +253,42 @@ class TransferTest extends TestCase
         $this->expectExceptionCode(0);
         $this->expectExceptionMessage('test_err_code_des');
 
-        $responseData = [
+        $data = [
             'result_code' => 'FAIL',
             'err_code_des' => 'test_err_code_des',
         ];
 
-        $xml = SerializerUtils::xmlEncode($responseData);
+        $xml = $this->encodeXML($data);
         $response = ResponseFactory::createMockResponse($xml);
 
-        $request = static::createRequest();
-        $parseResponseRef = new \ReflectionMethod($request, 'parseResponse');
+        $parseResponseRef = new \ReflectionMethod($this->request, 'parseResponse');
         $parseResponseRef->setAccessible(true);
-        $parseResponseRef->invoke($request, $response);
+        $parseResponseRef->invoke($this->request, $response);
     }
 
-    public function testMissingOptionsException(): void
+    public function testAppidMissingOptionsException(): void
     {
         $this->expectException(MissingOptionsException::class);
-        $this->expectExceptionMessage('The required options "amount", "desc", "openid", "partner_trade_no" are missing');
+        $this->expectExceptionMessage('The required option "appid" is missing');
 
-        $request = static::createRequest();
-        $request->resolve();
-    }
-
-    public function testReUserNameMissingOptionsException(): void
-    {
-        $this->expectException(MissingOptionsException::class);
-        $this->expectExceptionMessage('The required option "re_user_name" is missing (when "check_name" option is set to "FORCE_CHECK")');
-
-        $request = static::createRequest();
-        $request->resolve([
+        $this->request->build([
             'partner_trade_no' => 'test_partner_trade_no',
             'openid' => 'test_openid',
             'amount' => 1,
             'desc' => 'test_desc',
-            'check_name' => 'FORCE_CHECK',
         ]);
     }
 
-    public function testCheckNameInvalidOptionsException(): void
+    public function testAppidInvalidOptionsException(): void
     {
         $this->expectException(InvalidOptionsException::class);
-        $this->expectExceptionMessage('The option "check_name" with value "test_check_name" is invalid. Accepted values are: "NO_CHECK", "FORCE_CHECK"');
+        $this->expectExceptionMessage('The option "appid" with value 123 is expected to be of type "string", but is of type "int"');
 
-        $request = static::createRequest();
-        $request->resolve([
+        $this->request->build([
+            'appid' => 123,
             'partner_trade_no' => 'test_partner_trade_no',
             'openid' => 'test_openid',
             'amount' => 1,
-            'desc' => 'test_desc',
-            'check_name' => 'test_check_name',
-        ]);
-    }
-
-    public function testAmountInvalidOptionsException(): void
-    {
-        $this->expectException(InvalidOptionsException::class);
-        $this->expectExceptionMessage('The option "amount" with value "test_amount" is expected to be of type "int", but is of type "string"');
-
-        $request = static::createRequest();
-        $request->resolve([
-            'partner_trade_no' => 'test_partner_trade_no',
-            'openid' => 'test_openid',
-            'amount' => 'test_amount',
             'desc' => 'test_desc',
         ]);
     }
@@ -208,13 +298,8 @@ class TransferTest extends TestCase
         $this->expectException(NoConfigurationException::class);
         $this->expectExceptionMessage('No configured value for "mchid" option');
 
-        $configuration = new Configuration([
-            'appid' => 'test_appid',
-            'secret' => 'test_secret',
-        ]);
-
-        $request = static::createRequest($configuration);
-        $request->send([
+        $this->request->build([
+            'appid' => 'foo',
             'partner_trade_no' => 'test_partner_trade_no',
             'openid' => 'test_openid',
             'amount' => 1,
@@ -227,14 +312,9 @@ class TransferTest extends TestCase
         $this->expectException(NoConfigurationException::class);
         $this->expectExceptionMessage('No configured value for "mchkey" option');
 
-        $configuration = new Configuration([
+        $this->request->build([
             'appid' => 'test_appid',
-            'secret' => 'test_secret',
             'mchid' => 'test_mchid',
-        ]);
-
-        $request = static::createRequest($configuration);
-        $request->send([
             'partner_trade_no' => 'test_partner_trade_no',
             'openid' => 'test_openid',
             'amount' => 1,
@@ -242,55 +322,20 @@ class TransferTest extends TestCase
         ]);
     }
 
-    public function testClientCertFileNoConfigurationException(): void
+    protected function createRequest(): Transfer
     {
-        $this->expectException(NoConfigurationException::class);
-        $this->expectExceptionMessage('No configured value for "client_cert_file" option');
+        $serializer = new Serializer([], [new XmlEncoder(), new JsonEncoder()]);
 
-        $configuration = new Configuration([
-            'appid' => 'test_appid',
-            'secret' => 'test_secret',
-            'mchid' => 'test_mchid',
-            'mchkey' => 'test_mchkey',
-        ]);
-
-        $request = static::createRequest($configuration);
-        $request->send([
-            'partner_trade_no' => 'test_partner_trade_no',
-            'openid' => 'test_openid',
-            'amount' => 1,
-            'desc' => 'test_desc',
-        ]);
+        return new Transfer($serializer);
     }
 
-    public function testClientKeyFileNoConfigurationException(): void
+    protected function encodeXML(array $data): string
     {
-        $this->expectException(NoConfigurationException::class);
-        $this->expectExceptionMessage('No configured value for "client_key_file" option');
-
-        $configuration = new Configuration([
-            'appid' => 'test_appid',
-            'secret' => 'test_secret',
-            'mchid' => 'test_mchid',
-            'mchkey' => 'test_mchkey',
-            'client_cert_file' => __DIR__.'/../Mock/cert.pem',
-        ]);
-
-        $request = static::createRequest($configuration);
-        $request->send([
-            'partner_trade_no' => 'test_partner_trade_no',
-            'openid' => 'test_openid',
-            'amount' => 1,
-            'desc' => 'test_desc',
-        ]);
+        return (new XmlEncoder())->encode($data, 'xml');
     }
 
-    public static function createRequest(Configuration $configuration = null): Transfer
+    protected function decodeXML(string $data): array
     {
-        if (null === $configuration) {
-            $configuration = ConfigurationTest::createConfiguration();
-        }
-
-        return new Transfer($configuration);
+        return (new XmlEncoder())->decode($data, 'xml');
     }
 }

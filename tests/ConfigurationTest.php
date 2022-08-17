@@ -19,23 +19,19 @@ class ConfigurationTest extends TestCase
         $configuration = static::create();
         $configuration->configure($resolver);
 
-        static::assertContains('appid', $resolver->getDefinedOptions());
-        static::assertContains('secret', $resolver->getDefinedOptions());
-        static::assertContains('mchid', $resolver->getDefinedOptions());
-        static::assertContains('mchkey', $resolver->getDefinedOptions());
-        static::assertContains('mch_client_cert', $resolver->getDefinedOptions());
-        static::assertContains('mch_client_key', $resolver->getDefinedOptions());
+        static::assertSame([
+            'appid',
+            'secret',
+            'mchid',
+            'mchkey',
+            'mch_client_cert',
+            'mch_client_key',
+        ], $resolver->getDefinedOptions());
     }
 
     public function testAll(): void
     {
         $configuration = static::create();
-        static::assertTrue($configuration->offsetExists('appid'));
-        static::assertTrue($configuration->offsetExists('secret'));
-        static::assertTrue($configuration->offsetExists('mchid'));
-        static::assertTrue($configuration->offsetExists('mchkey'));
-        static::assertTrue($configuration->offsetExists('mch_client_cert'));
-        static::assertTrue($configuration->offsetExists('mch_client_key'));
 
         static::assertSame('test_appid', $configuration['appid']);
         static::assertSame('test_secret', $configuration['secret']);

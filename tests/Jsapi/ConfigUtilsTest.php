@@ -6,7 +6,6 @@ namespace Siganushka\ApiClient\Wechat\Tests\Jsapi;
 
 use PHPUnit\Framework\TestCase;
 use Siganushka\ApiClient\Wechat\Jsapi\ConfigUtils;
-use Siganushka\ApiClient\Wechat\Tests\Ticket\TicketOptionsTest;
 use Symfony\Component\OptionsResolver\Exception\InvalidOptionsException;
 use Symfony\Component\OptionsResolver\Exception\MissingOptionsException;
 use Symfony\Component\OptionsResolver\OptionsResolver;
@@ -30,19 +29,17 @@ class ConfigUtilsTest extends TestCase
         $resolver = new OptionsResolver();
         $this->configUtils->configure($resolver);
 
-        static::assertContains('appid', $resolver->getDefinedOptions());
-        static::assertContains('ticket', $resolver->getDefinedOptions());
-        static::assertContains('timestamp', $resolver->getDefinedOptions());
-        static::assertContains('nonce_str', $resolver->getDefinedOptions());
-        static::assertContains('url', $resolver->getDefinedOptions());
-        static::assertContains('apis', $resolver->getDefinedOptions());
-        static::assertContains('debug', $resolver->getDefinedOptions());
-    }
+        static::assertSame([
+            'appid',
+            'ticket',
+            'timestamp',
+            'nonce_str',
+            'url',
+            'apis',
+            'debug',
+        ], $resolver->getDefinedOptions());
 
-    public function testResolve(): void
-    {
-        $resolved = $this->configUtils->resolve(['appid' => 'foo', 'ticket' => 'bar']);
-        static::assertArrayNotHasKey('using_config', $resolved);
+        $resolved = $resolver->resolve(['appid' => 'foo', 'ticket' => 'bar']);
         static::assertSame('foo', $resolved['appid']);
         static::assertSame('bar', $resolved['ticket']);
         static::assertArrayHasKey('timestamp', $resolved);
@@ -51,30 +48,20 @@ class ConfigUtilsTest extends TestCase
         static::assertSame([], $resolved['apis']);
         static::assertFalse($resolved['debug']);
 
-        $this->configUtils->using(TicketOptionsTest::create());
-
-        $resolved = $this->configUtils->resolve();
-        static::assertSame('default', $resolved['using_config']);
-        static::assertSame('test_appid', $resolved['appid']);
-        static::assertSame('test_ticket', $resolved['ticket']);
-        static::assertArrayHasKey('timestamp', $resolved);
-        static::assertArrayHasKey('nonce_str', $resolved);
-        static::assertArrayHasKey('url', $resolved);
-        static::assertSame([], $resolved['apis']);
-        static::assertFalse($resolved['debug']);
-
-        $resolved = $this->configUtils->resolve([
-            'using_config' => 'custom',
+        $resolved = $resolver->resolve([
+            'appid' => 'foo',
+            'ticket' => 'bar',
+            'timestamp' => 'test_timestamp',
+            'nonce_str' => 'test_nonce_str',
             'url' => '/foo',
             'apis' => ['a', 'b', 'c'],
             'debug' => true,
         ]);
 
-        static::assertSame('custom', $resolved['using_config']);
-        static::assertSame('custom_appid', $resolved['appid']);
-        static::assertSame('custom_ticket', $resolved['ticket']);
-        static::assertArrayHasKey('timestamp', $resolved);
-        static::assertArrayHasKey('nonce_str', $resolved);
+        static::assertSame('foo', $resolved['appid']);
+        static::assertSame('bar', $resolved['ticket']);
+        static::assertSame('test_timestamp', $resolved['timestamp']);
+        static::assertSame('test_nonce_str', $resolved['nonce_str']);
         static::assertSame('/foo', $resolved['url']);
         static::assertSame(['a', 'b', 'c'], $resolved['apis']);
         static::assertTrue($resolved['debug']);
@@ -82,21 +69,21 @@ class ConfigUtilsTest extends TestCase
 
     public function testGenerate(): void
     {
-        $this->configUtils->using(TicketOptionsTest::create());
-
-        $configs = $this->configUtils->generate();
-        static::assertSame('test_appid', $configs['appId']);
+        $configs = $this->configUtils->generate(['appid' => 'foo', 'ticket' => 'bar']);
+        static::assertSame('foo', $configs['appId']);
         static::assertArrayHasKey('timestamp', $configs);
         static::assertArrayHasKey('nonceStr', $configs);
         static::assertArrayHasKey('signature', $configs);
-        static::assertEquals([], $configs['jsApiList']);
+        static::assertSame([], $configs['jsApiList']);
         static::assertFalse($configs['debug']);
 
         $configs = $this->configUtils->generate([
             'appid' => 'foo',
             'ticket' => 'bar',
+            'timestamp' => 'test_timestamp',
+            'nonce_str' => 'test_nonce_str',
             'url' => '/foo',
-            'apis' => ['test_api'],
+            'apis' => ['a', 'b', 'c'],
             'debug' => true,
         ]);
 
@@ -104,7 +91,7 @@ class ConfigUtilsTest extends TestCase
         static::assertArrayHasKey('timestamp', $configs);
         static::assertArrayHasKey('nonceStr', $configs);
         static::assertArrayHasKey('signature', $configs);
-        static::assertEquals(['test_api'], $configs['jsApiList']);
+        static::assertSame(['a', 'b', 'c'], $configs['jsApiList']);
         static::assertTrue($configs['debug']);
     }
 

@@ -4,39 +4,46 @@ declare(strict_types=1);
 
 namespace Siganushka\ApiClient\Wechat\Tests\Miniapp;
 
-use PHPUnit\Framework\TestCase;
 use Siganushka\ApiClient\Exception\ParseResponseException;
 use Siganushka\ApiClient\Response\ResponseFactory;
+use Siganushka\ApiClient\Test\RequestTestCase;
 use Siganushka\ApiClient\Wechat\Miniapp\SessionKey;
-use Siganushka\ApiClient\Wechat\Tests\ConfigurationTest;
-use Symfony\Component\Cache\Adapter\FilesystemAdapter;
 use Symfony\Component\HttpClient\MockHttpClient;
 use Symfony\Component\OptionsResolver\Exception\InvalidOptionsException;
 use Symfony\Component\OptionsResolver\Exception\MissingOptionsException;
+use Symfony\Component\OptionsResolver\OptionsResolver;
 
-class SessionKeyTest extends TestCase
+class SessionKeyTest extends RequestTestCase
 {
-    public function testResolve(): void
+    public function testConfigure(): void
     {
-        $request = static::createRequest();
+        $resolver = new OptionsResolver();
+        $this->request->configure($resolver);
 
-        $resolved = $request->resolve(['code' => 'foo']);
-        static::assertEquals(['code' => 'foo'], $resolved);
+        static::assertSame([
+            'appid',
+            'secret',
+            'code',
+        ], $resolver->getDefinedOptions());
+
+        static::assertSame([
+            'appid' => 'foo',
+            'secret' => 'bar',
+            'code' => 'baz',
+        ], $resolver->resolve(['appid' => 'foo', 'secret' => 'bar', 'code' => 'baz']));
     }
 
     public function testBuild(): void
     {
-        $request = static::createRequest();
-        $requestOptions = $request->build(['code' => 'foo']);
-
+        $requestOptions = $this->request->build(['appid' => 'foo', 'secret' => 'bar', 'code' => 'baz']);
         static::assertSame('GET', $requestOptions->getMethod());
         static::assertSame(SessionKey::URL, $requestOptions->getUrl());
-        static::assertEquals([
+        static::assertSame([
             'query' => [
-                'appid' => 'test_appid',
-                'secret' => 'test_secret',
+                'appid' => 'foo',
+                'secret' => 'bar',
                 'grant_type' => 'authorization_code',
-                'code' => 'foo',
+                'code' => 'baz',
             ],
         ], $requestOptions->toArray());
     }
@@ -49,12 +56,9 @@ class SessionKeyTest extends TestCase
         ];
 
         $response = ResponseFactory::createMockResponseWithJson($data);
-        $httpClient = new MockHttpClient($response);
+        $client = new MockHttpClient($response);
 
-        $request = static::createRequest();
-        $request->setHttpClient($httpClient);
-
-        $result = $request->send(['code' => 'foo']);
+        $result = $this->request->send($client, ['appid' => 'foo', 'secret' => 'bar', 'code' => 'baz']);
         static::assertSame($data, $result);
     }
 
@@ -71,37 +75,61 @@ class SessionKeyTest extends TestCase
 
         $response = ResponseFactory::createMockResponseWithJson($data);
 
-        $request = static::createRequest();
-        $parseResponseRef = new \ReflectionMethod($request, 'parseResponse');
+        $parseResponseRef = new \ReflectionMethod($this->request, 'parseResponse');
         $parseResponseRef->setAccessible(true);
-        $parseResponseRef->invoke($request, $response);
+        $parseResponseRef->invoke($this->request, $response);
     }
 
-    public function testCodeMissingException(): void
+    public function testAppidMissingOptionsException(): void
+    {
+        $this->expectException(MissingOptionsException::class);
+        $this->expectExceptionMessage('The required option "appid" is missing');
+
+        $this->request->build(['secret' => 'bar', 'code' => 'baz']);
+    }
+
+    public function testAppidInvalidOptionsException(): void
+    {
+        $this->expectException(InvalidOptionsException::class);
+        $this->expectExceptionMessage('The option "appid" with value 123 is expected to be of type "string", but is of type "int"');
+
+        $this->request->build(['appid' => 123, 'secret' => 'bar', 'code' => 'baz']);
+    }
+
+    public function testSecretMissingOptionsException(): void
+    {
+        $this->expectException(MissingOptionsException::class);
+        $this->expectExceptionMessage('The required option "secret" is missing');
+
+        $this->request->build(['appid' => 'foo', 'code' => 'baz']);
+    }
+
+    public function testSecretInvalidOptionsException(): void
+    {
+        $this->expectException(InvalidOptionsException::class);
+        $this->expectExceptionMessage('The option "secret" with value 123 is expected to be of type "string", but is of type "int"');
+
+        $this->request->build(['appid' => 'foo', 'secret' => 123, 'code' => 'baz']);
+    }
+
+    public function testCodeMissingOptionsException(): void
     {
         $this->expectException(MissingOptionsException::class);
         $this->expectExceptionMessage('The required option "code" is missing');
 
-        $request = static::createRequest();
-        $request->resolve();
+        $this->request->build(['appid' => 'foo', 'secret' => 'bar']);
     }
 
-    public function testCodeInvalidException(): void
+    public function testCodeInvalidOptionsException(): void
     {
         $this->expectException(InvalidOptionsException::class);
         $this->expectExceptionMessage('The option "code" with value 123 is expected to be of type "string", but is of type "int"');
 
-        $request = static::createRequest();
-        $request->resolve(['code' => 123]);
+        $this->request->build(['appid' => 'foo', 'secret' => 'bar', 'code' => 123]);
     }
 
-    public static function createRequest(): SessionKey
+    protected function createRequest(): SessionKey
     {
-        $cachePool = new FilesystemAdapter();
-        $cachePool->clear();
-
-        $configuration = ConfigurationTest::createConfiguration();
-
-        return new SessionKey($cachePool, $configuration);
+        return new SessionKey();
     }
 }

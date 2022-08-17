@@ -30,35 +30,58 @@ class TokenOptionsTest extends TestCase
         $tokenOptions = static::create();
         $tokenOptions->configure($resolver);
 
-        static::assertContains('using_config', $resolver->getDefinedOptions());
-        static::assertContains('appid', $resolver->getDefinedOptions());
-        static::assertContains('secret', $resolver->getDefinedOptions());
-        static::assertContains('token', $resolver->getDefinedOptions());
+        static::assertSame([
+            'using_config',
+            'appid',
+            'secret',
+            'mchid',
+            'mchkey',
+            'mch_client_cert',
+            'mch_client_key',
+            'token',
+        ], $resolver->getDefinedOptions());
     }
 
     public function testResolve(): void
     {
         $resolver = new OptionsResolver();
 
+        $configurationManager = ConfigurationManagerTest::create();
+
+        $defaultConfig = $configurationManager->get('default');
+        $customConfig = $configurationManager->get('custom');
+
         $tokenOptions = static::create();
         $tokenOptions->configure($resolver);
 
         $resolved = $resolver->resolve();
         static::assertSame('default', $resolved['using_config']);
-        static::assertSame('test_appid', $resolved['appid']);
-        static::assertSame('test_secret', $resolved['secret']);
+        static::assertSame($defaultConfig['appid'], $resolved['appid']);
+        static::assertSame($defaultConfig['secret'], $resolved['secret']);
+        static::assertSame($defaultConfig['mchid'], $resolved['mchid']);
+        static::assertSame($defaultConfig['mchkey'], $resolved['mchkey']);
+        static::assertSame($defaultConfig['mch_client_cert'], $resolved['mch_client_cert']);
+        static::assertSame($defaultConfig['mch_client_key'], $resolved['mch_client_key']);
         static::assertSame('test_token_1', $resolved['token']);
 
         $resolved = $resolver->resolve(['using_config' => 'custom']);
         static::assertSame('custom', $resolved['using_config']);
-        static::assertSame('custom_appid', $resolved['appid']);
-        static::assertSame('custom_secret', $resolved['secret']);
+        static::assertSame($customConfig['appid'], $resolved['appid']);
+        static::assertSame($customConfig['secret'], $resolved['secret']);
+        static::assertSame($customConfig['mchid'], $resolved['mchid']);
+        static::assertSame($customConfig['mchkey'], $resolved['mchkey']);
+        static::assertSame($customConfig['mch_client_cert'], $resolved['mch_client_cert']);
+        static::assertSame($customConfig['mch_client_key'], $resolved['mch_client_key']);
         static::assertSame('test_token_2', $resolved['token']);
 
         $resolved = $resolver->resolve(['using_config' => 'custom', 'appid' => 'foo', 'secret' => 'bar']);
         static::assertSame('custom', $resolved['using_config']);
         static::assertSame('foo', $resolved['appid']);
         static::assertSame('bar', $resolved['secret']);
+        static::assertSame($customConfig['mchid'], $resolved['mchid']);
+        static::assertSame($customConfig['mchkey'], $resolved['mchkey']);
+        static::assertSame($customConfig['mch_client_cert'], $resolved['mch_client_cert']);
+        static::assertSame($customConfig['mch_client_key'], $resolved['mch_client_key']);
         static::assertSame('test_token_3', $resolved['token']);
     }
 
@@ -97,7 +120,7 @@ class TokenOptionsTest extends TestCase
         }
 
         $responses = [];
-        foreach (range(1, 10) as $num) {
+        foreach (range(1, 3) as $num) {
             $responses[] = ResponseFactory::createMockResponseWithJson([
                 'access_token' => sprintf('test_token_%s', $num),
                 'expires_in' => 1024,

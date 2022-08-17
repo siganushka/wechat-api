@@ -4,35 +4,24 @@ declare(strict_types=1);
 
 namespace Siganushka\ApiClient\Wechat\Tests\Template;
 
-use PHPUnit\Framework\TestCase;
 use Siganushka\ApiClient\Exception\ParseResponseException;
 use Siganushka\ApiClient\Response\ResponseFactory;
+use Siganushka\ApiClient\Test\RequestTestCase;
 use Siganushka\ApiClient\Wechat\Template\Message;
 use Siganushka\ApiClient\Wechat\Template\Template;
 use Symfony\Component\HttpClient\MockHttpClient;
 use Symfony\Component\OptionsResolver\Exception\InvalidOptionsException;
+use Symfony\Component\OptionsResolver\Exception\MissingOptionsException;
 use Symfony\Component\OptionsResolver\OptionsResolver;
 
-class MessageTest extends TestCase
+class MessageTest extends RequestTestCase
 {
-    private ?Message $request = null;
-
-    protected function setUp(): void
-    {
-        $this->request = new Message();
-    }
-
-    protected function tearDown(): void
-    {
-        $this->request = null;
-    }
-
-    public function testDefinedOptions(): void
+    public function testConfigure(): void
     {
         $resolver = new OptionsResolver();
         $this->request->configure($resolver);
 
-        static::assertEquals([
+        static::assertSame([
             'token',
             'touser',
             'template',
@@ -40,16 +29,43 @@ class MessageTest extends TestCase
             'miniprogram',
             'client_msg_id',
         ], $resolver->getDefinedOptions());
-    }
 
-    public function testResolve(): void
-    {
         $template = new Template('baz');
-        $resolved = $this->request->resolve(['token' => 'foo', 'touser' => 'bar', 'template' => $template]);
-        static::assertNull($resolved['url']);
-        static::assertEquals([], $resolved['miniprogram']);
-        static::assertSame('bar', $resolved['touser']);
-        static::assertSame($template, $resolved['template']);
+
+        static::assertSame([
+            'url' => null,
+            'miniprogram' => [],
+            'client_msg_id' => null,
+            'token' => 'foo',
+            'touser' => 'bar',
+            'template' => $template,
+        ], $resolver->resolve([
+            'token' => 'foo',
+            'touser' => 'bar',
+            'template' => $template,
+        ]));
+
+        static::assertSame([
+            'url' => '/baz',
+            'miniprogram' => [
+                'appid' => 'foo',
+                'pagepath' => '/bar',
+            ],
+            'client_msg_id' => 'test_client_msg_id',
+            'token' => 'foo',
+            'touser' => 'bar',
+            'template' => $template,
+        ], $resolver->resolve([
+            'token' => 'foo',
+            'touser' => 'bar',
+            'template' => $template,
+            'url' => '/baz',
+            'miniprogram' => [
+                'appid' => 'foo',
+                'pagepath' => '/bar',
+            ],
+            'client_msg_id' => 'test_client_msg_id',
+        ]));
     }
 
     public function testBuild(): void
@@ -59,7 +75,7 @@ class MessageTest extends TestCase
 
         static::assertSame('POST', $requestOptions->getMethod());
         static::assertSame(Message::URL, $requestOptions->getUrl());
-        static::assertEquals([
+        static::assertSame([
             'query' => [
                 'access_token' => 'foo',
             ],
@@ -76,20 +92,26 @@ class MessageTest extends TestCase
             'token' => 'foo',
             'touser' => 'bar',
             'template' => $template,
-            'url' => '/foo',
+            'url' => '/baz',
             'miniprogram' => [
-                'appid' => 'test_appid',
-                'pagepath' => 'test_pagepath',
+                'appid' => 'foo',
+                'pagepath' => '/bar',
             ],
+            'client_msg_id' => 'test_client_msg_id',
         ]);
 
-        static::assertEquals([
+        static::assertSame([
             'query' => [
                 'access_token' => 'foo',
             ],
             'json' => [
                 'touser' => 'bar',
                 'template_id' => 'baz',
+                'url' => '/baz',
+                'miniprogram' => [
+                    'appid' => 'foo',
+                    'pagepath' => '/bar',
+                ],
                 'data' => [
                     'key1' => [
                         'value' => 'key1_value',
@@ -99,11 +121,7 @@ class MessageTest extends TestCase
                         'color' => '#ff0000',
                     ],
                 ],
-                'url' => '/foo',
-                'miniprogram' => [
-                    'appid' => 'test_appid',
-                    'pagepath' => 'test_pagepath',
-                ],
+                'client_msg_id' => 'test_client_msg_id',
             ],
         ], $requestOptions->toArray());
     }
@@ -140,11 +158,52 @@ class MessageTest extends TestCase
         $parseResponseRef->invoke($this->request, $response);
     }
 
+    public function testTokenMissingOptionsException(): void
+    {
+        $this->expectException(MissingOptionsException::class);
+        $this->expectExceptionMessage('The required option "token" is missing');
+
+        $template = new Template('baz');
+        $this->request->build(['touser' => 'bar', 'template' => $template]);
+    }
+
+    public function testTokenInvalidOptionsException(): void
+    {
+        $this->expectException(InvalidOptionsException::class);
+        $this->expectExceptionMessage('The option "token" with value 123 is expected to be of type "string", but is of type "int"');
+
+        $template = new Template('baz');
+        $this->request->build(['token' => 123, 'touser' => 'bar', 'template' => $template]);
+    }
+
+    public function testTouserMissingOptionsException(): void
+    {
+        $this->expectException(MissingOptionsException::class);
+        $this->expectExceptionMessage('The required option "touser" is missing');
+
+        $template = new Template('baz');
+        $this->request->build(['token' => 'foo', 'template' => $template]);
+    }
+
+    public function testTouserInvalidOptionsException(): void
+    {
+        $this->expectException(InvalidOptionsException::class);
+        $this->expectExceptionMessage('The option "touser" with value 123 is expected to be of type "string", but is of type "int"');
+
+        $template = new Template('baz');
+        $this->request->build(['token' => 'foo', 'touser' => 123, 'template' => $template]);
+    }
+
     public function testTemplateInvalidException(): void
     {
         $this->expectException(InvalidOptionsException::class);
         $this->expectExceptionMessage(sprintf('The option "template" with value "baz" is expected to be of type "%s", but is of type "string"', Template::class));
 
-        $this->request->resolve(['token' => 'foo', 'touser' => 'bar', 'template' => 'baz']);
+        $this->request->build(['token' => 'foo', 'touser' => 'bar', 'template' => 'baz']);
+    }
+
+    protected function createRequest(): Message
+    {
+        return new Message();
     }
 }

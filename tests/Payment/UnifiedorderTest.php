@@ -4,40 +4,58 @@ declare(strict_types=1);
 
 namespace Siganushka\ApiClient\Wechat\Tests\Payment;
 
-use PHPUnit\Framework\TestCase;
 use Siganushka\ApiClient\Exception\ParseResponseException;
 use Siganushka\ApiClient\Response\ResponseFactory;
-use Siganushka\ApiClient\Wechat\Configuration;
+use Siganushka\ApiClient\Test\RequestTestCase;
+use Siganushka\ApiClient\Wechat\Payment\SignatureUtils;
 use Siganushka\ApiClient\Wechat\Payment\Unifiedorder;
-use Siganushka\ApiClient\Wechat\SerializerUtils;
-use Siganushka\ApiClient\Wechat\Tests\ConfigurationTest;
 use Symfony\Component\HttpClient\MockHttpClient;
 use Symfony\Component\OptionsResolver\Exception\InvalidOptionsException;
 use Symfony\Component\OptionsResolver\Exception\MissingOptionsException;
 use Symfony\Component\OptionsResolver\Exception\NoConfigurationException;
+use Symfony\Component\OptionsResolver\OptionsResolver;
 use Symfony\Component\Serializer\Encoder\JsonEncoder;
 use Symfony\Component\Serializer\Encoder\XmlEncoder;
 use Symfony\Component\Serializer\Serializer;
 
-class UnifiedorderTest extends TestCase
+class UnifiedorderTest extends RequestTestCase
 {
-    private ?Unifiedorder $request = null;
-
-    protected function setUp(): void
+    public function testConfigure(): void
     {
-        $serializer = new Serializer([], [new XmlEncoder(), new JsonEncoder()]);
+        $resolver = new OptionsResolver();
+        $this->request->configure($resolver);
 
-        $this->request = new Unifiedorder($serializer);
-    }
+        static::assertSame([
+            'appid',
+            'mchid',
+            'mchkey',
+            'sign_type',
+            'nonce_str',
+            'client_ip',
+            'using_slave_url',
+            'device_info',
+            'body',
+            'detail',
+            'attach',
+            'out_trade_no',
+            'fee_type',
+            'total_fee',
+            'time_start',
+            'time_expire',
+            'goods_tag',
+            'notify_url',
+            'trade_type',
+            'product_id',
+            'limit_pay',
+            'openid',
+            'receipt',
+            'profit_sharing',
+            'scene_info',
+        ], $resolver->getDefinedOptions());
 
-    protected function tearDown(): void
-    {
-        $this->request = null;
-    }
-
-    public function testResolve(): void
-    {
         $options = [
+            'appid' => 'test_appid',
+            'nonce_str' => 'test_nonce_str',
             'body' => 'test_body',
             'notify_url' => 'test_notify_url',
             'out_trade_no' => 'test_out_trade_no',
@@ -46,23 +64,92 @@ class UnifiedorderTest extends TestCase
             'openid' => 'test_openid',
         ];
 
-        $request = static::createRequest();
+        static::assertEquals([
+            'appid' => $options['appid'],
+            'mchid' => null,
+            'mchkey' => null,
+            'sign_type' => 'MD5',
+            'nonce_str' => $options['nonce_str'],
+            'client_ip' => '0.0.0.0',
+            'using_slave_url' => false,
+            'device_info' => null,
+            'body' => $options['body'],
+            'detail' => null,
+            'attach' => null,
+            'out_trade_no' => $options['out_trade_no'],
+            'fee_type' => null,
+            'total_fee' => 1,
+            'time_start' => null,
+            'time_expire' => null,
+            'goods_tag' => null,
+            'notify_url' => $options['notify_url'],
+            'trade_type' => $options['trade_type'],
+            'product_id' => null,
+            'limit_pay' => null,
+            'openid' => $options['openid'],
+            'receipt' => null,
+            'profit_sharing' => null,
+            'scene_info' => null,
+        ], $resolver->resolve($options));
 
-        $resolved = $request->resolve($options);
-        static::assertArrayHasKey('nonce_str', $resolved);
-        static::assertSame('0.0.0.0', $resolved['spbill_create_ip']);
-        static::assertSame('JSAPI', $resolved['trade_type']);
-        static::assertSame('test_openid', $resolved['openid']);
-        static::assertSame(1, $resolved['total_fee']);
-        static::assertSame('test_body', $resolved['body']);
-        static::assertSame('test_notify_url', $resolved['notify_url']);
-        static::assertSame('test_out_trade_no', $resolved['out_trade_no']);
-        static::assertFalse($resolved['using_slave_url']);
+        $timeStartAt = new \DateTimeImmutable();
+        $timeExpireAt = $timeStartAt->modify('+7 days');
+        $options = array_merge($options, [
+            'mchid' => 'test_mchid',
+            'mchkey' => 'test_mchkey',
+            'sign_type' => 'HMAC-SHA256',
+            'client_ip' => '127.0.0.1',
+            'using_slave_url' => true,
+            'device_info' => 'test_device_info',
+            'detail' => 'test_detail',
+            'attach' => 'test_attach',
+            'fee_type' => 'CNY',
+            'time_start' => $timeStartAt,
+            'time_expire' => $timeExpireAt,
+            'goods_tag' => 'test_goods_tag',
+            'product_id' => 'test_product_id',
+            'limit_pay' => 'no_credit',
+            'receipt' => 'Y',
+            'profit_sharing' => 'Y',
+            'scene_info' => 'test_scene_info',
+        ]);
+
+        static::assertEquals([
+            'appid' => $options['appid'],
+            'mchid' => $options['mchid'],
+            'mchkey' => $options['mchkey'],
+            'sign_type' => $options['sign_type'],
+            'nonce_str' => $options['nonce_str'],
+            'client_ip' => $options['client_ip'],
+            'using_slave_url' => $options['using_slave_url'],
+            'device_info' => $options['device_info'],
+            'body' => $options['body'],
+            'detail' => $options['detail'],
+            'attach' => $options['attach'],
+            'out_trade_no' => $options['out_trade_no'],
+            'fee_type' => $options['fee_type'],
+            'total_fee' => $options['total_fee'],
+            'time_start' => $timeStartAt->format('YmdHis'),
+            'time_expire' => $timeExpireAt->format('YmdHis'),
+            'goods_tag' => $options['goods_tag'],
+            'notify_url' => $options['notify_url'],
+            'trade_type' => $options['trade_type'],
+            'product_id' => $options['product_id'],
+            'limit_pay' => $options['limit_pay'],
+            'openid' => $options['openid'],
+            'receipt' => $options['receipt'],
+            'profit_sharing' => $options['profit_sharing'],
+            'scene_info' => $options['scene_info'],
+        ], $resolver->resolve($options));
     }
 
     public function testBuild(): void
     {
         $options = [
+            'appid' => 'test_appid',
+            'mchid' => 'test_mchid',
+            'mchkey' => 'test_mchkey',
+            'nonce_str' => 'test_nonce_str',
             'body' => 'test_body',
             'notify_url' => 'test_notify_url',
             'out_trade_no' => 'test_out_trade_no',
@@ -71,62 +158,103 @@ class UnifiedorderTest extends TestCase
             'openid' => 'test_openid',
         ];
 
-        $request = static::createRequest();
-        $requestOptions = $request->build($options);
-
+        $requestOptions = $this->request->build($options);
         static::assertSame('POST', $requestOptions->getMethod());
         static::assertSame(Unifiedorder::URL, $requestOptions->getUrl());
 
-        $body = SerializerUtils::xmlDecode($requestOptions->toArray()['body']);
-        static::assertArrayHasKey('nonce_str', $body);
-        static::assertArrayHasKey('sign', $body);
-        static::assertSame('test_appid', $body['appid']);
-        static::assertSame('test_mchid', $body['mch_id']);
-        static::assertSame('HMAC-SHA256', $body['sign_type']);
-        static::assertSame('test_body', $body['body']);
-        static::assertSame('test_out_trade_no', $body['out_trade_no']);
-        static::assertSame('1', $body['total_fee']);
-        static::assertSame('JSAPI', $body['trade_type']);
-        static::assertSame('test_notify_url', $body['notify_url']);
-        static::assertSame('0.0.0.0', $body['spbill_create_ip']);
-        static::assertSame('test_openid', $body['openid']);
+        $body = $this->decodeXML($requestOptions->toArray()['body']);
 
-        $requestOptions = $request->build($options + [
-            'product_id' => 'test_product_id',
+        $signature = $body['sign'];
+        unset($body['sign']);
+
+        $signatureUtils = SignatureUtils::create();
+        static::assertSame($signature, $signatureUtils->generateFromOptions([
+            'mchkey' => $options['mchkey'],
+            'parameters' => $body,
+        ]));
+
+        static::assertSame([
+            'appid' => $options['appid'],
+            'mch_id' => $options['mchid'],
+            'nonce_str' => $options['nonce_str'],
+            'sign_type' => 'MD5',
+            'body' => $options['body'],
+            'out_trade_no' => $options['out_trade_no'],
+            'total_fee' => (string) $options['total_fee'],
+            'spbill_create_ip' => '0.0.0.0',
+            'notify_url' => $options['notify_url'],
+            'trade_type' => $options['trade_type'],
+            'openid' => $options['openid'],
+        ], $body);
+
+        $timeStartAt = new \DateTimeImmutable();
+        $timeExpireAt = $timeStartAt->modify('+7 days');
+        $options = array_merge($options, [
+            'mchid' => 'test_mchid',
+            'mchkey' => 'test_mchkey',
+            'sign_type' => 'HMAC-SHA256',
+            'client_ip' => '127.0.0.1',
+            'using_slave_url' => true,
             'device_info' => 'test_device_info',
             'detail' => 'test_detail',
             'attach' => 'test_attach',
             'fee_type' => 'CNY',
-            'time_start' => 'test_time_start',
-            'time_expire' => 'test_time_expire',
+            'time_start' => $timeStartAt,
+            'time_expire' => $timeExpireAt,
             'goods_tag' => 'test_goods_tag',
+            'product_id' => 'test_product_id',
             'limit_pay' => 'no_credit',
             'receipt' => 'Y',
-            'profit_sharing' => 'N',
+            'profit_sharing' => 'Y',
             'scene_info' => 'test_scene_info',
-            'using_slave_url' => true,
         ]);
 
-        static::assertSame(Unifiedorder::URL2, $requestOptions->getUrl());
+        $requestOptions = $this->request->build($options);
 
-        $body = SerializerUtils::xmlDecode($requestOptions->toArray()['body']);
-        static::assertSame('test_product_id', $body['product_id']);
-        static::assertSame('test_device_info', $body['device_info']);
-        static::assertSame('test_detail', $body['detail']);
-        static::assertSame('test_attach', $body['attach']);
-        static::assertSame('CNY', $body['fee_type']);
-        static::assertSame('test_time_start', $body['time_start']);
-        static::assertSame('test_time_expire', $body['time_expire']);
-        static::assertSame('test_goods_tag', $body['goods_tag']);
-        static::assertSame('no_credit', $body['limit_pay']);
-        static::assertSame('Y', $body['receipt']);
-        static::assertSame('N', $body['profit_sharing']);
-        static::assertSame('test_scene_info', $body['scene_info']);
+        $body = $this->decodeXML($requestOptions->toArray()['body']);
+
+        $signature = $body['sign'];
+        unset($body['sign']);
+
+        static::assertSame($signature, $signatureUtils->generateFromOptions([
+            'mchkey' => $options['mchkey'],
+            'sign_type' => $options['sign_type'],
+            'parameters' => $body,
+        ]));
+
+        static::assertSame([
+            'appid' => $options['appid'],
+            'mch_id' => $options['mchid'],
+            'device_info' => $options['device_info'],
+            'nonce_str' => $options['nonce_str'],
+            'sign_type' => $options['sign_type'],
+            'body' => $options['body'],
+            'detail' => $options['detail'],
+            'attach' => $options['attach'],
+            'out_trade_no' => $options['out_trade_no'],
+            'fee_type' => $options['fee_type'],
+            'total_fee' => (string) $options['total_fee'],
+            'spbill_create_ip' => $options['client_ip'],
+            'time_start' => $timeStartAt->format('YmdHis'),
+            'time_expire' => $timeExpireAt->format('YmdHis'),
+            'goods_tag' => $options['goods_tag'],
+            'notify_url' => $options['notify_url'],
+            'trade_type' => $options['trade_type'],
+            'product_id' => $options['product_id'],
+            'limit_pay' => $options['limit_pay'],
+            'openid' => $options['openid'],
+            'receipt' => $options['receipt'],
+            'profit_sharing' => $options['profit_sharing'],
+            'scene_info' => $options['scene_info'],
+        ], $body);
     }
 
     public function testSend(): void
     {
         $options = [
+            'appid' => 'test_appid',
+            'mchid' => 'test_mchid',
+            'mchkey' => 'test_mchkey',
             'body' => 'test_body',
             'notify_url' => 'test_notify_url',
             'out_trade_no' => 'test_out_trade_no',
@@ -135,40 +263,36 @@ class UnifiedorderTest extends TestCase
             'openid' => 'test_openid',
         ];
 
-        $responseData = [
+        $data = [
             'return_code' => 'SUCCESS',
             'result_code' => 'SUCCESS',
         ];
 
-        $xml = SerializerUtils::xmlEncode($responseData);
+        $xml = $this->encodeXML($data);
         $response = ResponseFactory::createMockResponse($xml);
-        $httpClient = new MockHttpClient($response);
+        $client = new MockHttpClient($response);
 
-        $request = static::createRequest();
-        $request->setHttpClient($httpClient);
-
-        $result = $request->send($options);
-        static::assertSame($responseData, $result);
+        $result = $this->request->send($client, $options);
+        static::assertSame($data, $result);
     }
 
-    public function testReturnCodeParseResponseException(): void
+    public function testParseResponseException(): void
     {
         $this->expectException(ParseResponseException::class);
         $this->expectExceptionCode(0);
         $this->expectExceptionMessage('test_return_msg');
 
-        $responseData = [
+        $data = [
             'return_code' => 'FAIL',
             'return_msg' => 'test_return_msg',
         ];
 
-        $xml = SerializerUtils::xmlEncode($responseData);
+        $xml = $this->encodeXML($data);
         $response = ResponseFactory::createMockResponse($xml);
 
-        $request = static::createRequest();
-        $parseResponseRef = new \ReflectionMethod($request, 'parseResponse');
+        $parseResponseRef = new \ReflectionMethod($this->request, 'parseResponse');
         $parseResponseRef->setAccessible(true);
-        $parseResponseRef->invoke($request, $response);
+        $parseResponseRef->invoke($this->request, $response);
     }
 
     public function testResultCodeParseResponseException(): void
@@ -177,154 +301,49 @@ class UnifiedorderTest extends TestCase
         $this->expectExceptionCode(0);
         $this->expectExceptionMessage('test_err_code_des');
 
-        $responseData = [
+        $data = [
             'result_code' => 'FAIL',
             'err_code_des' => 'test_err_code_des',
         ];
 
-        $xml = SerializerUtils::xmlEncode($responseData);
+        $xml = $this->encodeXML($data);
         $response = ResponseFactory::createMockResponse($xml);
 
-        $request = static::createRequest();
-        $parseResponseRef = new \ReflectionMethod($request, 'parseResponse');
+        $parseResponseRef = new \ReflectionMethod($this->request, 'parseResponse');
         $parseResponseRef->setAccessible(true);
-        $parseResponseRef->invoke($request, $response);
+        $parseResponseRef->invoke($this->request, $response);
     }
 
-    public function testMissingOptionsException(): void
+    public function testAppidMissingOptionsException(): void
     {
         $this->expectException(MissingOptionsException::class);
-        $this->expectExceptionMessage('The required options "body", "notify_url", "out_trade_no", "total_fee", "trade_type" are missing');
+        $this->expectExceptionMessage('The required option "appid" is missing');
 
-        $request = static::createRequest();
-        $request->resolve();
-    }
-
-    public function testOpenidMissingOptionsException(): void
-    {
-        $this->expectException(MissingOptionsException::class);
-        $this->expectExceptionMessage('The required option "openid" is missing (when "trade_type" option is set to "JSAPI")');
-
-        $request = static::createRequest();
-        $request->resolve([
-            'body' => 'test_body',
-            'notify_url' => 'test_notify_url',
-            'out_trade_no' => 'test_out_trade_no',
-            'total_fee' => 1,
-            'trade_type' => 'JSAPI',
-        ]);
-    }
-
-    public function testProductIdMissingOptionsException(): void
-    {
-        $this->expectException(MissingOptionsException::class);
-        $this->expectExceptionMessage('The required option "product_id" is missing (when "trade_type" option is set to "NATIVE")');
-
-        $request = static::createRequest();
-        $request->resolve([
-            'body' => 'test_body',
-            'notify_url' => 'test_notify_url',
-            'out_trade_no' => 'test_out_trade_no',
-            'total_fee' => 1,
-            'trade_type' => 'NATIVE',
-        ]);
-    }
-
-    public function testFeeTypeInvalidOptionsException(): void
-    {
-        $this->expectException(InvalidOptionsException::class);
-        $this->expectExceptionMessage('The option "fee_type" with value "foo" is invalid. Accepted values are: null, "CNY"');
-
-        $request = static::createRequest();
-        $request->resolve([
+        $this->request->build([
+            'mchid' => 'test_mchid',
+            'mchkey' => 'test_mchkey',
             'body' => 'test_body',
             'notify_url' => 'test_notify_url',
             'out_trade_no' => 'test_out_trade_no',
             'total_fee' => 1,
             'trade_type' => 'JSAPI',
             'openid' => 'test_openid',
-            'fee_type' => 'foo',
         ]);
     }
 
-    public function testTradeTypeInvalidOptionsException(): void
+    public function testAppidInvalidOptionsException(): void
     {
         $this->expectException(InvalidOptionsException::class);
-        $this->expectExceptionMessage('The option "trade_type" with value "foo" is invalid. Accepted values are: null, "JSAPI", "NATIVE", "APP", "MWEB"');
+        $this->expectExceptionMessage('The option "appid" with value 123 is expected to be of type "string", but is of type "int"');
 
-        $request = static::createRequest();
-        $request->resolve([
+        $this->request->build([
+            'appid' => 123,
+            'mchid' => 'test_mchid',
+            'mchkey' => 'test_mchkey',
             'body' => 'test_body',
             'notify_url' => 'test_notify_url',
             'out_trade_no' => 'test_out_trade_no',
             'total_fee' => 1,
-            'trade_type' => 'foo',
-            'openid' => 'test_openid',
-        ]);
-    }
-
-    public function testLimitPayInvalidOptionsException(): void
-    {
-        $this->expectException(InvalidOptionsException::class);
-        $this->expectExceptionMessage('The option "limit_pay" with value "foo" is invalid. Accepted values are: null, "no_credit"');
-
-        $request = static::createRequest();
-        $request->resolve([
-            'body' => 'test_body',
-            'notify_url' => 'test_notify_url',
-            'out_trade_no' => 'test_out_trade_no',
-            'total_fee' => 1,
-            'trade_type' => 'JSAPI',
-            'openid' => 'test_openid',
-            'limit_pay' => 'foo',
-        ]);
-    }
-
-    public function testReceiptInvalidOptionsException(): void
-    {
-        $this->expectException(InvalidOptionsException::class);
-        $this->expectExceptionMessage('The option "receipt" with value "foo" is invalid. Accepted values are: null, "Y"');
-
-        $request = static::createRequest();
-        $request->resolve([
-            'body' => 'test_body',
-            'notify_url' => 'test_notify_url',
-            'out_trade_no' => 'test_out_trade_no',
-            'total_fee' => 1,
-            'trade_type' => 'JSAPI',
-            'openid' => 'test_openid',
-            'receipt' => 'foo',
-        ]);
-    }
-
-    public function testProfitSharingInvalidOptionsException(): void
-    {
-        $this->expectException(InvalidOptionsException::class);
-        $this->expectExceptionMessage('The option "profit_sharing" with value "foo" is invalid. Accepted values are: null, "Y", "N"');
-
-        $request = static::createRequest();
-        $request->resolve([
-            'body' => 'test_body',
-            'notify_url' => 'test_notify_url',
-            'out_trade_no' => 'test_out_trade_no',
-            'total_fee' => 1,
-            'trade_type' => 'JSAPI',
-            'openid' => 'test_openid',
-            'profit_sharing' => 'foo',
-        ]);
-    }
-
-    public function testTotalFeeInvalidOptionsException(): void
-    {
-        $this->expectException(InvalidOptionsException::class);
-        $this->expectExceptionMessage('The option "total_fee" with value "test_total_fee" is expected to be of type "int", but is of type "string"');
-
-        $request = static::createRequest();
-        $request->resolve([
-            'body' => 'test_body',
-            'notify_url' => 'test_notify_url',
-            'out_trade_no' => 'test_out_trade_no',
-            'total_fee' => 'test_total_fee',
             'trade_type' => 'JSAPI',
             'openid' => 'test_openid',
         ]);
@@ -335,13 +354,9 @@ class UnifiedorderTest extends TestCase
         $this->expectException(NoConfigurationException::class);
         $this->expectExceptionMessage('No configured value for "mchid" option');
 
-        $configuration = new Configuration([
+        $this->request->build([
             'appid' => 'test_appid',
-            'secret' => 'test_secret',
-        ]);
-
-        $request = static::createRequest($configuration);
-        $request->send([
+            'mchkey' => 'test_mchkey',
             'body' => 'test_body',
             'notify_url' => 'test_notify_url',
             'out_trade_no' => 'test_out_trade_no',
@@ -356,14 +371,9 @@ class UnifiedorderTest extends TestCase
         $this->expectException(NoConfigurationException::class);
         $this->expectExceptionMessage('No configured value for "mchkey" option');
 
-        $configuration = ConfigurationTest::create([
+        $this->request->build([
             'appid' => 'test_appid',
-            'secret' => 'test_secret',
             'mchid' => 'test_mchid',
-        ]);
-
-        $request = static::createRequest($configuration);
-        $request->send([
             'body' => 'test_body',
             'notify_url' => 'test_notify_url',
             'out_trade_no' => 'test_out_trade_no',
@@ -371,5 +381,22 @@ class UnifiedorderTest extends TestCase
             'trade_type' => 'JSAPI',
             'openid' => 'test_openid',
         ]);
+    }
+
+    protected function createRequest(): Unifiedorder
+    {
+        $serializer = new Serializer([], [new XmlEncoder(), new JsonEncoder()]);
+
+        return new Unifiedorder($serializer);
+    }
+
+    protected function encodeXML(array $data): string
+    {
+        return (new XmlEncoder())->encode($data, 'xml');
+    }
+
+    protected function decodeXML(string $data): array
+    {
+        return (new XmlEncoder())->decode($data, 'xml');
     }
 }

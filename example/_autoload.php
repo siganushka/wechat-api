@@ -5,12 +5,8 @@ declare(strict_types=1);
 use Siganushka\ApiClient\RequestClientBuilder;
 use Siganushka\ApiClient\Wechat\Configuration;
 use Siganushka\ApiClient\Wechat\ConfigurationManager;
-use Siganushka\ApiClient\Wechat\ConfigurationOptions;
-use Siganushka\ApiClient\Wechat\Core\TokenOptions;
-use Siganushka\ApiClient\Wechat\Ticket\TicketOptions;
 use Siganushka\ApiClient\Wechat\WechatExtension;
 use Symfony\Component\ErrorHandler\Debug;
-use Symfony\Component\OptionsResolver\OptionsResolver;
 
 require __DIR__.'/../vendor/autoload.php';
 
@@ -33,20 +29,6 @@ $configurationManager = new ConfigurationManager('miniapp');
 foreach (require $configFile as $name => $config) {
     $configurationManager->set($name, new Configuration($config));
 }
-
-$resolver = new OptionsResolver();
-
-// $configurationOptions = new ConfigurationOptions($configurationManager);
-// $configurationOptions->configure($resolver);
-// dd('A', $resolver->getDefinedOptions(), $resolver->resolve(['using_config' => 'open']));
-
-// $tokenOptions = new TokenOptions($configurationManager);
-// $tokenOptions->configure($resolver);
-// dd('B', $resolver->getDefinedOptions(), $resolver->resolve(['using_config' => 'open', 'token' => 'foo']));
-
-// $ticketOptions = new TicketOptions($configurationManager);
-// $ticketOptions->configure($resolver);
-// dd('C', $resolver->getDefinedOptions(), $resolver->resolve(['using_config' => 'open', 'type' => 'wx_card']));
 
 $client = RequestClientBuilder::create()
     ->addExtension(new WechatExtension($configurationManager))

@@ -4,34 +4,48 @@ declare(strict_types=1);
 
 namespace Siganushka\ApiClient\Wechat\Tests\OAuth;
 
-use PHPUnit\Framework\TestCase;
 use Siganushka\ApiClient\Exception\ParseResponseException;
 use Siganushka\ApiClient\Response\ResponseFactory;
+use Siganushka\ApiClient\Test\RequestTestCase;
 use Siganushka\ApiClient\Wechat\OAuth\UserInfo;
 use Symfony\Component\HttpClient\MockHttpClient;
 use Symfony\Component\OptionsResolver\Exception\InvalidOptionsException;
 use Symfony\Component\OptionsResolver\Exception\MissingOptionsException;
+use Symfony\Component\OptionsResolver\OptionsResolver;
 
-class UserInfoTest extends TestCase
+class UserInfoTest extends RequestTestCase
 {
-    public function testResolve(): void
+    public function testConfigure(): void
     {
-        $request = static::createRequest();
+        $resolver = new OptionsResolver();
+        $this->request->configure($resolver);
 
-        $resolved = $request->resolve(['access_token' => 'foo', 'openid' => 'bar']);
-        static::assertSame('foo', $resolved['access_token']);
-        static::assertSame('bar', $resolved['openid']);
-        static::assertSame('zh_CN', $resolved['lang']);
+        static::assertSame([
+            'access_token',
+            'openid',
+            'lang',
+        ], $resolver->getDefinedOptions());
+
+        static::assertSame([
+            'lang' => 'zh_CN',
+            'access_token' => 'foo',
+            'openid' => 'bar',
+        ], $resolver->resolve(['access_token' => 'foo', 'openid' => 'bar']));
+
+        static::assertSame([
+            'lang' => 'en',
+            'access_token' => 'foo',
+            'openid' => 'bar',
+        ], $resolver->resolve(['access_token' => 'foo', 'openid' => 'bar', 'lang' => 'en']));
     }
 
     public function testBuild(): void
     {
-        $request = static::createRequest();
-        $requestOptions = $request->build(['access_token' => 'foo', 'openid' => 'bar']);
+        $requestOptions = $this->request->build(['access_token' => 'foo', 'openid' => 'bar']);
 
         static::assertSame('GET', $requestOptions->getMethod());
         static::assertSame(UserInfo::URL, $requestOptions->getUrl());
-        static::assertEquals([
+        static::assertSame([
             'query' => [
                 'access_token' => 'foo',
                 'openid' => 'bar',
@@ -39,12 +53,13 @@ class UserInfoTest extends TestCase
             ],
         ], $requestOptions->toArray());
 
-        $requestOptions = $request->build(['access_token' => 'foo', 'openid' => 'bar', 'lang' => 'en_US']);
-        static::assertEquals([
+        $requestOptions = $this->request->build(['access_token' => 'foo', 'openid' => 'bar', 'lang' => 'en']);
+
+        static::assertSame([
             'query' => [
                 'access_token' => 'foo',
                 'openid' => 'bar',
-                'lang' => 'en_US',
+                'lang' => 'en',
             ],
         ], $requestOptions->toArray());
     }
@@ -57,12 +72,9 @@ class UserInfoTest extends TestCase
         ];
 
         $response = ResponseFactory::createMockResponseWithJson($data);
-        $httpClient = new MockHttpClient($response);
+        $client = new MockHttpClient($response);
 
-        $request = static::createRequest();
-        $request->setHttpClient($httpClient);
-
-        $result = $request->send(['access_token' => 'foo', 'openid' => 'bar']);
+        $result = $this->request->send($client, ['access_token' => 'foo', 'openid' => 'bar']);
         static::assertSame($data, $result);
     }
 
@@ -79,31 +91,52 @@ class UserInfoTest extends TestCase
 
         $response = ResponseFactory::createMockResponseWithJson($data);
 
-        $request = static::createRequest();
-        $parseResponseRef = new \ReflectionMethod($request, 'parseResponse');
+        $parseResponseRef = new \ReflectionMethod($this->request, 'parseResponse');
         $parseResponseRef->setAccessible(true);
-        $parseResponseRef->invoke($request, $response);
+        $parseResponseRef->invoke($this->request, $response);
     }
 
-    public function testAccessTokenMissingException(): void
+    public function testAccessTokenMissingOptionsException(): void
     {
         $this->expectException(MissingOptionsException::class);
         $this->expectExceptionMessage('The required option "access_token" is missing');
 
-        $request = static::createRequest();
-        $request->resolve(['openid' => 'bar']);
+        $this->request->build(['openid' => 'bar']);
     }
 
-    public function testAccessTokenInvalidException(): void
+    public function testAccessTokenInvalidOptionsException(): void
     {
         $this->expectException(InvalidOptionsException::class);
         $this->expectExceptionMessage('The option "access_token" with value 123 is expected to be of type "string", but is of type "int"');
 
-        $request = static::createRequest();
-        $request->resolve(['access_token' => 123, 'openid' => 'bar']);
+        $this->request->build(['access_token' => 123, 'openid' => 'bar']);
     }
 
-    public static function createRequest(): UserInfo
+    public function testOpenidMissingOptionsException(): void
+    {
+        $this->expectException(MissingOptionsException::class);
+        $this->expectExceptionMessage('The required option "openid" is missing');
+
+        $this->request->build(['access_token' => 'foo']);
+    }
+
+    public function testOpenidInvalidOptionsException(): void
+    {
+        $this->expectException(InvalidOptionsException::class);
+        $this->expectExceptionMessage('The option "openid" with value 123 is expected to be of type "string", but is of type "int"');
+
+        $this->request->build(['access_token' => 'foo', 'openid' => 123]);
+    }
+
+    public function testLangInvalidOptionsException(): void
+    {
+        $this->expectException(InvalidOptionsException::class);
+        $this->expectExceptionMessage('The option "lang" with value "baz" is invalid. Accepted values are: "zh_CN", "zh_TW", "en"');
+
+        $this->request->build(['access_token' => 'foo', 'openid' => 'bar', 'lang' => 'baz']);
+    }
+
+    protected function createRequest(): UserInfo
     {
         return new UserInfo();
     }

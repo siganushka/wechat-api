@@ -37,9 +37,12 @@ class Transfer extends AbstractRequest
     {
         WechatOptions::appid($resolver);
         WechatOptions::mchid($resolver);
+        WechatOptions::mchkey($resolver);
         WechatOptions::mch_client_cert($resolver);
         WechatOptions::mch_client_key($resolver);
+        WechatOptions::sign_type($resolver);
         WechatOptions::nonce_str($resolver);
+        WechatOptions::client_ip($resolver);
 
         $resolver
             ->define('device_info')
@@ -91,12 +94,6 @@ class Transfer extends AbstractRequest
         ;
 
         $resolver
-            ->define('spbill_create_ip')
-            ->default(null)
-            ->allowedTypes('null', 'string')
-        ;
-
-        $resolver
             ->define('scene')
             ->default(null)
             ->allowedTypes('null', 'string')
@@ -117,7 +114,7 @@ class Transfer extends AbstractRequest
 
     protected function configureRequest(RequestOptions $request, array $options): void
     {
-        foreach (['mchid', 'mch_client_cert', 'mch_client_key'] as $optionName) {
+        foreach (['mchid', 'mchkey', 'mch_client_cert', 'mch_client_key'] as $optionName) {
             if (null === $options[$optionName]) {
                 throw new NoConfigurationException(sprintf('No configured value for "%s" option.', $optionName));
             }
@@ -134,7 +131,7 @@ class Transfer extends AbstractRequest
             're_user_name' => $options['re_user_name'],
             'amount' => $options['amount'],
             'desc' => $options['desc'],
-            'spbill_create_ip' => $options['spbill_create_ip'],
+            'spbill_create_ip' => $options['client_ip'],
             'scene' => $options['scene'],
             'brand_id' => $options['brand_id'],
             'finder_template_id' => $options['finder_template_id'],
@@ -146,13 +143,16 @@ class Transfer extends AbstractRequest
         }
 
         // Generate signature
-        $body['sign'] = $signatureUtils->generate($body);
-        $xmlBody = $this->serializer->encode($body, 'xml');
+        $body['sign'] = $signatureUtils->generateFromOptions([
+            'mchkey' => $options['mchkey'],
+            'sign_type' => $options['sign_type'],
+            'parameters' => $body,
+        ]);
 
         $request
             ->setMethod('POST')
             ->setUrl(static::URL)
-            ->setBody($xmlBody)
+            ->setBody($this->serializer->encode($body, 'xml'))
             ->setLocalCert($options['mch_client_cert'])
             ->setLocalPk($options['mch_client_key'])
         ;

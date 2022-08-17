@@ -37,9 +37,10 @@ class Refund extends AbstractRequest
     {
         WechatOptions::appid($resolver);
         WechatOptions::mchid($resolver);
-        WechatOptions::sign_type($resolver);
+        WechatOptions::mchkey($resolver);
         WechatOptions::mch_client_cert($resolver);
         WechatOptions::mch_client_key($resolver);
+        WechatOptions::sign_type($resolver);
         WechatOptions::nonce_str($resolver);
 
         $resolver
@@ -106,7 +107,7 @@ class Refund extends AbstractRequest
 
     protected function configureRequest(RequestOptions $request, array $options): void
     {
-        foreach (['mchid', 'mch_client_cert', 'mch_client_key'] as $optionName) {
+        foreach (['mchid', 'mchkey', 'mch_client_cert', 'mch_client_key'] as $optionName) {
             if (null === $options[$optionName]) {
                 throw new NoConfigurationException(sprintf('No configured value for "%s" option.', $optionName));
             }
@@ -115,8 +116,8 @@ class Refund extends AbstractRequest
         $body = array_filter([
             'appid' => $options['appid'],
             'mch_id' => $options['mchid'],
-            'nonce_str' => $options['nonce_str'],
             'sign_type' => $options['sign_type'],
+            'nonce_str' => $options['nonce_str'],
             'transaction_id' => $options['transaction_id'],
             'out_trade_no' => $options['out_trade_no'],
             'out_refund_no' => $options['out_refund_no'],
@@ -134,13 +135,16 @@ class Refund extends AbstractRequest
         }
 
         // Generate signature
-        $body['sign'] = $signatureUtils->generate($body);
-        $xmlBody = $this->serializer->encode($body, 'xml');
+        $body['sign'] = $signatureUtils->generateFromOptions([
+            'mchkey' => $options['mchkey'],
+            'sign_type' => $options['sign_type'],
+            'parameters' => $body,
+        ]);
 
         $request
             ->setMethod('POST')
             ->setUrl(static::URL)
-            ->setBody($xmlBody)
+            ->setBody($this->serializer->encode($body, 'xml'))
             ->setLocalCert($options['mch_client_cert'])
             ->setLocalPk($options['mch_client_key'])
         ;

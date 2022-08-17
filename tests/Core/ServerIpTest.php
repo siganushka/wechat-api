@@ -4,52 +4,29 @@ declare(strict_types=1);
 
 namespace Siganushka\ApiClient\Wechat\Tests\Core;
 
-use PHPUnit\Framework\TestCase;
 use Siganushka\ApiClient\Exception\ParseResponseException;
 use Siganushka\ApiClient\Response\ResponseFactory;
+use Siganushka\ApiClient\Test\RequestTestCase;
 use Siganushka\ApiClient\Wechat\Core\ServerIp;
 use Symfony\Component\HttpClient\MockHttpClient;
 use Symfony\Component\OptionsResolver\Exception\InvalidOptionsException;
 use Symfony\Component\OptionsResolver\Exception\MissingOptionsException;
 use Symfony\Component\OptionsResolver\OptionsResolver;
 
-class ServerIpTest extends TestCase
+class ServerIpTest extends RequestTestCase
 {
-    private ?ServerIp $request = null;
-
-    protected function setUp(): void
-    {
-        $this->request = new ServerIp();
-    }
-
-    protected function tearDown(): void
-    {
-        $this->request = null;
-    }
-
     public function testConfigure(): void
     {
         $resolver = new OptionsResolver();
         $this->request->configure($resolver);
 
-        static::assertContains('token', $resolver->getDefinedOptions());
-    }
+        static::assertSame([
+            'token',
+        ], $resolver->getDefinedOptions());
 
-    public function testResolve(): void
-    {
-        $resolved = $this->request->resolve(['token' => 'foo']);
-        static::assertArrayNotHasKey('using_config', $resolved);
-        static::assertSame('foo', $resolved['token']);
-
-        $this->request->using(TokenOptionsTest::create());
-
-        $resolved = $this->request->resolve();
-        static::assertSame('default', $resolved['using_config']);
-        static::assertSame('test_token_1', $resolved['token']);
-
-        $resolved = $this->request->resolve(['using_config' => 'custom']);
-        static::assertSame('custom', $resolved['using_config']);
-        static::assertSame('test_token_2', $resolved['token']);
+        static::assertSame([
+            'token' => 'foo',
+        ], $resolver->resolve(['token' => 'foo']));
     }
 
     public function testBuild(): void
@@ -57,20 +34,9 @@ class ServerIpTest extends TestCase
         $requestOptions = $this->request->build(['token' => 'foo']);
         static::assertSame('GET', $requestOptions->getMethod());
         static::assertSame(ServerIp::URL, $requestOptions->getUrl());
-        static::assertEquals([
+        static::assertSame([
             'query' => [
                 'access_token' => 'foo',
-            ],
-        ], $requestOptions->toArray());
-
-        $this->request->using(TokenOptionsTest::create());
-
-        $requestOptions = $this->request->build();
-        static::assertSame('GET', $requestOptions->getMethod());
-        static::assertSame(ServerIp::URL, $requestOptions->getUrl());
-        static::assertEquals([
-            'query' => [
-                'access_token' => 'test_token_1',
             ],
         ], $requestOptions->toArray());
     }
@@ -88,7 +54,7 @@ class ServerIpTest extends TestCase
         static::assertSame($data['ip_list'], $result);
     }
 
-    public function testSendWithParseResponseException(): void
+    public function testParseResponseException(): void
     {
         $this->expectException(ParseResponseException::class);
         $this->expectExceptionCode(16);
@@ -111,7 +77,7 @@ class ServerIpTest extends TestCase
         $this->expectException(MissingOptionsException::class);
         $this->expectExceptionMessage('The required option "token" is missing');
 
-        $this->request->resolve();
+        $this->request->build();
     }
 
     public function testTokenInvalidOptionsException(): void
@@ -119,6 +85,11 @@ class ServerIpTest extends TestCase
         $this->expectException(InvalidOptionsException::class);
         $this->expectExceptionMessage('The option "token" with value 123 is expected to be of type "string", but is of type "int"');
 
-        $this->request->resolve(['token' => 123]);
+        $this->request->build(['token' => 123]);
+    }
+
+    protected function createRequest(): ServerIp
+    {
+        return new ServerIp();
     }
 }

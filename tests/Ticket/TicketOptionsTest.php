@@ -24,43 +24,98 @@ class TicketOptionsTest extends TestCase
         $ticketOptions = static::create();
         $ticketOptions->configure($resolver);
 
-        static::assertContains('using_config', $resolver->getDefinedOptions());
-        static::assertContains('appid', $resolver->getDefinedOptions());
-        static::assertContains('secret', $resolver->getDefinedOptions());
-        static::assertContains('token', $resolver->getDefinedOptions());
-        static::assertContains('ticket', $resolver->getDefinedOptions());
+        static::assertSame([
+            'token',
+            'type',
+            'using_config',
+            'appid',
+            'secret',
+            'mchid',
+            'mchkey',
+            'mch_client_cert',
+            'mch_client_key',
+            'ticket',
+        ], $resolver->getDefinedOptions());
+
+        $configurationManager = ConfigurationManagerTest::create();
+
+        $defaultConfig = $configurationManager->get('default');
+        $customConfig = $configurationManager->get('custom');
+
+        static::assertSame([
+            'type' => 'jsapi',
+            'using_config' => 'default',
+            'appid' => $defaultConfig['appid'],
+            'secret' => $defaultConfig['secret'],
+            'mchid' => $defaultConfig['mchid'],
+            'mchkey' => $defaultConfig['mchkey'],
+            'mch_client_cert' => $defaultConfig['mch_client_cert'],
+            'mch_client_key' => $defaultConfig['mch_client_key'],
+            'token' => 'test_token',
+            'ticket' => 'test_ticket',
+        ], $resolver->resolve());
+
+        static::assertSame([
+            'type' => 'jsapi',
+            'using_config' => 'custom',
+            'appid' => $customConfig['appid'],
+            'secret' => $customConfig['secret'],
+            'mchid' => $customConfig['mchid'],
+            'mchkey' => $customConfig['mchkey'],
+            'mch_client_cert' => $customConfig['mch_client_cert'],
+            'mch_client_key' => $customConfig['mch_client_key'],
+            'token' => 'custom_token',
+            'ticket' => 'custom_ticket',
+        ], $resolver->resolve(['using_config' => 'custom']));
     }
 
     public function testResolve(): void
     {
         $resolver = new OptionsResolver();
 
-        $ticketOptions = static::create();
+        $configurationManager = ConfigurationManagerTest::create();
+
+        $defaultConfig = $configurationManager->get('default');
+        $customConfig = $configurationManager->get('custom');
+
+        $ticketOptions = static::create($configurationManager);
         $ticketOptions->configure($resolver);
 
         $resolved = $resolver->resolve();
-        static::assertSame('default', $resolved['using_config']);
-        static::assertSame('test_appid', $resolved['appid']);
-        static::assertSame('test_secret', $resolved['secret']);
         static::assertSame('test_token', $resolved['token']);
-        static::assertSame('test_ticket', $resolved['ticket']);
         static::assertSame('jsapi', $resolved['type']);
+        static::assertSame('default', $resolved['using_config']);
+        static::assertSame($defaultConfig['appid'], $resolved['appid']);
+        static::assertSame($defaultConfig['secret'], $resolved['secret']);
+        static::assertSame($defaultConfig['mchid'], $resolved['mchid']);
+        static::assertSame($defaultConfig['mchkey'], $resolved['mchkey']);
+        static::assertSame($defaultConfig['mch_client_cert'], $resolved['mch_client_cert']);
+        static::assertSame($defaultConfig['mch_client_key'], $resolved['mch_client_key']);
+        static::assertSame('test_ticket', $resolved['ticket']);
 
         $resolved = $resolver->resolve(['using_config' => 'custom']);
-        static::assertSame('custom', $resolved['using_config']);
-        static::assertSame('custom_appid', $resolved['appid']);
-        static::assertSame('custom_secret', $resolved['secret']);
         static::assertSame('custom_token', $resolved['token']);
-        static::assertSame('custom_ticket', $resolved['ticket']);
         static::assertSame('jsapi', $resolved['type']);
+        static::assertSame('custom', $resolved['using_config']);
+        static::assertSame($customConfig['appid'], $resolved['appid']);
+        static::assertSame($customConfig['secret'], $resolved['secret']);
+        static::assertSame($customConfig['mchid'], $resolved['mchid']);
+        static::assertSame($customConfig['mchkey'], $resolved['mchkey']);
+        static::assertSame($customConfig['mch_client_cert'], $resolved['mch_client_cert']);
+        static::assertSame($customConfig['mch_client_key'], $resolved['mch_client_key']);
+        static::assertSame('custom_ticket', $resolved['ticket']);
 
         $resolved = $resolver->resolve(['using_config' => 'custom', 'token' => 'foo', 'type' => 'wx_card']);
-        static::assertSame('custom', $resolved['using_config']);
-        static::assertSame('custom_appid', $resolved['appid']);
-        static::assertSame('custom_secret', $resolved['secret']);
         static::assertSame('foo', $resolved['token']);
-        static::assertSame('custom_ticket_2', $resolved['ticket']);
         static::assertSame('wx_card', $resolved['type']);
+        static::assertSame('custom', $resolved['using_config']);
+        static::assertSame($customConfig['appid'], $resolved['appid']);
+        static::assertSame($customConfig['secret'], $resolved['secret']);
+        static::assertSame($customConfig['mchid'], $resolved['mchid']);
+        static::assertSame($customConfig['mchkey'], $resolved['mchkey']);
+        static::assertSame($customConfig['mch_client_cert'], $resolved['mch_client_cert']);
+        static::assertSame($customConfig['mch_client_key'], $resolved['mch_client_key']);
+        static::assertSame('custom_ticket_2', $resolved['ticket']);
     }
 
     public function testGetExtendedRequests(): void

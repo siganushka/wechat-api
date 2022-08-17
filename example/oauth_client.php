@@ -16,8 +16,9 @@ if (!isset($_GET['code'])) {
     ];
 
     $client = new Client();
-    $client->using(new ConfigurationOptions($configuration));
-    $client->redirect($options);
+    $client->using(new ConfigurationOptions($configurationManager));
+
+    header(sprintf('Location: %s', $client->getRedirectUrl($options)));
     exit;
 }
 

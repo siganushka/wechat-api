@@ -5,7 +5,6 @@ declare(strict_types=1);
 namespace Siganushka\ApiClient\Wechat\Tests;
 
 use PHPUnit\Framework\TestCase;
-use Siganushka\ApiClient\Wechat\Configuration;
 use Siganushka\ApiClient\Wechat\ConfigurationManager;
 use Siganushka\ApiClient\Wechat\ConfigurationOptions;
 use Siganushka\ApiClient\Wechat\Core\Token;
@@ -25,22 +24,21 @@ class ConfigurationOptionsTest extends TestCase
 
         $configurationOptions = static::create();
         $configurationOptions->configure($resolver);
-        static::assertContains('using_config', $resolver->getDefinedOptions());
 
-        Configuration::apply($resolver);
-        static::assertContains('using_config', $resolver->getDefinedOptions());
-        static::assertContains('appid', $resolver->getDefinedOptions());
-        static::assertContains('secret', $resolver->getDefinedOptions());
-        static::assertContains('mchid', $resolver->getDefinedOptions());
-        static::assertContains('mchkey', $resolver->getDefinedOptions());
-        static::assertContains('mch_client_cert', $resolver->getDefinedOptions());
-        static::assertContains('mch_client_key', $resolver->getDefinedOptions());
+        static::assertSame([
+            'using_config',
+            'appid',
+            'secret',
+            'mchid',
+            'mchkey',
+            'mch_client_cert',
+            'mch_client_key',
+        ], $resolver->getDefinedOptions());
     }
 
     public function testResolve(): void
     {
         $resolver = new OptionsResolver();
-        Configuration::apply($resolver);
 
         $configurationOptions = static::create();
         $configurationOptions->configure($resolver);

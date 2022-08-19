@@ -7,20 +7,23 @@ namespace Siganushka\ApiClient\Wechat;
 use Siganushka\ApiClient\AbstractConfiguration;
 use Symfony\Component\OptionsResolver\OptionsResolver;
 
+/**
+ * Wechat configuration.
+ */
 class Configuration extends AbstractConfiguration
 {
     protected function configureOptions(OptionsResolver $resolver): void
     {
-        static::apply($resolver);
-    }
+        OptionsUtils::appid($resolver);
+        OptionsUtils::secret($resolver);
+        OptionsUtils::mchid($resolver);
+        OptionsUtils::mchkey($resolver);
+        OptionsUtils::mch_client_cert($resolver);
+        OptionsUtils::mch_client_key($resolver);
 
-    public static function apply(OptionsResolver $resolver): void
-    {
-        WechatOptions::appid($resolver);
-        WechatOptions::secret($resolver);
-        WechatOptions::mchid($resolver);
-        WechatOptions::mchkey($resolver);
-        WechatOptions::mch_client_cert($resolver);
-        WechatOptions::mch_client_key($resolver);
+        foreach ($resolver->getDefinedOptions() as $option) {
+            $resolver->setDefault($option, null);
+            $resolver->addAllowedTypes($option, 'null');
+        }
     }
 }

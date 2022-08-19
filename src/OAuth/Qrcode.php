@@ -7,7 +7,7 @@ namespace Siganushka\ApiClient\Wechat\OAuth;
 use Symfony\Component\OptionsResolver\OptionsResolver;
 
 /**
- * Wechat open oauth client class.
+ * Wechat oauth client class for open platform.
  *
  * @see https://developers.weixin.qq.com/doc/oplatform/Website_App/WeChat_Login/Wechat_Login.html
  */

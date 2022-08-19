@@ -35,18 +35,18 @@ use Symfony\Contracts\HttpClient\HttpClientInterface;
 
 class WechatExtension implements RequestExtensionInterface
 {
-    private ConfigurationManager $configurationManager;
+    private Configuration $configuration;
     private HttpClientInterface $httpClient;
     private CacheItemPoolInterface $cachePool;
     private SerializerInterface $serializer;
 
     public function __construct(
-        ConfigurationManager $configurationManager,
+        Configuration $configuration,
         HttpClientInterface $httpClient = null,
         CacheItemPoolInterface $cachePool = null,
         SerializerInterface $serializer = null)
     {
-        $this->configurationManager = $configurationManager;
+        $this->configuration = $configuration;
         $this->httpClient = $httpClient ?? HttpClient::create();
         $this->cachePool = $cachePool ?? new FilesystemAdapter();
         $this->serializer = $serializer ?? new Serializer([], [new XmlEncoder(), new JsonEncoder()]);
@@ -62,7 +62,7 @@ class WechatExtension implements RequestExtensionInterface
             new SessionKey($this->cachePool),
             new Wxacode(),
             new WxacodeUnlimited(),
-            new AccessToken(),
+            new AccessToken($this->cachePool),
             new CheckToken(),
             new RefreshToken(),
             new UserInfo(),
@@ -78,9 +78,9 @@ class WechatExtension implements RequestExtensionInterface
     public function loadOptionsExtensions(): array
     {
         return [
-            new ConfigurationOptions($this->configurationManager),
-            new TokenOptions($this->configurationManager, $this->httpClient, $this->cachePool),
-            new TicketOptions($this->configurationManager, $this->httpClient, $this->cachePool),
+            new ConfigurationOptions($this->configuration),
+            new TokenOptions($this->configuration, $this->httpClient, $this->cachePool),
+            new TicketOptions($this->configuration, $this->httpClient, $this->cachePool),
         ];
     }
 }

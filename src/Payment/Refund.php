@@ -8,9 +8,8 @@ use Siganushka\ApiClient\AbstractRequest;
 use Siganushka\ApiClient\Exception\ParseResponseException;
 use Siganushka\ApiClient\RequestOptions;
 use Siganushka\ApiClient\Wechat\ConfigurationOptions;
-use Siganushka\ApiClient\Wechat\WechatOptions;
+use Siganushka\ApiClient\Wechat\OptionsUtils;
 use Symfony\Component\OptionsResolver\Exception\MissingOptionsException;
-use Symfony\Component\OptionsResolver\Exception\NoConfigurationException;
 use Symfony\Component\OptionsResolver\Options;
 use Symfony\Component\OptionsResolver\OptionsResolver;
 use Symfony\Component\Serializer\Encoder\DecoderInterface;
@@ -35,13 +34,13 @@ class Refund extends AbstractRequest
 
     protected function configureOptions(OptionsResolver $resolver): void
     {
-        WechatOptions::appid($resolver);
-        WechatOptions::mchid($resolver);
-        WechatOptions::mchkey($resolver);
-        WechatOptions::mch_client_cert($resolver);
-        WechatOptions::mch_client_key($resolver);
-        WechatOptions::sign_type($resolver);
-        WechatOptions::nonce_str($resolver);
+        OptionsUtils::appid($resolver);
+        OptionsUtils::mchid($resolver);
+        OptionsUtils::mchkey($resolver);
+        OptionsUtils::mch_client_cert($resolver);
+        OptionsUtils::mch_client_key($resolver);
+        OptionsUtils::sign_type($resolver);
+        OptionsUtils::nonce_str($resolver);
 
         $resolver
             ->define('transaction_id')
@@ -107,12 +106,6 @@ class Refund extends AbstractRequest
 
     protected function configureRequest(RequestOptions $request, array $options): void
     {
-        foreach (['mchid', 'mchkey', 'mch_client_cert', 'mch_client_key'] as $optionName) {
-            if (null === $options[$optionName]) {
-                throw new NoConfigurationException(sprintf('No configured value for "%s" option.', $optionName));
-            }
-        }
-
         $body = array_filter([
             'appid' => $options['appid'],
             'mch_id' => $options['mchid'],
@@ -138,7 +131,7 @@ class Refund extends AbstractRequest
         $body['sign'] = $signatureUtils->generateFromOptions([
             'mchkey' => $options['mchkey'],
             'sign_type' => $options['sign_type'],
-            'parameters' => $body,
+            'data' => $body,
         ]);
 
         $request

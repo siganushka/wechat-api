@@ -10,9 +10,7 @@ use Siganushka\ApiClient\Test\RequestTestCase;
 use Siganushka\ApiClient\Wechat\Payment\SignatureUtils;
 use Siganushka\ApiClient\Wechat\Payment\Unifiedorder;
 use Symfony\Component\HttpClient\MockHttpClient;
-use Symfony\Component\OptionsResolver\Exception\InvalidOptionsException;
 use Symfony\Component\OptionsResolver\Exception\MissingOptionsException;
-use Symfony\Component\OptionsResolver\Exception\NoConfigurationException;
 use Symfony\Component\OptionsResolver\OptionsResolver;
 use Symfony\Component\Serializer\Encoder\JsonEncoder;
 use Symfony\Component\Serializer\Encoder\XmlEncoder;
@@ -55,6 +53,8 @@ class UnifiedorderTest extends RequestTestCase
 
         $options = [
             'appid' => 'test_appid',
+            'mchid' => 'test_mchid',
+            'mchkey' => 'test_mchkey',
             'nonce_str' => 'test_nonce_str',
             'body' => 'test_body',
             'notify_url' => 'test_notify_url',
@@ -66,8 +66,8 @@ class UnifiedorderTest extends RequestTestCase
 
         static::assertEquals([
             'appid' => $options['appid'],
-            'mchid' => null,
-            'mchkey' => null,
+            'mchid' => $options['mchid'],
+            'mchkey' => $options['mchkey'],
             'sign_type' => 'MD5',
             'nonce_str' => $options['nonce_str'],
             'client_ip' => '0.0.0.0',
@@ -95,8 +95,6 @@ class UnifiedorderTest extends RequestTestCase
         $timeStartAt = new \DateTimeImmutable();
         $timeExpireAt = $timeStartAt->modify('+7 days');
         $options = array_merge($options, [
-            'mchid' => 'test_mchid',
-            'mchkey' => 'test_mchkey',
             'sign_type' => 'HMAC-SHA256',
             'client_ip' => '127.0.0.1',
             'using_slave_url' => true,
@@ -170,7 +168,7 @@ class UnifiedorderTest extends RequestTestCase
         $signatureUtils = SignatureUtils::create();
         static::assertSame($signature, $signatureUtils->generateFromOptions([
             'mchkey' => $options['mchkey'],
-            'parameters' => $body,
+            'data' => $body,
         ]));
 
         static::assertSame([
@@ -190,8 +188,6 @@ class UnifiedorderTest extends RequestTestCase
         $timeStartAt = new \DateTimeImmutable();
         $timeExpireAt = $timeStartAt->modify('+7 days');
         $options = array_merge($options, [
-            'mchid' => 'test_mchid',
-            'mchkey' => 'test_mchkey',
             'sign_type' => 'HMAC-SHA256',
             'client_ip' => '127.0.0.1',
             'using_slave_url' => true,
@@ -219,7 +215,7 @@ class UnifiedorderTest extends RequestTestCase
         static::assertSame($signature, $signatureUtils->generateFromOptions([
             'mchkey' => $options['mchkey'],
             'sign_type' => $options['sign_type'],
-            'parameters' => $body,
+            'data' => $body,
         ]));
 
         static::assertSame([
@@ -331,28 +327,10 @@ class UnifiedorderTest extends RequestTestCase
         ]);
     }
 
-    public function testAppidInvalidOptionsException(): void
+    public function testMchidMissingOptionsException(): void
     {
-        $this->expectException(InvalidOptionsException::class);
-        $this->expectExceptionMessage('The option "appid" with value 123 is expected to be of type "string", but is of type "int"');
-
-        $this->request->build([
-            'appid' => 123,
-            'mchid' => 'test_mchid',
-            'mchkey' => 'test_mchkey',
-            'body' => 'test_body',
-            'notify_url' => 'test_notify_url',
-            'out_trade_no' => 'test_out_trade_no',
-            'total_fee' => 1,
-            'trade_type' => 'JSAPI',
-            'openid' => 'test_openid',
-        ]);
-    }
-
-    public function testMchidNoConfigurationException(): void
-    {
-        $this->expectException(NoConfigurationException::class);
-        $this->expectExceptionMessage('No configured value for "mchid" option');
+        $this->expectException(MissingOptionsException::class);
+        $this->expectExceptionMessage('The required option "mchid" is missing');
 
         $this->request->build([
             'appid' => 'test_appid',
@@ -366,10 +344,10 @@ class UnifiedorderTest extends RequestTestCase
         ]);
     }
 
-    public function testMchkeyNoConfigurationException(): void
+    public function testMchkeyMissingOptionsException(): void
     {
-        $this->expectException(NoConfigurationException::class);
-        $this->expectExceptionMessage('No configured value for "mchkey" option');
+        $this->expectException(MissingOptionsException::class);
+        $this->expectExceptionMessage('The required option "mchkey" is missing');
 
         $this->request->build([
             'appid' => 'test_appid',

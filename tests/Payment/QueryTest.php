@@ -10,9 +10,7 @@ use Siganushka\ApiClient\Test\RequestTestCase;
 use Siganushka\ApiClient\Wechat\Payment\Query;
 use Siganushka\ApiClient\Wechat\Payment\SignatureUtils;
 use Symfony\Component\HttpClient\MockHttpClient;
-use Symfony\Component\OptionsResolver\Exception\InvalidOptionsException;
 use Symfony\Component\OptionsResolver\Exception\MissingOptionsException;
-use Symfony\Component\OptionsResolver\Exception\NoConfigurationException;
 use Symfony\Component\OptionsResolver\OptionsResolver;
 use Symfony\Component\Serializer\Encoder\JsonEncoder;
 use Symfony\Component\Serializer\Encoder\XmlEncoder;
@@ -37,39 +35,38 @@ class QueryTest extends RequestTestCase
         ], $resolver->getDefinedOptions());
 
         $options = [
-            'appid' => 'foo',
+            'appid' => 'test_appid',
+            'mchid' => 'test_mchid',
+            'mchkey' => 'test_mchkey',
             'transaction_id' => 'test_transaction_id',
+            'nonce_str' => 'test_nonce_str',
         ];
 
-        $resolved = $resolver->resolve($options);
-        static::assertSame('foo', $resolved['appid']);
-        static::assertNull($resolved['mchid']);
-        static::assertNull($resolved['mchkey']);
-        static::assertSame('MD5', $resolved['sign_type']);
-        static::assertArrayHasKey('nonce_str', $resolved);
-        static::assertFalse($resolved['using_slave_url']);
-        static::assertSame('test_transaction_id', $resolved['transaction_id']);
-        static::assertNull($resolved['out_trade_no']);
+        static::assertSame([
+            'sign_type' => 'MD5',
+            'nonce_str' => $options['nonce_str'],
+            'using_slave_url' => false,
+            'transaction_id' => $options['transaction_id'],
+            'out_trade_no' => null,
+            'appid' => $options['appid'],
+            'mchid' => $options['mchid'],
+            'mchkey' => $options['mchkey'],
+        ], $resolver->resolve($options));
 
-        $resolved = $resolver->resolve([
-            'appid' => 'foo',
-            'mchid' => 'bar',
-            'mchkey' => 'test_mchkey',
+        static::assertSame([
             'sign_type' => 'HMAC-SHA256',
-            'nonce_str' => 'test_nonce_str',
+            'nonce_str' => $options['nonce_str'],
             'using_slave_url' => true,
-            'transaction_id' => 'test_transaction_id',
+            'transaction_id' => $options['transaction_id'],
             'out_trade_no' => 'test_out_trade_no',
-        ]);
-
-        static::assertSame('foo', $resolved['appid']);
-        static::assertSame('bar', $resolved['mchid']);
-        static::assertSame('test_mchkey', $resolved['mchkey']);
-        static::assertSame('HMAC-SHA256', $resolved['sign_type']);
-        static::assertSame('test_nonce_str', $resolved['nonce_str']);
-        static::assertTrue($resolved['using_slave_url']);
-        static::assertSame('test_transaction_id', $resolved['transaction_id']);
-        static::assertSame('test_out_trade_no', $resolved['out_trade_no']);
+            'appid' => $options['appid'],
+            'mchid' => $options['mchid'],
+            'mchkey' => $options['mchkey'],
+        ], $resolver->resolve($options + [
+            'sign_type' => 'HMAC-SHA256',
+            'using_slave_url' => true,
+            'out_trade_no' => 'test_out_trade_no',
+        ]));
     }
 
     public function testBuild(): void
@@ -94,7 +91,7 @@ class QueryTest extends RequestTestCase
         $signatureUtils = SignatureUtils::create();
         static::assertSame($signature, $signatureUtils->generateFromOptions([
             'mchkey' => $options['mchkey'],
-            'parameters' => $body,
+            'data' => $body,
         ]));
 
         static::assertSame([
@@ -121,7 +118,7 @@ class QueryTest extends RequestTestCase
         static::assertSame($signature, $signatureUtils->generateFromOptions([
             'mchkey' => $options['mchkey'],
             'sign_type' => 'HMAC-SHA256',
-            'parameters' => $body,
+            'data' => $body,
         ]));
 
         static::assertSame([
@@ -200,41 +197,36 @@ class QueryTest extends RequestTestCase
         $this->expectExceptionMessage('The required option "appid" is missing');
 
         $this->request->build([
+            'mchid' => 'test_mchid',
+            'mchkey' => 'test_mchkey',
             'transaction_id' => 'test_transaction_id',
+            'nonce_str' => 'test_nonce_str',
         ]);
     }
 
-    public function testAppidInvalidOptionsException(): void
+    public function testMchidMissingOptionsException(): void
     {
-        $this->expectException(InvalidOptionsException::class);
-        $this->expectExceptionMessage('The option "appid" with value 123 is expected to be of type "string", but is of type "int"');
+        $this->expectException(MissingOptionsException::class);
+        $this->expectExceptionMessage('The required option "mchid" is missing');
 
         $this->request->build([
-            'appid' => 123,
+            'appid' => 'test_appid',
+            'mchkey' => 'test_mchkey',
             'transaction_id' => 'test_transaction_id',
+            'nonce_str' => 'test_nonce_str',
         ]);
     }
 
-    public function testMchidNoConfigurationException(): void
+    public function testMchkeyMissingOptionsException(): void
     {
-        $this->expectException(NoConfigurationException::class);
-        $this->expectExceptionMessage('No configured value for "mchid" option');
+        $this->expectException(MissingOptionsException::class);
+        $this->expectExceptionMessage('The required option "mchkey" is missing');
 
         $this->request->build([
-            'appid' => 'foo',
+            'appid' => 'test_appid',
+            'mchid' => 'test_mchid',
             'transaction_id' => 'test_transaction_id',
-        ]);
-    }
-
-    public function testMchkeyNoConfigurationException(): void
-    {
-        $this->expectException(NoConfigurationException::class);
-        $this->expectExceptionMessage('No configured value for "mchkey" option');
-
-        $this->request->build([
-            'appid' => 'foo',
-            'mchid' => 'bar',
-            'transaction_id' => 'test_transaction_id',
+            'nonce_str' => 'test_nonce_str',
         ]);
     }
 

@@ -6,8 +6,7 @@ namespace Siganushka\ApiClient\Wechat\Payment;
 
 use Siganushka\ApiClient\ConfigurableSubjectInterface;
 use Siganushka\ApiClient\ConfigurableSubjectTrait;
-use Siganushka\ApiClient\Wechat\WechatOptions;
-use Symfony\Component\OptionsResolver\Exception\NoConfigurationException;
+use Siganushka\ApiClient\Wechat\OptionsUtils;
 use Symfony\Component\OptionsResolver\OptionsResolver;
 
 /**
@@ -24,40 +23,44 @@ class SignatureUtils implements ConfigurableSubjectInterface
         return new static();
     }
 
-    public function generate(array $parameters): string
+    /**
+     * @param array $data 要发送的数据集合
+     *
+     * @return string JSAPI 支付参数
+     */
+    public function generate(array $data): string
     {
-        return $this->generateFromOptions(['parameters' => $parameters]);
+        return $this->generateFromOptions(['data' => $data]);
     }
 
+    /**
+     * @param array $options 自定义 JSAPI 支付参数
+     */
     public function generateFromOptions(array $options = []): string
     {
         $resolver = new OptionsResolver();
         $this->configure($resolver);
 
         $resolved = $resolver->resolve($options);
-        if (null === $resolved['mchkey']) {
-            throw new NoConfigurationException('No configured value for "mchkey" option.');
-        }
+        // data to signature
+        $data = $resolved['data'];
 
-        // parameters to signature
-        $parameters = $resolved['parameters'];
+        ksort($data);
+        $data['key'] = $resolved['mchkey'];
 
-        ksort($parameters);
-        $parameters['key'] = $resolved['mchkey'];
-
-        $signature = http_build_query($parameters);
+        $signature = http_build_query($data);
         $signature = urldecode($signature);
 
-        $signature = (WechatOptions::SIGN_TYPE_SHA256 === $resolved['sign_type'])
+        $signature = (OptionsUtils::SIGN_TYPE_SHA256 === $resolved['sign_type'])
             ? hash_hmac('sha256', $signature, $resolved['mchkey'])
             : hash('md5', $signature);
 
         return strtoupper($signature);
     }
 
-    public function check(string $sign, array $parameters): bool
+    public function check(string $sign, array $data): bool
     {
-        return 0 === strcmp($sign, $this->generate($parameters));
+        return 0 === strcmp($sign, $this->generate($data));
     }
 
     public function checkFromOptions(string $sign, array $options = []): bool
@@ -67,11 +70,11 @@ class SignatureUtils implements ConfigurableSubjectInterface
 
     protected function configureOptions(OptionsResolver $resolver): void
     {
-        WechatOptions::mchkey($resolver);
-        WechatOptions::sign_type($resolver);
+        OptionsUtils::mchkey($resolver);
+        OptionsUtils::sign_type($resolver);
 
         $resolver
-            ->define('parameters')
+            ->define('data')
             ->required()
             ->allowedTypes('array')
         ;

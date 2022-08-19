@@ -7,7 +7,7 @@ namespace Siganushka\ApiClient\Wechat\Core;
 use Siganushka\ApiClient\AbstractRequest;
 use Siganushka\ApiClient\Exception\ParseResponseException;
 use Siganushka\ApiClient\RequestOptions;
-use Siganushka\ApiClient\Wechat\WechatOptions;
+use Siganushka\ApiClient\Wechat\OptionsUtils;
 use Symfony\Component\OptionsResolver\OptionsResolver;
 use Symfony\Contracts\HttpClient\ResponseInterface;
 
@@ -20,7 +20,7 @@ class CallbackIp extends AbstractRequest
 
     protected function configureOptions(OptionsResolver $resolver): void
     {
-        WechatOptions::token($resolver);
+        OptionsUtils::token($resolver);
     }
 
     protected function configureRequest(RequestOptions $request, array $options): void

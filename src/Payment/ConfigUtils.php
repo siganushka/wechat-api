@@ -7,7 +7,7 @@ namespace Siganushka\ApiClient\Wechat\Payment;
 use Siganushka\ApiClient\ConfigurableSubjectInterface;
 use Siganushka\ApiClient\ConfigurableSubjectTrait;
 use Siganushka\ApiClient\Wechat\ConfigurationOptions;
-use Siganushka\ApiClient\Wechat\WechatOptions;
+use Siganushka\ApiClient\Wechat\OptionsUtils;
 use Symfony\Component\OptionsResolver\OptionsResolver;
 
 /**
@@ -19,18 +19,28 @@ class ConfigUtils implements ConfigurableSubjectInterface
 {
     use ConfigurableSubjectTrait;
 
+    /**
+     * @param string $prepayId 统一下单接口返回的prepay_id参数
+     *
+     * @return array JSAPI 配置参数
+     */
     public function generate(string $prepayId): array
     {
         return $this->generateFromOptions(['prepay_id' => $prepayId]);
     }
 
+    /**
+     * @param array $options 自定义 JSAPI 配置参数
+     *
+     * @return array JSAPI 配置参数
+     */
     public function generateFromOptions(array $options = []): array
     {
         $resolver = new OptionsResolver();
         $this->configure($resolver);
 
         $resolved = $resolver->resolve($options);
-        $parameters = [
+        $data = [
             'appId' => $resolved['appid'],
             'signType' => $resolved['sign_type'],
             'timeStamp' => $resolved['timestamp'],
@@ -44,22 +54,22 @@ class ConfigUtils implements ConfigurableSubjectInterface
         }
 
         // Generate pay signature
-        $parameters['paySign'] = $signatureUtils->generateFromOptions([
+        $data['paySign'] = $signatureUtils->generateFromOptions([
             'mchkey' => $resolved['mchkey'],
             'sign_type' => $resolved['sign_type'],
-            'parameters' => $parameters,
+            'data' => $data,
         ]);
 
-        return $parameters;
+        return $data;
     }
 
     protected function configureOptions(OptionsResolver $resolver): void
     {
-        WechatOptions::appid($resolver);
-        WechatOptions::mchkey($resolver);
-        WechatOptions::sign_type($resolver);
-        WechatOptions::timestamp($resolver);
-        WechatOptions::nonce_str($resolver);
+        OptionsUtils::appid($resolver);
+        OptionsUtils::mchkey($resolver);
+        OptionsUtils::sign_type($resolver);
+        OptionsUtils::timestamp($resolver);
+        OptionsUtils::nonce_str($resolver);
 
         $resolver
             ->define('prepay_id')

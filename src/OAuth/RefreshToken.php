@@ -7,7 +7,7 @@ namespace Siganushka\ApiClient\Wechat\OAuth;
 use Siganushka\ApiClient\AbstractRequest;
 use Siganushka\ApiClient\Exception\ParseResponseException;
 use Siganushka\ApiClient\RequestOptions;
-use Siganushka\ApiClient\Wechat\WechatOptions;
+use Siganushka\ApiClient\Wechat\OptionsUtils;
 use Symfony\Component\OptionsResolver\OptionsResolver;
 use Symfony\Contracts\HttpClient\ResponseInterface;
 
@@ -20,7 +20,7 @@ class RefreshToken extends AbstractRequest
 
     protected function configureOptions(OptionsResolver $resolver): void
     {
-        WechatOptions::appid($resolver);
+        OptionsUtils::appid($resolver);
 
         $resolver
             ->define('refresh_token')
@@ -44,6 +44,15 @@ class RefreshToken extends AbstractRequest
         ;
     }
 
+    /**
+     * @return array{
+     *  openid: string,
+     *  access_token: string,
+     *  expires_in: int,
+     *  refresh_token: string,
+     *  scope: string
+     * }
+     */
     protected function parseResponse(ResponseInterface $response): array
     {
         $result = $response->toArray();
@@ -51,7 +60,7 @@ class RefreshToken extends AbstractRequest
         $errcode = (int) ($result['errcode'] ?? 0);
         $errmsg = (string) ($result['errmsg'] ?? '');
 
-        if (0 === $errcode) {
+        if (0 === $errcode && isset($result['access_token']) && isset($result['openid'])) {
             return $result;
         }
 

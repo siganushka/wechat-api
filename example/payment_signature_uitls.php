@@ -7,7 +7,7 @@ use Siganushka\ApiClient\Wechat\Payment\SignatureUtils;
 
 require __DIR__.'/_autoload.php';
 
-$parameters = [
+$data = [
     'return_code' => 'SUCCESS',
     'return_msg' => 'OK',
     'result_code' => 'SUCCESS',
@@ -18,10 +18,10 @@ $parameters = [
 ];
 
 $signatureUtils = new SignatureUtils();
-$signatureUtils->using(new ConfigurationOptions($configurationManager));
+$signatureUtils->using(new ConfigurationOptions($configuration));
 
 // 生成签名
-$sign = $signatureUtils->generate($parameters);
+$sign = $signatureUtils->generate($data);
 
 // 生成 & 验证签名
-dd($sign, $signatureUtils->check($sign, $parameters));
+dd($sign, $signatureUtils->check($sign, $data));

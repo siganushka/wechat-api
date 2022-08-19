@@ -7,7 +7,7 @@ namespace Siganushka\ApiClient\Wechat\Tests\Payment;
 use PHPUnit\Framework\TestCase;
 use Siganushka\ApiClient\Wechat\Payment\SignatureUtils;
 use Siganushka\ApiClient\Wechat\Tests\ConfigurationOptionsTest;
-use Symfony\Component\OptionsResolver\Exception\NoConfigurationException;
+use Symfony\Component\OptionsResolver\Exception\MissingOptionsException;
 use Symfony\Component\OptionsResolver\OptionsResolver;
 
 class SignatureUtilsTest extends TestCase
@@ -32,59 +32,64 @@ class SignatureUtilsTest extends TestCase
         static::assertSame([
             'mchkey',
             'sign_type',
-            'parameters',
+            'data',
         ], $resolver->getDefinedOptions());
 
-        $parameters = ['foo' => 'hello'];
+        $data = ['foo' => 'hello'];
         static::assertSame([
-            'mchkey' => null,
             'sign_type' => 'MD5',
-            'parameters' => $parameters,
-        ], $resolver->resolve(['parameters' => $parameters]));
+            'mchkey' => 'foo',
+            'data' => $data,
+        ], $resolver->resolve([
+            'mchkey' => 'foo',
+            'data' => $data,
+        ]));
 
         static::assertSame([
-            'mchkey' => 'foo',
             'sign_type' => 'HMAC-SHA256',
-            'parameters' => $parameters,
+            'mchkey' => 'foo',
+            'data' => $data,
         ], $resolver->resolve([
             'mchkey' => 'foo',
             'sign_type' => 'HMAC-SHA256',
-            'parameters' => $parameters,
+            'data' => $data,
         ]));
     }
 
     public function testGenerate(): void
     {
-        $parameters = ['foo' => 'hello'];
+        $data = ['foo' => 'hello'];
 
         $this->signatureUtils->using(ConfigurationOptionsTest::create());
-        $signature = $this->signatureUtils->generate($parameters);
+        $signature = $this->signatureUtils->generate($data);
 
         static::assertSame('44C65B2286547046D4DEF419020A6425', $signature);
-        static::assertTrue($this->signatureUtils->check('44C65B2286547046D4DEF419020A6425', $parameters));
+        static::assertTrue($this->signatureUtils->check('44C65B2286547046D4DEF419020A6425', $data));
     }
 
     /**
      * @dataProvider getSignatureProvider
      */
-    public function testGenerateFromOptions(string $key, array $parameters, string $sign, string $signType): void
+    public function testGenerateFromOptions(string $key, array $data, string $sign, string $signType): void
     {
         $options = [
             'mchkey' => $key,
             'sign_type' => $signType,
-            'parameters' => $parameters,
+            'data' => $data,
         ];
 
         static::assertSame($sign, $this->signatureUtils->generateFromOptions($options));
         static::assertTrue($this->signatureUtils->checkFromOptions($sign, $options));
     }
 
-    public function testMchkeyNoConfigurationException(): void
+    public function testMchkeyMissingOptionsException(): void
     {
-        $this->expectException(NoConfigurationException::class);
-        $this->expectExceptionMessage('No configured value for "mchkey" option');
+        $this->expectException(MissingOptionsException::class);
+        $this->expectExceptionMessage('The required option "mchkey" is missing');
 
-        $this->signatureUtils->generate(['foo' => 'hello']);
+        $this->signatureUtils->generateFromOptions([
+            'data' => ['foo' => 'hello'],
+        ]);
     }
 
     public function getSignatureProvider(): array

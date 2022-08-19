@@ -92,7 +92,7 @@ class ConfigUtilsTest extends TestCase
         $signatureUtils = SignatureUtils::create();
         static::assertTrue($signatureUtils->checkFromOptions($paySign, [
             'mchkey' => 'bar',
-            'parameters' => $payConfig,
+            'data' => $payConfig,
         ]));
     }
 }

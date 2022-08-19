@@ -39,37 +39,44 @@ class ConfigUtilsTest extends TestCase
             'debug',
         ], $resolver->getDefinedOptions());
 
-        $resolved = $resolver->resolve(['appid' => 'foo', 'ticket' => 'bar']);
-        static::assertSame('foo', $resolved['appid']);
-        static::assertSame('bar', $resolved['ticket']);
-        static::assertArrayHasKey('timestamp', $resolved);
-        static::assertArrayHasKey('nonce_str', $resolved);
-        static::assertArrayHasKey('url', $resolved);
-        static::assertSame([], $resolved['apis']);
-        static::assertFalse($resolved['debug']);
-
-        $resolved = $resolver->resolve([
-            'appid' => 'foo',
-            'ticket' => 'bar',
+        static::assertSame([
             'timestamp' => 'test_timestamp',
             'nonce_str' => 'test_nonce_str',
-            'url' => '/foo',
+            'url' => 'test_url',
+            'apis' => [],
+            'debug' => false,
+            'appid' => 'test_appid',
+            'ticket' => 'test_ticket',
+        ], $resolver->resolve([
+            'appid' => 'test_appid',
+            'ticket' => 'test_ticket',
+            'timestamp' => 'test_timestamp',
+            'nonce_str' => 'test_nonce_str',
+            'url' => 'test_url',
+        ]));
+
+        static::assertSame([
+            'timestamp' => 'test_timestamp',
+            'nonce_str' => 'test_nonce_str',
+            'url' => 'test_url',
             'apis' => ['a', 'b', 'c'],
             'debug' => true,
-        ]);
-
-        static::assertSame('foo', $resolved['appid']);
-        static::assertSame('bar', $resolved['ticket']);
-        static::assertSame('test_timestamp', $resolved['timestamp']);
-        static::assertSame('test_nonce_str', $resolved['nonce_str']);
-        static::assertSame('/foo', $resolved['url']);
-        static::assertSame(['a', 'b', 'c'], $resolved['apis']);
-        static::assertTrue($resolved['debug']);
+            'appid' => 'test_appid',
+            'ticket' => 'test_ticket',
+        ], $resolver->resolve([
+            'appid' => 'test_appid',
+            'ticket' => 'test_ticket',
+            'timestamp' => 'test_timestamp',
+            'nonce_str' => 'test_nonce_str',
+            'url' => 'test_url',
+            'apis' => ['a', 'b', 'c'],
+            'debug' => true,
+        ]));
     }
 
     public function testGenerate(): void
     {
-        $configs = $this->configUtils->generate(['appid' => 'foo', 'ticket' => 'bar']);
+        $configs = $this->configUtils->generateFromOptions(['appid' => 'foo', 'ticket' => 'bar']);
         static::assertSame('foo', $configs['appId']);
         static::assertArrayHasKey('timestamp', $configs);
         static::assertArrayHasKey('nonceStr', $configs);
@@ -77,7 +84,7 @@ class ConfigUtilsTest extends TestCase
         static::assertSame([], $configs['jsApiList']);
         static::assertFalse($configs['debug']);
 
-        $configs = $this->configUtils->generate([
+        $configs = $this->configUtils->generateFromOptions([
             'appid' => 'foo',
             'ticket' => 'bar',
             'timestamp' => 'test_timestamp',
@@ -100,7 +107,7 @@ class ConfigUtilsTest extends TestCase
         $this->expectException(MissingOptionsException::class);
         $this->expectExceptionMessage('The required option "appid" is missing');
 
-        $this->configUtils->generate(['ticket' => 'bar']);
+        $this->configUtils->generateFromOptions(['ticket' => 'bar']);
     }
 
     public function testAppidInvalidOptionsException(): void
@@ -108,7 +115,7 @@ class ConfigUtilsTest extends TestCase
         $this->expectException(InvalidOptionsException::class);
         $this->expectExceptionMessage('The option "appid" with value 123 is expected to be of type "string", but is of type "int"');
 
-        $this->configUtils->generate(['appid' => 123, 'ticket' => 'bar']);
+        $this->configUtils->generateFromOptions(['appid' => 123, 'ticket' => 'bar']);
     }
 
     public function testTicketMissingOptionsException(): void
@@ -116,7 +123,7 @@ class ConfigUtilsTest extends TestCase
         $this->expectException(MissingOptionsException::class);
         $this->expectExceptionMessage('The required option "ticket" is missing');
 
-        $this->configUtils->generate(['appid' => 'foo']);
+        $this->configUtils->generateFromOptions(['appid' => 'foo']);
     }
 
     public function testTicketInvalidOptionsException(): void
@@ -124,7 +131,7 @@ class ConfigUtilsTest extends TestCase
         $this->expectException(InvalidOptionsException::class);
         $this->expectExceptionMessage('The option "ticket" with value 123 is expected to be of type "string", but is of type "int"');
 
-        $this->configUtils->generate(['appid' => 'foo', 'ticket' => 123]);
+        $this->configUtils->generateFromOptions(['appid' => 'foo', 'ticket' => 123]);
     }
 
     public function testUrlInvalidOptionsException(): void
@@ -132,7 +139,7 @@ class ConfigUtilsTest extends TestCase
         $this->expectException(InvalidOptionsException::class);
         $this->expectExceptionMessage('The option "url" with value 123 is expected to be of type "string", but is of type "int"');
 
-        $this->configUtils->generate(['appid' => 'foo', 'ticket' => 'bar', 'url' => 123]);
+        $this->configUtils->generateFromOptions(['appid' => 'foo', 'ticket' => 'bar', 'url' => 123]);
     }
 
     public function testApisInvalidOptionsException(): void
@@ -140,7 +147,7 @@ class ConfigUtilsTest extends TestCase
         $this->expectException(InvalidOptionsException::class);
         $this->expectExceptionMessage('The option "apis" with value 123 is expected to be of type "string[]", but is of type "int"');
 
-        $this->configUtils->generate(['appid' => 'foo', 'ticket' => 'bar', 'apis' => 123]);
+        $this->configUtils->generateFromOptions(['appid' => 'foo', 'ticket' => 'bar', 'apis' => 123]);
     }
 
     public function testDebugInvalidOptionsException(): void
@@ -148,6 +155,6 @@ class ConfigUtilsTest extends TestCase
         $this->expectException(InvalidOptionsException::class);
         $this->expectExceptionMessage('The option "debug" with value 123 is expected to be of type "bool", but is of type "int"');
 
-        $this->configUtils->generate(['appid' => 'foo', 'ticket' => 'bar', 'debug' => 123]);
+        $this->configUtils->generateFromOptions(['appid' => 'foo', 'ticket' => 'bar', 'debug' => 123]);
     }
 }

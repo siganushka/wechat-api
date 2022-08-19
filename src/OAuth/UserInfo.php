@@ -53,6 +53,20 @@ class UserInfo extends AbstractRequest
         ;
     }
 
+    /**
+     * @return array{
+     *  openid: string,
+     *  nickname: string,
+     *  sex: int,
+     *  language: string,
+     *  city: string,
+     *  province: string,
+     *  country: string,
+     *  headimgurl: string,
+     *  privilege: array,
+     *  unionid?: string
+     * }
+     */
     protected function parseResponse(ResponseInterface $response): array
     {
         $result = $response->toArray();

@@ -2,9 +2,9 @@
 
 declare(strict_types=1);
 
-use Siganushka\ApiClient\RequestClientBuilder;
+use Siganushka\ApiClient\RequestClient;
+use Siganushka\ApiClient\RequestFactoryBuilder;
 use Siganushka\ApiClient\Wechat\Configuration;
-use Siganushka\ApiClient\Wechat\ConfigurationManager;
 use Siganushka\ApiClient\Wechat\WechatExtension;
 use Symfony\Component\ErrorHandler\Debug;
 
@@ -25,12 +25,18 @@ if (!is_file($configFile)) {
     exit('请复制 _config.php.dist 为 _config.php 并填写参数！');
 }
 
-$configurationManager = new ConfigurationManager('miniapp');
-foreach (require $configFile as $name => $config) {
-    $configurationManager->set($name, new Configuration($config));
-}
+$configs = require $configFile;
 
-$client = RequestClientBuilder::create()
-    ->addExtension(new WechatExtension($configurationManager))
-    ->build()
+// 小程序配置（默认）
+$configuration = new Configuration($configs['miniapp']);
+// 公众号配置
+$mpConfiguration = new Configuration($configs['mp']);
+// 开放平台配置
+$openConfiguration = new Configuration($configs['open']);
+
+$factory = RequestFactoryBuilder::create()
+    ->addExtension(new WechatExtension($configuration))
+    ->getFactory()
 ;
+
+$client = new RequestClient($factory);

@@ -22,5 +22,6 @@ jobs:
             - { name: Validate composer,    run: composer validate --strict }
             - { name: Install dependencies, run: composer install }
             - { name: Run tests,            run: php vendor/bin/simple-phpunit --debug }
+            - { name: Install Psalm,        run: composer require --dev vimeo/psalm }
             - { name: Psalm Version,        run: php vendor/bin/psalm --version }
             - { name: Run Psalm,            run: php vendor/bin/psalm --show-info=true }

@@ -46,6 +46,12 @@ class CheckToken extends AbstractRequest
         ;
     }
 
+    /**
+     * @return array{
+     *  errcode: int,
+     *  errmsg: string
+     * }
+     */
     protected function parseResponse(ResponseInterface $response): array
     {
         $result = $response->toArray();

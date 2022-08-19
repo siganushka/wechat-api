@@ -9,11 +9,9 @@ use Siganushka\ApiClient\Response\ResponseFactory;
 use Siganushka\ApiClient\Test\RequestTestCase;
 use Siganushka\ApiClient\Wechat\Payment\Refund;
 use Siganushka\ApiClient\Wechat\Payment\SignatureUtils;
-use Siganushka\ApiClient\Wechat\Tests\ConfigurationManagerTest;
+use Siganushka\ApiClient\Wechat\Tests\ConfigurationTest;
 use Symfony\Component\HttpClient\MockHttpClient;
-use Symfony\Component\OptionsResolver\Exception\InvalidOptionsException;
 use Symfony\Component\OptionsResolver\Exception\MissingOptionsException;
-use Symfony\Component\OptionsResolver\Exception\NoConfigurationException;
 use Symfony\Component\OptionsResolver\OptionsResolver;
 use Symfony\Component\Serializer\Encoder\JsonEncoder;
 use Symfony\Component\Serializer\Encoder\XmlEncoder;
@@ -45,11 +43,12 @@ class RefundTest extends RequestTestCase
             'notify_url',
         ], $resolver->getDefinedOptions());
 
-        $configurationManager = ConfigurationManagerTest::create();
-        $defaultConfig = $configurationManager->get('default');
-
         $options = [
-            'appid' => $defaultConfig['appid'],
+            'appid' => 'test_appid',
+            'mchid' => 'test_mchid',
+            'mchkey' => 'test_mchkey',
+            'mch_client_cert' => ConfigurationTest::MCH_CLIENT_CERT,
+            'mch_client_key' => ConfigurationTest::MCH_CLIENT_KEY,
             'nonce_str' => 'test_nonce_str',
             'transaction_id' => 'test_transaction_id',
             'out_refund_no' => 'test_out_refund_no',
@@ -58,10 +57,6 @@ class RefundTest extends RequestTestCase
         ];
 
         static::assertSame([
-            'mchid' => null,
-            'mchkey' => null,
-            'mch_client_cert' => null,
-            'mch_client_key' => null,
             'sign_type' => 'MD5',
             'nonce_str' => $options['nonce_str'],
             'transaction_id' => $options['transaction_id'],
@@ -71,56 +66,52 @@ class RefundTest extends RequestTestCase
             'refund_account' => null,
             'notify_url' => null,
             'appid' => $options['appid'],
+            'mchid' => $options['mchid'],
+            'mchkey' => $options['mchkey'],
+            'mch_client_cert' => $options['mch_client_cert'],
+            'mch_client_key' => $options['mch_client_key'],
             'out_refund_no' => $options['out_refund_no'],
             'total_fee' => $options['total_fee'],
             'refund_fee' => $options['refund_fee'],
         ], $resolver->resolve($options));
 
-        $options = array_merge($options, [
-            'mchid' => $defaultConfig['mchid'],
-            'mchkey' => $defaultConfig['mchkey'],
-            'mch_client_cert' => $defaultConfig['mch_client_cert'],
-            'mch_client_key' => $defaultConfig['mch_client_key'],
+        static::assertSame([
             'sign_type' => 'HMAC-SHA256',
-            'nonce_str' => 'test_nonce_str',
+            'nonce_str' => $options['nonce_str'],
+            'transaction_id' => $options['transaction_id'],
             'out_trade_no' => 'test_out_trade_no',
             'refund_fee_type' => 'CNY',
             'refund_desc' => 'test_refund_desc',
             'refund_account' => 'REFUND_SOURCE_RECHARGE_FUNDS',
             'notify_url' => 'test_notify_url',
-        ]);
-
-        static::assertSame([
+            'appid' => $options['appid'],
             'mchid' => $options['mchid'],
             'mchkey' => $options['mchkey'],
             'mch_client_cert' => $options['mch_client_cert'],
             'mch_client_key' => $options['mch_client_key'],
-            'sign_type' => $options['sign_type'],
-            'nonce_str' => $options['nonce_str'],
-            'transaction_id' => $options['transaction_id'],
-            'out_trade_no' => $options['out_trade_no'],
-            'refund_fee_type' => $options['refund_fee_type'],
-            'refund_desc' => $options['refund_desc'],
-            'refund_account' => $options['refund_account'],
-            'notify_url' => $options['notify_url'],
-            'appid' => $options['appid'],
             'out_refund_no' => $options['out_refund_no'],
             'total_fee' => $options['total_fee'],
             'refund_fee' => $options['refund_fee'],
-        ], $resolver->resolve($options));
+        ], $resolver->resolve($options + [
+            'sign_type' => 'HMAC-SHA256',
+            'out_trade_no' => 'test_out_trade_no',
+            'refund_fee_type' => 'CNY',
+            'refund_desc' => 'test_refund_desc',
+            'refund_account' => 'REFUND_SOURCE_RECHARGE_FUNDS',
+            'notify_url' => 'test_notify_url',
+        ]));
     }
 
     public function testBuild(): void
     {
-        $configurationManager = ConfigurationManagerTest::create();
-        $defaultConfig = $configurationManager->get('default');
+        $configuration = ConfigurationTest::create();
 
         $options = [
-            'appid' => $defaultConfig['appid'],
-            'mchid' => $defaultConfig['mchid'],
-            'mchkey' => $defaultConfig['mchkey'],
-            'mch_client_cert' => $defaultConfig['mch_client_cert'],
-            'mch_client_key' => $defaultConfig['mch_client_key'],
+            'appid' => $configuration['appid'],
+            'mchid' => $configuration['mchid'],
+            'mchkey' => $configuration['mchkey'],
+            'mch_client_cert' => $configuration['mch_client_cert'],
+            'mch_client_key' => $configuration['mch_client_key'],
             'nonce_str' => uniqid(),
             'transaction_id' => 'test_transaction_id',
             'out_refund_no' => 'test_out_refund_no',
@@ -131,8 +122,8 @@ class RefundTest extends RequestTestCase
         $requestOptions = $this->request->build($options);
         static::assertSame('POST', $requestOptions->getMethod());
         static::assertSame(Refund::URL, $requestOptions->getUrl());
-        static::assertSame($requestOptions->toArray()['local_cert'], $defaultConfig['mch_client_cert']);
-        static::assertSame($requestOptions->toArray()['local_pk'], $defaultConfig['mch_client_key']);
+        static::assertSame($requestOptions->toArray()['local_cert'], $configuration['mch_client_cert']);
+        static::assertSame($requestOptions->toArray()['local_pk'], $configuration['mch_client_key']);
 
         $body = $this->decodeXML($requestOptions->toArray()['body']);
 
@@ -142,7 +133,7 @@ class RefundTest extends RequestTestCase
         $signatureUtils = SignatureUtils::create();
         static::assertSame($signature, $signatureUtils->generateFromOptions([
             'mchkey' => $options['mchkey'],
-            'parameters' => $body,
+            'data' => $body,
         ]));
 
         static::assertSame([
@@ -173,7 +164,7 @@ class RefundTest extends RequestTestCase
         static::assertSame($signature, $signatureUtils->generateFromOptions([
             'mchkey' => $options['mchkey'],
             'sign_type' => 'HMAC-SHA256',
-            'parameters' => $body,
+            'data' => $body,
         ]));
 
         static::assertSame([
@@ -195,15 +186,14 @@ class RefundTest extends RequestTestCase
 
     public function testSend(): void
     {
-        $configurationManager = ConfigurationManagerTest::create();
-        $defaultConfig = $configurationManager->get('default');
+        $configuration = ConfigurationTest::create();
 
         $options = [
-            'appid' => $defaultConfig['appid'],
-            'mchid' => $defaultConfig['mchid'],
-            'mchkey' => $defaultConfig['mchkey'],
-            'mch_client_cert' => $defaultConfig['mch_client_cert'],
-            'mch_client_key' => $defaultConfig['mch_client_key'],
+            'appid' => $configuration['appid'],
+            'mchid' => $configuration['mchid'],
+            'mchkey' => $configuration['mchkey'],
+            'mch_client_cert' => $configuration['mch_client_cert'],
+            'mch_client_key' => $configuration['mch_client_key'],
             'transaction_id' => 'test_transaction_id',
             'out_refund_no' => 'test_out_refund_no',
             'total_fee' => 12,
@@ -266,14 +256,12 @@ class RefundTest extends RequestTestCase
         $this->expectException(MissingOptionsException::class);
         $this->expectExceptionMessage('The required option "appid" is missing');
 
-        $configurationManager = ConfigurationManagerTest::create();
-        $defaultConfig = $configurationManager->get('default');
-
         $this->request->build([
-            'mchid' => $defaultConfig['mchid'],
-            'mchkey' => $defaultConfig['mchkey'],
-            'mch_client_cert' => $defaultConfig['mch_client_cert'],
-            'mch_client_key' => $defaultConfig['mch_client_key'],
+            'mchid' => 'test_mchid',
+            'mchkey' => 'test_mchkey',
+            'mch_client_cert' => ConfigurationTest::MCH_CLIENT_CERT,
+            'mch_client_key' => ConfigurationTest::MCH_CLIENT_KEY,
+            'nonce_str' => 'test_nonce_str',
             'transaction_id' => 'test_transaction_id',
             'out_refund_no' => 'test_out_refund_no',
             'total_fee' => 12,
@@ -281,20 +269,17 @@ class RefundTest extends RequestTestCase
         ]);
     }
 
-    public function testAppidInvalidOptionsException(): void
+    public function testMchidMissingOptionsException(): void
     {
-        $this->expectException(InvalidOptionsException::class);
-        $this->expectExceptionMessage('The option "appid" with value 123 is expected to be of type "string", but is of type "int"');
-
-        $configurationManager = ConfigurationManagerTest::create();
-        $defaultConfig = $configurationManager->get('default');
+        $this->expectException(MissingOptionsException::class);
+        $this->expectExceptionMessage('The required option "mchid" is missing');
 
         $this->request->build([
-            'appid' => 123,
-            'mchid' => $defaultConfig['mchid'],
-            'mchkey' => $defaultConfig['mchkey'],
-            'mch_client_cert' => $defaultConfig['mch_client_cert'],
-            'mch_client_key' => $defaultConfig['mch_client_key'],
+            'appid' => 'test_appid',
+            'mchkey' => 'test_mchkey',
+            'mch_client_cert' => ConfigurationTest::MCH_CLIENT_CERT,
+            'mch_client_key' => ConfigurationTest::MCH_CLIENT_KEY,
+            'nonce_str' => 'test_nonce_str',
             'transaction_id' => 'test_transaction_id',
             'out_refund_no' => 'test_out_refund_no',
             'total_fee' => 12,
@@ -302,39 +287,17 @@ class RefundTest extends RequestTestCase
         ]);
     }
 
-    public function testMchidNoConfigurationException(): void
+    public function testMchkeyMissingOptionsException(): void
     {
-        $this->expectException(NoConfigurationException::class);
-        $this->expectExceptionMessage('No configured value for "mchid" option');
-
-        $configurationManager = ConfigurationManagerTest::create();
-        $defaultConfig = $configurationManager->get('default');
+        $this->expectException(MissingOptionsException::class);
+        $this->expectExceptionMessage('The required option "mchkey" is missing');
 
         $this->request->build([
-            'appid' => $defaultConfig['appid'],
-            'mchkey' => $defaultConfig['mchkey'],
-            'mch_client_cert' => $defaultConfig['mch_client_cert'],
-            'mch_client_key' => $defaultConfig['mch_client_key'],
-            'transaction_id' => 'test_transaction_id',
-            'out_refund_no' => 'test_out_refund_no',
-            'total_fee' => 12,
-            'refund_fee' => 10,
-        ]);
-    }
-
-    public function testMchkeyNoConfigurationException(): void
-    {
-        $this->expectException(NoConfigurationException::class);
-        $this->expectExceptionMessage('No configured value for "mchkey" option');
-
-        $configurationManager = ConfigurationManagerTest::create();
-        $defaultConfig = $configurationManager->get('default');
-
-        $this->request->build([
-            'appid' => $defaultConfig['appid'],
-            'mchid' => $defaultConfig['mchid'],
-            'mch_client_cert' => $defaultConfig['mch_client_cert'],
-            'mch_client_key' => $defaultConfig['mch_client_key'],
+            'appid' => 'test_appid',
+            'mchid' => 'test_mchid',
+            'mch_client_cert' => ConfigurationTest::MCH_CLIENT_CERT,
+            'mch_client_key' => ConfigurationTest::MCH_CLIENT_KEY,
+            'nonce_str' => 'test_nonce_str',
             'transaction_id' => 'test_transaction_id',
             'out_refund_no' => 'test_out_refund_no',
             'total_fee' => 12,

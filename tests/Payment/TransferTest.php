@@ -9,11 +9,9 @@ use Siganushka\ApiClient\Response\ResponseFactory;
 use Siganushka\ApiClient\Test\RequestTestCase;
 use Siganushka\ApiClient\Wechat\Payment\SignatureUtils;
 use Siganushka\ApiClient\Wechat\Payment\Transfer;
-use Siganushka\ApiClient\Wechat\Tests\ConfigurationManagerTest;
+use Siganushka\ApiClient\Wechat\Tests\ConfigurationTest;
 use Symfony\Component\HttpClient\MockHttpClient;
-use Symfony\Component\OptionsResolver\Exception\InvalidOptionsException;
 use Symfony\Component\OptionsResolver\Exception\MissingOptionsException;
-use Symfony\Component\OptionsResolver\Exception\NoConfigurationException;
 use Symfony\Component\OptionsResolver\OptionsResolver;
 use Symfony\Component\Serializer\Encoder\JsonEncoder;
 use Symfony\Component\Serializer\Encoder\XmlEncoder;
@@ -47,12 +45,13 @@ class TransferTest extends RequestTestCase
             'finder_template_id',
         ], $resolver->getDefinedOptions());
 
-        $configurationManager = ConfigurationManagerTest::create();
-        $defaultConfig = $configurationManager->get('default');
-
         $options = [
-            'appid' => $defaultConfig['appid'],
-            'nonce_str' => uniqid(),
+            'appid' => 'test_appid',
+            'mchid' => 'test_mchid',
+            'mchkey' => 'test_mchkey',
+            'mch_client_cert' => ConfigurationTest::MCH_CLIENT_CERT,
+            'mch_client_key' => ConfigurationTest::MCH_CLIENT_KEY,
+            'nonce_str' => 'test_nonce_str',
             'partner_trade_no' => 'test_partner_trade_no',
             'openid' => 'test_openid',
             'amount' => 1,
@@ -60,10 +59,6 @@ class TransferTest extends RequestTestCase
         ];
 
         static::assertSame([
-            'mchid' => null,
-            'mchkey' => null,
-            'mch_client_cert' => null,
-            'mch_client_key' => null,
             'sign_type' => 'MD5',
             'nonce_str' => $options['nonce_str'],
             'client_ip' => '0.0.0.0',
@@ -74,37 +69,40 @@ class TransferTest extends RequestTestCase
             'brand_id' => null,
             'finder_template_id' => null,
             'appid' => $options['appid'],
-            'partner_trade_no' => 'test_partner_trade_no',
-            'openid' => 'test_openid',
-            'amount' => 1,
-            'desc' => 'test_desc',
+            'mchid' => $options['mchid'],
+            'mchkey' => $options['mchkey'],
+            'mch_client_cert' => $options['mch_client_cert'],
+            'mch_client_key' => $options['mch_client_key'],
+            'partner_trade_no' => $options['partner_trade_no'],
+            'openid' => $options['openid'],
+            'amount' => $options['amount'],
+            'desc' => $options['desc'],
         ], $resolver->resolve($options));
 
         static::assertSame([
-            'mchid' => $defaultConfig['mchid'],
-            'mchkey' => $defaultConfig['mchkey'],
-            'mch_client_cert' => $defaultConfig['mch_client_cert'],
-            'mch_client_key' => $defaultConfig['mch_client_key'],
-            'sign_type' => 'MD5',
+            'sign_type' => 'HMAC-SHA256',
             'nonce_str' => $options['nonce_str'],
-            'client_ip' => '0.0.0.0',
+            'client_ip' => '127.0.0.1',
             'device_info' => 'test_device_info',
-            'check_name' => 'NO_CHECK',
+            'check_name' => 'FORCE_CHECK',
             're_user_name' => 'test_re_user_name',
             'scene' => 'test_scene',
             'brand_id' => 16,
             'finder_template_id' => 'test_finder_template_id',
             'appid' => $options['appid'],
-            'partner_trade_no' => 'test_partner_trade_no',
-            'openid' => 'test_openid',
-            'amount' => 1,
-            'desc' => 'test_desc',
+            'mchid' => $options['mchid'],
+            'mchkey' => $options['mchkey'],
+            'mch_client_cert' => $options['mch_client_cert'],
+            'mch_client_key' => $options['mch_client_key'],
+            'partner_trade_no' => $options['partner_trade_no'],
+            'openid' => $options['openid'],
+            'amount' => $options['amount'],
+            'desc' => $options['desc'],
         ], $resolver->resolve($options + [
-            'mchid' => $defaultConfig['mchid'],
-            'mchkey' => $defaultConfig['mchkey'],
-            'mch_client_cert' => $defaultConfig['mch_client_cert'],
-            'mch_client_key' => $defaultConfig['mch_client_key'],
+            'sign_type' => 'HMAC-SHA256',
+            'client_ip' => '127.0.0.1',
             'device_info' => 'test_device_info',
+            'check_name' => 'FORCE_CHECK',
             're_user_name' => 'test_re_user_name',
             'scene' => 'test_scene',
             'brand_id' => 16,
@@ -114,15 +112,14 @@ class TransferTest extends RequestTestCase
 
     public function testBuild(): void
     {
-        $configurationManager = ConfigurationManagerTest::create();
-        $defaultConfig = $configurationManager->get('default');
+        $configuration = ConfigurationTest::create();
 
         $options = [
-            'appid' => $defaultConfig['appid'],
-            'mchid' => $defaultConfig['mchid'],
-            'mchkey' => $defaultConfig['mchkey'],
-            'mch_client_cert' => $defaultConfig['mch_client_cert'],
-            'mch_client_key' => $defaultConfig['mch_client_key'],
+            'appid' => $configuration['appid'],
+            'mchid' => $configuration['mchid'],
+            'mchkey' => $configuration['mchkey'],
+            'mch_client_cert' => $configuration['mch_client_cert'],
+            'mch_client_key' => $configuration['mch_client_key'],
             'nonce_str' => uniqid(),
             'partner_trade_no' => 'test_partner_trade_no',
             'openid' => 'test_openid',
@@ -144,7 +141,7 @@ class TransferTest extends RequestTestCase
         $signatureUtils = SignatureUtils::create();
         static::assertSame($signature, $signatureUtils->generateFromOptions([
             'mchkey' => $options['mchkey'],
-            'parameters' => $body,
+            'data' => $body,
         ]));
 
         static::assertSame([
@@ -176,7 +173,7 @@ class TransferTest extends RequestTestCase
         static::assertSame($signature, $signatureUtils->generateFromOptions([
             'mchkey' => $options['mchkey'],
             'sign_type' => 'HMAC-SHA256',
-            'parameters' => $body,
+            'data' => $body,
         ]));
 
         static::assertSame([
@@ -199,15 +196,14 @@ class TransferTest extends RequestTestCase
 
     public function testSend(): void
     {
-        $configurationManager = ConfigurationManagerTest::create();
-        $defaultConfig = $configurationManager->get('default');
+        $configuration = ConfigurationTest::create();
 
         $options = [
-            'appid' => $defaultConfig['appid'],
-            'mchid' => $defaultConfig['mchid'],
-            'mchkey' => $defaultConfig['mchkey'],
-            'mch_client_cert' => $defaultConfig['mch_client_cert'],
-            'mch_client_key' => $defaultConfig['mch_client_key'],
+            'appid' => $configuration['appid'],
+            'mchid' => $configuration['mchid'],
+            'mchkey' => $configuration['mchkey'],
+            'mch_client_cert' => $configuration['mch_client_cert'],
+            'mch_client_key' => $configuration['mch_client_key'],
             'nonce_str' => uniqid(),
             'partner_trade_no' => 'test_partner_trade_no',
             'openid' => 'test_openid',
@@ -272,6 +268,10 @@ class TransferTest extends RequestTestCase
         $this->expectExceptionMessage('The required option "appid" is missing');
 
         $this->request->build([
+            'mchid' => 'test_mchid',
+            'mchkey' => 'test_mchkey',
+            'mch_client_cert' => ConfigurationTest::MCH_CLIENT_CERT,
+            'mch_client_key' => ConfigurationTest::MCH_CLIENT_KEY,
             'partner_trade_no' => 'test_partner_trade_no',
             'openid' => 'test_openid',
             'amount' => 1,
@@ -279,13 +279,16 @@ class TransferTest extends RequestTestCase
         ]);
     }
 
-    public function testAppidInvalidOptionsException(): void
+    public function testMchidMissingOptionsException(): void
     {
-        $this->expectException(InvalidOptionsException::class);
-        $this->expectExceptionMessage('The option "appid" with value 123 is expected to be of type "string", but is of type "int"');
+        $this->expectException(MissingOptionsException::class);
+        $this->expectExceptionMessage('The required option "mchid" is missing');
 
         $this->request->build([
-            'appid' => 123,
+            'appid' => 'test_appid',
+            'mchkey' => 'test_mchkey',
+            'mch_client_cert' => ConfigurationTest::MCH_CLIENT_CERT,
+            'mch_client_key' => ConfigurationTest::MCH_CLIENT_KEY,
             'partner_trade_no' => 'test_partner_trade_no',
             'openid' => 'test_openid',
             'amount' => 1,
@@ -293,28 +296,16 @@ class TransferTest extends RequestTestCase
         ]);
     }
 
-    public function testMchidNoConfigurationException(): void
+    public function testMchkeyMissingOptionsException(): void
     {
-        $this->expectException(NoConfigurationException::class);
-        $this->expectExceptionMessage('No configured value for "mchid" option');
-
-        $this->request->build([
-            'appid' => 'foo',
-            'partner_trade_no' => 'test_partner_trade_no',
-            'openid' => 'test_openid',
-            'amount' => 1,
-            'desc' => 'test_desc',
-        ]);
-    }
-
-    public function testMchkeyNoConfigurationException(): void
-    {
-        $this->expectException(NoConfigurationException::class);
-        $this->expectExceptionMessage('No configured value for "mchkey" option');
+        $this->expectException(MissingOptionsException::class);
+        $this->expectExceptionMessage('The required option "mchkey" is missing');
 
         $this->request->build([
             'appid' => 'test_appid',
             'mchid' => 'test_mchid',
+            'mch_client_cert' => ConfigurationTest::MCH_CLIENT_CERT,
+            'mch_client_key' => ConfigurationTest::MCH_CLIENT_KEY,
             'partner_trade_no' => 'test_partner_trade_no',
             'openid' => 'test_openid',
             'amount' => 1,

@@ -7,8 +7,8 @@ use Siganushka\ApiClient\Wechat\Ticket\TicketOptions;
 
 require __DIR__.'/_autoload.php';
 
-$configUtils = new ConfigUtils($configurationManager);
-$configUtils->using(new TicketOptions($configurationManager));
+$configUtils = new ConfigUtils();
+$configUtils->using(new TicketOptions($configuration));
 
-$config = $configUtils->generate();
+$config = $configUtils->generateFromOptions();
 dd($config);

@@ -7,7 +7,7 @@ namespace Siganushka\ApiClient\Wechat\Core;
 use Psr\Cache\CacheItemPoolInterface;
 use Siganushka\ApiClient\RequestOptionsExtensionInterface;
 use Siganushka\ApiClient\RequestOptionsExtensionTrait;
-use Siganushka\ApiClient\Wechat\ConfigurationManager;
+use Siganushka\ApiClient\Wechat\Configuration;
 use Siganushka\ApiClient\Wechat\ConfigurationOptions;
 use Siganushka\ApiClient\Wechat\Miniapp\Qrcode;
 use Siganushka\ApiClient\Wechat\Miniapp\Wxacode;
@@ -24,20 +24,20 @@ class TokenOptions implements RequestOptionsExtensionInterface
 {
     use RequestOptionsExtensionTrait;
 
-    protected ConfigurationManager $configurationManager;
+    protected Configuration $configuration;
     protected HttpClientInterface $httpClient;
     protected CacheItemPoolInterface $cachePool;
 
-    public function __construct(ConfigurationManager $configurationManager, HttpClientInterface $httpClient = null, CacheItemPoolInterface $cachePool = null)
+    public function __construct(Configuration $configuration, HttpClientInterface $httpClient = null, CacheItemPoolInterface $cachePool = null)
     {
-        $this->configurationManager = $configurationManager;
+        $this->configuration = $configuration;
         $this->httpClient = $httpClient ?? HttpClient::create();
         $this->cachePool = $cachePool ?? new FilesystemAdapter();
     }
 
     protected function configureOptions(OptionsResolver $resolver): void
     {
-        $configurationOptions = new ConfigurationOptions($this->configurationManager);
+        $configurationOptions = new ConfigurationOptions($this->configuration);
         $configurationOptions->configure($resolver);
 
         $resolver->setDefault('token', function (Options $options) {

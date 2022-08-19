@@ -9,7 +9,7 @@ use Symfony\Component\OptionsResolver\OptionConfigurator;
 use Symfony\Component\OptionsResolver\Options;
 use Symfony\Component\OptionsResolver\OptionsResolver;
 
-final class WechatOptions
+final class OptionsUtils
 {
     public const SIGN_TYPE_SHA256 = 'HMAC-SHA256';
     public const SIGN_TYPE_MD5 = 'MD5';
@@ -36,8 +36,8 @@ final class WechatOptions
     {
         return $resolver
             ->define('mchid')
-            ->default(null)
-            ->allowedTypes('null', 'string')
+            ->required()
+            ->allowedTypes('string')
         ;
     }
 
@@ -45,8 +45,8 @@ final class WechatOptions
     {
         return $resolver
             ->define('mchkey')
-            ->default(null)
-            ->allowedTypes('null', 'string')
+            ->required()
+            ->allowedTypes('string')
         ;
     }
 
@@ -54,8 +54,8 @@ final class WechatOptions
     {
         return $resolver
             ->define('mch_client_cert')
-            ->default(null)
-            ->allowedTypes('null', 'string')
+            ->required()
+            ->allowedTypes('string')
             ->normalize(function (Options $options, ?string $mchClientCert) {
                 if (null !== $mchClientCert && !is_file($mchClientCert)) {
                     throw new InvalidOptionsException('The option "mch_client_cert" file does not exists.');
@@ -70,8 +70,8 @@ final class WechatOptions
     {
         return $resolver
             ->define('mch_client_key')
-            ->default(null)
-            ->allowedTypes('null', 'string')
+            ->required()
+            ->allowedTypes('string')
             ->normalize(function (Options $options, ?string $mchClientKey) {
                 if (null !== $mchClientKey && !is_file($mchClientKey)) {
                     throw new InvalidOptionsException('The option "mch_client_key" file does not exists.');
@@ -79,6 +79,24 @@ final class WechatOptions
 
                 return $mchClientKey;
             })
+        ;
+    }
+
+    public static function token(OptionsResolver $resolver): OptionConfigurator
+    {
+        return $resolver
+            ->define('token')
+            ->required()
+            ->allowedTypes('string')
+        ;
+    }
+
+    public static function ticket(OptionsResolver $resolver): OptionConfigurator
+    {
+        return $resolver
+            ->define('ticket')
+            ->required()
+            ->allowedTypes('string')
         ;
     }
 
@@ -114,33 +132,6 @@ final class WechatOptions
         return $resolver
             ->define('client_ip')
             ->default(GenericUtils::getClientIp())
-            ->allowedTypes('string')
-        ;
-    }
-
-    public static function token(OptionsResolver $resolver): OptionConfigurator
-    {
-        return $resolver
-            ->define('token')
-            ->required()
-            ->allowedTypes('string')
-        ;
-    }
-
-    public static function ticket(OptionsResolver $resolver): OptionConfigurator
-    {
-        return $resolver
-            ->define('ticket')
-            ->required()
-            ->allowedTypes('string')
-        ;
-    }
-
-    public static function using_config(OptionsResolver $resolver): OptionConfigurator
-    {
-        return $resolver
-            ->define('using_config')
-            ->required()
             ->allowedTypes('string')
         ;
     }

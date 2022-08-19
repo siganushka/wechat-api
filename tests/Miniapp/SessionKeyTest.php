@@ -43,7 +43,7 @@ class SessionKeyTest extends RequestTestCase
                 'appid' => 'foo',
                 'secret' => 'bar',
                 'grant_type' => 'authorization_code',
-                'code' => 'baz',
+                'js_code' => 'baz',
             ],
         ], $requestOptions->toArray());
     }

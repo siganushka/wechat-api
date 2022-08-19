@@ -6,8 +6,11 @@ namespace Siganushka\ApiClient\Wechat\OAuth;
 
 use Siganushka\ApiClient\ConfigurableSubjectInterface;
 use Siganushka\ApiClient\ConfigurableSubjectTrait;
-use Siganushka\ApiClient\Wechat\WechatOptions;
+use Siganushka\ApiClient\Wechat\ConfigurationOptions;
+use Siganushka\ApiClient\Wechat\OptionsUtils;
+use Symfony\Component\HttpClient\HttpClient;
 use Symfony\Component\OptionsResolver\OptionsResolver;
+use Symfony\Contracts\HttpClient\HttpClientInterface;
 
 /**
  * Wechat oauth client class.
@@ -19,6 +22,13 @@ class Client implements ConfigurableSubjectInterface
     use ConfigurableSubjectTrait;
 
     public const URL = 'https://open.weixin.qq.com/connect/oauth2/authorize';
+
+    private HttpClientInterface $httpClient;
+
+    public function __construct(HttpClientInterface $httpClient = null)
+    {
+        $this->httpClient = $httpClient ?? HttpClient::create();
+    }
 
     public function getRedirectUrl(array $options = []): string
     {
@@ -43,9 +53,43 @@ class Client implements ConfigurableSubjectInterface
         return sprintf('%s?%s#wechat_redirect', static::URL, http_build_query($query));
     }
 
+    public function getAccessToken(array $options = []): array
+    {
+        $accessToken = new AccessToken();
+        if (isset($this->configurators[ConfigurationOptions::class])) {
+            $accessToken->using($this->configurators[ConfigurationOptions::class]);
+        }
+
+        return $accessToken->send($this->httpClient, $options);
+    }
+
+    public function getUserInfo(array $options = []): array
+    {
+        $userInfo = new UserInfo();
+
+        return $userInfo->send($this->httpClient, $options);
+    }
+
+    public function refreshToken(array $options = []): array
+    {
+        $refreshToken = new RefreshToken();
+        if (isset($this->configurators[ConfigurationOptions::class])) {
+            $refreshToken->using($this->configurators[ConfigurationOptions::class]);
+        }
+
+        return $refreshToken->send($this->httpClient, $options);
+    }
+
+    public function checkToken(array $options = []): array
+    {
+        $checkToken = new CheckToken();
+
+        return $checkToken->send($this->httpClient, $options);
+    }
+
     protected function configureOptions(OptionsResolver $resolver): void
     {
-        WechatOptions::appid($resolver);
+        OptionsUtils::appid($resolver);
 
         $resolver
             ->define('redirect_uri')

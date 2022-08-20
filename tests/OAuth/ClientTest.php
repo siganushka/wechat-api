@@ -6,6 +6,8 @@ namespace Siganushka\ApiClient\Wechat\Tests\OAuth;
 
 use PHPUnit\Framework\TestCase;
 use Siganushka\ApiClient\Wechat\OAuth\Client;
+use Symfony\Component\OptionsResolver\Exception\InvalidOptionsException;
+use Symfony\Component\OptionsResolver\Exception\MissingOptionsException;
 use Symfony\Component\OptionsResolver\OptionsResolver;
 
 class ClientTest extends TestCase
@@ -62,5 +64,37 @@ class ClientTest extends TestCase
         $redirectUrl = $this->client->getRedirectUrl(['appid' => 'foo', 'redirect_uri' => '/bar', 'state' => 'baz', 'scope' => 'snsapi_userinfo']);
         static::assertStringContainsString('scope=snsapi_userinfo', $redirectUrl);
         static::assertStringContainsString('state=baz', $redirectUrl);
+    }
+
+    public function testAppidMissingOptionsException(): void
+    {
+        $this->expectException(MissingOptionsException::class);
+        $this->expectExceptionMessage('The required option "appid" is missing');
+
+        $this->client->getRedirectUrl(['redirect_uri' => '/bar']);
+    }
+
+    public function testAppidInvalidOptionsException(): void
+    {
+        $this->expectException(InvalidOptionsException::class);
+        $this->expectExceptionMessage('The option "appid" with value 123 is expected to be of type "string", but is of type "int"');
+
+        $this->client->getRedirectUrl(['appid' => 123, 'redirect_uri' => '/bar']);
+    }
+
+    public function testRedirectUriMissingOptionsException(): void
+    {
+        $this->expectException(MissingOptionsException::class);
+        $this->expectExceptionMessage('The required option "redirect_uri" is missing');
+
+        $this->client->getRedirectUrl(['appid' => 'foo']);
+    }
+
+    public function testRedirectUriInvalidOptionsException(): void
+    {
+        $this->expectException(InvalidOptionsException::class);
+        $this->expectExceptionMessage('The option "redirect_uri" with value 123 is expected to be of type "string", but is of type "int"');
+
+        $this->client->getRedirectUrl(['appid' => 'foo', 'redirect_uri' => 123]);
     }
 }

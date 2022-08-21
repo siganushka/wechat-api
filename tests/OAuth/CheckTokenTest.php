@@ -55,7 +55,7 @@ class CheckTokenTest extends RequestTestCase
         $response = ResponseFactory::createMockResponseWithJson($data);
         $client = new MockHttpClient($response);
 
-        $result = $this->request->send($client, ['access_token' => 'foo', 'openid' => 'bar']);
+        $result = $this->request->setHttpClient($client)->send(['access_token' => 'foo', 'openid' => 'bar']);
         static::assertSame($data, $result);
     }
 

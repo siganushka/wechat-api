@@ -134,7 +134,7 @@ class WxacodeUnlimitedTest extends RequestTestCase
         $response = ResponseFactory::createMockResponse($data, $info);
         $client = new MockHttpClient($response);
 
-        $result = $this->request->send($client, ['token' => 'foo', 'scene' => 'bar']);
+        $result = $this->request->setHttpClient($client)->send(['token' => 'foo', 'scene' => 'bar']);
         static::assertSame($data, $result);
     }
 

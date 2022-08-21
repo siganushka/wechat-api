@@ -136,7 +136,7 @@ class MessageTest extends RequestTestCase
         $client = new MockHttpClient($response);
 
         $template = new Template('baz');
-        $result = $this->request->send($client, ['token' => 'foo', 'touser' => 'bar', 'template' => $template]);
+        $result = $this->request->setHttpClient($client)->send(['token' => 'foo', 'touser' => 'bar', 'template' => $template]);
         static::assertSame($data, $result);
     }
 

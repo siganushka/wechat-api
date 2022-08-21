@@ -2,8 +2,7 @@
 
 declare(strict_types=1);
 
-use Siganushka\ApiClient\RequestClient;
-use Siganushka\ApiClient\RequestFactoryBuilder;
+use Siganushka\ApiClient\RequestClientBuilder;
 use Siganushka\ApiClient\Wechat\Configuration;
 use Siganushka\ApiClient\Wechat\WechatExtension;
 use Symfony\Component\ErrorHandler\Debug;
@@ -34,9 +33,7 @@ $mpConfiguration = new Configuration($configs['mp']);
 // 开放平台配置
 $openConfiguration = new Configuration($configs['open']);
 
-$factory = RequestFactoryBuilder::create()
+$client = RequestClientBuilder::create()
     ->addExtension(new WechatExtension($configuration))
-    ->getFactory()
+    ->build()
 ;
-
-$client = new RequestClient($factory);

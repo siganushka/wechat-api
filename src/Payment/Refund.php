@@ -7,7 +7,6 @@ namespace Siganushka\ApiClient\Wechat\Payment;
 use Siganushka\ApiClient\AbstractRequest;
 use Siganushka\ApiClient\Exception\ParseResponseException;
 use Siganushka\ApiClient\RequestOptions;
-use Siganushka\ApiClient\Wechat\ConfigurationOptions;
 use Siganushka\ApiClient\Wechat\OptionsUtils;
 use Symfony\Component\OptionsResolver\Exception\MissingOptionsException;
 use Symfony\Component\OptionsResolver\Options;
@@ -122,13 +121,8 @@ class Refund extends AbstractRequest
             'notify_url' => $options['notify_url'],
         ], fn ($value) => null !== $value);
 
-        $signatureUtils = SignatureUtils::create();
-        if (isset($this->configurators[ConfigurationOptions::class])) {
-            $signatureUtils->using($this->configurators[ConfigurationOptions::class]);
-        }
-
         // Generate signature
-        $body['sign'] = $signatureUtils->generateFromOptions([
+        $body['sign'] = SignatureUtils::create()->generateFromOptions([
             'mchkey' => $options['mchkey'],
             'sign_type' => $options['sign_type'],
             'data' => $body,

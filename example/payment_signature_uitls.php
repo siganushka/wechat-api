@@ -17,7 +17,7 @@ $data = [
     'trade_type' => 'JSAPI',
 ];
 
-$signatureUtils = new SignatureUtils();
+$signatureUtils = SignatureUtils::create();
 $signatureUtils->using(new ConfigurationOptions($configuration));
 
 // 生成签名

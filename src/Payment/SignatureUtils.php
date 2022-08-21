@@ -4,8 +4,8 @@ declare(strict_types=1);
 
 namespace Siganushka\ApiClient\Wechat\Payment;
 
-use Siganushka\ApiClient\ConfigurableSubjectInterface;
-use Siganushka\ApiClient\ConfigurableSubjectTrait;
+use Siganushka\ApiClient\OptionsConfiguratorInterface;
+use Siganushka\ApiClient\OptionsConfiguratorTrait;
 use Siganushka\ApiClient\Wechat\OptionsUtils;
 use Symfony\Component\OptionsResolver\OptionsResolver;
 
@@ -14,10 +14,17 @@ use Symfony\Component\OptionsResolver\OptionsResolver;
  *
  * @see https://pay.weixin.qq.com/wiki/doc/api/jsapi.php?chapter=4_3
  */
-class SignatureUtils implements ConfigurableSubjectInterface
+class SignatureUtils implements OptionsConfiguratorInterface
 {
-    use ConfigurableSubjectTrait;
+    use OptionsConfiguratorTrait;
 
+    final public function __construct()
+    {
+    }
+
+    /**
+     * @return static
+     */
     public static function create(): self
     {
         return new static();

@@ -5,8 +5,8 @@ declare(strict_types=1);
 namespace Siganushka\ApiClient\Wechat\OAuth;
 
 use Psr\Cache\CacheItemPoolInterface;
-use Siganushka\ApiClient\ConfigurableSubjectInterface;
-use Siganushka\ApiClient\ConfigurableSubjectTrait;
+use Siganushka\ApiClient\OptionsConfiguratorInterface;
+use Siganushka\ApiClient\OptionsConfiguratorTrait;
 use Siganushka\ApiClient\Wechat\ConfigurationOptions;
 use Siganushka\ApiClient\Wechat\OptionsUtils;
 use Symfony\Component\Cache\Adapter\FilesystemAdapter;
@@ -19,9 +19,9 @@ use Symfony\Contracts\HttpClient\HttpClientInterface;
  *
  * @see https://developers.weixin.qq.com/doc/offiaccount/OA_Web_Apps/Wechat_webpage_authorization.html
  */
-class Client implements ConfigurableSubjectInterface
+class Client implements OptionsConfiguratorInterface
 {
-    use ConfigurableSubjectTrait;
+    use OptionsConfiguratorTrait;
 
     public const URL = 'https://open.weixin.qq.com/connect/oauth2/authorize';
 
@@ -60,35 +60,41 @@ class Client implements ConfigurableSubjectInterface
     public function getAccessToken(array $options = []): array
     {
         $accessToken = new AccessToken($this->cachePool);
-        if (isset($this->configurators[ConfigurationOptions::class])) {
-            $accessToken->using($this->configurators[ConfigurationOptions::class]);
+        $accessToken->setHttpClient($this->httpClient);
+
+        if (isset($this->extensions[ConfigurationOptions::class])) {
+            $accessToken->using($this->extensions[ConfigurationOptions::class]);
         }
 
-        return $accessToken->send($this->httpClient, $options);
+        return $accessToken->send($options);
     }
 
     public function getUserInfo(array $options = []): array
     {
         $userInfo = new UserInfo();
+        $userInfo->setHttpClient($this->httpClient);
 
-        return $userInfo->send($this->httpClient, $options);
+        return $userInfo->send($options);
     }
 
     public function refreshToken(array $options = []): array
     {
         $refreshToken = new RefreshToken();
-        if (isset($this->configurators[ConfigurationOptions::class])) {
-            $refreshToken->using($this->configurators[ConfigurationOptions::class]);
+        $refreshToken->setHttpClient($this->httpClient);
+
+        if (isset($this->extensions[ConfigurationOptions::class])) {
+            $refreshToken->using($this->extensions[ConfigurationOptions::class]);
         }
 
-        return $refreshToken->send($this->httpClient, $options);
+        return $refreshToken->send($options);
     }
 
     public function checkToken(array $options = []): array
     {
         $checkToken = new CheckToken();
+        $checkToken->setHttpClient($this->httpClient);
 
-        return $checkToken->send($this->httpClient, $options);
+        return $checkToken->send($options);
     }
 
     protected function configureOptions(OptionsResolver $resolver): void

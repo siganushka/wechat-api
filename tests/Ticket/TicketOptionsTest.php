@@ -48,13 +48,13 @@ class TicketOptionsTest extends TestCase
         ], $resolver->resolve());
     }
 
-    public function testGetExtendedRequests(): void
+    public function testGetExtendedClasses(): void
     {
         $ticketOptions = static::create();
 
-        $extendedRequests = $ticketOptions::getExtendedRequests();
-        static::assertCount(1, $extendedRequests);
-        static::assertContains(ConfigUtils::class, $extendedRequests);
+        $extendedClasses = $ticketOptions::getExtendedClasses();
+        static::assertCount(1, $extendedClasses);
+        static::assertContains(ConfigUtils::class, $extendedClasses);
     }
 
     public static function create(Configuration $configuration = null): TicketOptions

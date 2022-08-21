@@ -10,9 +10,13 @@ use Siganushka\ApiClient\Wechat\ConfigurationOptions;
 use Siganushka\ApiClient\Wechat\Core\Token;
 use Siganushka\ApiClient\Wechat\Miniapp\SessionKey;
 use Siganushka\ApiClient\Wechat\OAuth\AccessToken;
+use Siganushka\ApiClient\Wechat\OAuth\Client;
+use Siganushka\ApiClient\Wechat\OAuth\Qrcode;
 use Siganushka\ApiClient\Wechat\OAuth\RefreshToken;
+use Siganushka\ApiClient\Wechat\Payment\ConfigUtils as PaymentConfigUtils;
 use Siganushka\ApiClient\Wechat\Payment\Query;
 use Siganushka\ApiClient\Wechat\Payment\Refund;
+use Siganushka\ApiClient\Wechat\Payment\SignatureUtils;
 use Siganushka\ApiClient\Wechat\Payment\Transfer;
 use Siganushka\ApiClient\Wechat\Payment\Unifiedorder;
 use Symfony\Component\OptionsResolver\OptionsResolver;
@@ -59,20 +63,24 @@ class ConfigurationOptionsTest extends TestCase
         ]));
     }
 
-    public function testGetExtendedRequests(): void
+    public function testGetExtendedClasses(): void
     {
         $configurationOptions = static::create();
 
         static::assertSame([
             Token::class,
             SessionKey::class,
+            Client::class,
+            Qrcode::class,
             AccessToken::class,
             RefreshToken::class,
             Query::class,
             Refund::class,
             Transfer::class,
+            PaymentConfigUtils::class,
+            SignatureUtils::class,
             Unifiedorder::class,
-        ], $configurationOptions::getExtendedRequests());
+        ], $configurationOptions::getExtendedClasses());
     }
 
     public static function create(Configuration $configuration = null): ConfigurationOptions

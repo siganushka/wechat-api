@@ -122,7 +122,7 @@ class WxacodeTest extends RequestTestCase
         $response = ResponseFactory::createMockResponse($data, $info);
         $client = new MockHttpClient($response);
 
-        $result = $this->request->send($client, ['token' => 'foo', 'path' => '/bar']);
+        $result = $this->request->setHttpClient($client)->send(['token' => 'foo', 'path' => '/bar']);
         static::assertSame($data, $result);
     }
 

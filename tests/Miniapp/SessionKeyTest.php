@@ -58,7 +58,7 @@ class SessionKeyTest extends RequestTestCase
         $response = ResponseFactory::createMockResponseWithJson($data);
         $client = new MockHttpClient($response);
 
-        $result = $this->request->send($client, ['appid' => 'foo', 'secret' => 'bar', 'code' => 'baz']);
+        $result = $this->request->setHttpClient($client)->send(['appid' => 'foo', 'secret' => 'bar', 'code' => 'baz']);
         static::assertSame($data, $result);
     }
 

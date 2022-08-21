@@ -16,7 +16,7 @@ class SignatureUtilsTest extends TestCase
 
     protected function setUp(): void
     {
-        $this->signatureUtils = new SignatureUtils();
+        $this->signatureUtils = SignatureUtils::create();
     }
 
     protected function tearDown(): void

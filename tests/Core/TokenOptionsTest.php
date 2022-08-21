@@ -60,19 +60,19 @@ class TokenOptionsTest extends TestCase
         ], $resolver->resolve(['appid' => 'foo', 'secret' => 'bar']));
     }
 
-    public function testGetExtendedRequests(): void
+    public function testGetExtendedClasses(): void
     {
         $tokenOptions = static::create();
 
-        $extendedRequests = $tokenOptions::getExtendedRequests();
-        static::assertCount(7, $extendedRequests);
-        static::assertContains(CallbackIp::class, $extendedRequests);
-        static::assertContains(ServerIp::class, $extendedRequests);
-        static::assertContains(Qrcode::class, $extendedRequests);
-        static::assertContains(Wxacode::class, $extendedRequests);
-        static::assertContains(WxacodeUnlimited::class, $extendedRequests);
-        static::assertContains(Message::class, $extendedRequests);
-        static::assertContains(Ticket::class, $extendedRequests);
+        $extendedClasses = $tokenOptions::getExtendedClasses();
+        static::assertCount(7, $extendedClasses);
+        static::assertContains(CallbackIp::class, $extendedClasses);
+        static::assertContains(ServerIp::class, $extendedClasses);
+        static::assertContains(Qrcode::class, $extendedClasses);
+        static::assertContains(Wxacode::class, $extendedClasses);
+        static::assertContains(WxacodeUnlimited::class, $extendedClasses);
+        static::assertContains(Message::class, $extendedClasses);
+        static::assertContains(Ticket::class, $extendedClasses);
     }
 
     public static function create(Configuration $configuration = null): TokenOptions

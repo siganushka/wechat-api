@@ -59,7 +59,7 @@ class RefreshTokenTest extends RequestTestCase
         $response = ResponseFactory::createMockResponseWithJson($data);
         $client = new MockHttpClient($response);
 
-        $result = $this->request->send($client, ['appid' => 'foo', 'refresh_token' => 'bar']);
+        $result = $this->request->setHttpClient($client)->send(['appid' => 'foo', 'refresh_token' => 'bar']);
         static::assertSame($data, $result);
     }
 

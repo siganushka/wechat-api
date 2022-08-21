@@ -268,7 +268,7 @@ class UnifiedorderTest extends RequestTestCase
         $response = ResponseFactory::createMockResponse($xml);
         $client = new MockHttpClient($response);
 
-        $result = $this->request->send($client, $options);
+        $result = $this->request->setHttpClient($client)->send($options);
         static::assertSame($data, $result);
     }
 

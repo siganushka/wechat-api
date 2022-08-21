@@ -5,8 +5,8 @@ declare(strict_types=1);
 namespace Siganushka\ApiClient\Wechat\Core;
 
 use Psr\Cache\CacheItemPoolInterface;
-use Siganushka\ApiClient\RequestOptionsExtensionInterface;
-use Siganushka\ApiClient\RequestOptionsExtensionTrait;
+use Siganushka\ApiClient\OptionsExtensionInterface;
+use Siganushka\ApiClient\OptionsExtensionTrait;
 use Siganushka\ApiClient\Wechat\Configuration;
 use Siganushka\ApiClient\Wechat\ConfigurationOptions;
 use Siganushka\ApiClient\Wechat\Miniapp\Qrcode;
@@ -20,9 +20,9 @@ use Symfony\Component\OptionsResolver\Options;
 use Symfony\Component\OptionsResolver\OptionsResolver;
 use Symfony\Contracts\HttpClient\HttpClientInterface;
 
-class TokenOptions implements RequestOptionsExtensionInterface
+class TokenOptions implements OptionsExtensionInterface
 {
-    use RequestOptionsExtensionTrait;
+    use OptionsExtensionTrait;
 
     protected Configuration $configuration;
     protected HttpClientInterface $httpClient;
@@ -42,7 +42,9 @@ class TokenOptions implements RequestOptionsExtensionInterface
 
         $resolver->setDefault('token', function (Options $options) {
             $request = new Token($this->cachePool);
-            $result = $request->send($this->httpClient, [
+            $request->setHttpClient($this->httpClient);
+
+            $result = $request->send([
                 'appid' => $options['appid'],
                 'secret' => $options['secret'],
             ]);
@@ -51,7 +53,7 @@ class TokenOptions implements RequestOptionsExtensionInterface
         });
     }
 
-    public static function getExtendedRequests(): array
+    public static function getExtendedClasses(): array
     {
         return [
             CallbackIp::class,

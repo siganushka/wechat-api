@@ -5,8 +5,8 @@ declare(strict_types=1);
 namespace Siganushka\ApiClient\Wechat\Tests;
 
 use PHPUnit\Framework\TestCase;
+use Siganushka\ApiClient\OptionsExtensionInterface;
 use Siganushka\ApiClient\RequestInterface;
-use Siganushka\ApiClient\RequestOptionsExtensionInterface;
 use Siganushka\ApiClient\Wechat\WechatExtension;
 
 class WechatExtensionTest extends TestCase
@@ -24,7 +24,7 @@ class WechatExtensionTest extends TestCase
         }
 
         foreach ($extension->loadOptionsExtensions() as $extension) {
-            static::assertInstanceOf(RequestOptionsExtensionInterface::class, $extension);
+            static::assertInstanceOf(OptionsExtensionInterface::class, $extension);
         }
     }
 }

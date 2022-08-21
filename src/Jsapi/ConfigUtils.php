@@ -4,8 +4,8 @@ declare(strict_types=1);
 
 namespace Siganushka\ApiClient\Wechat\Jsapi;
 
-use Siganushka\ApiClient\ConfigurableSubjectInterface;
-use Siganushka\ApiClient\ConfigurableSubjectTrait;
+use Siganushka\ApiClient\OptionsConfiguratorInterface;
+use Siganushka\ApiClient\OptionsConfiguratorTrait;
 use Siganushka\ApiClient\Wechat\GenericUtils;
 use Siganushka\ApiClient\Wechat\OptionsUtils;
 use Symfony\Component\OptionsResolver\OptionsResolver;
@@ -15,9 +15,21 @@ use Symfony\Component\OptionsResolver\OptionsResolver;
  *
  * @see https://developers.weixin.qq.com/doc/offiaccount/OA_Web_Apps/JS-SDK.html
  */
-class ConfigUtils implements ConfigurableSubjectInterface
+class ConfigUtils implements OptionsConfiguratorInterface
 {
-    use ConfigurableSubjectTrait;
+    use OptionsConfiguratorTrait;
+
+    final public function __construct()
+    {
+    }
+
+    /**
+     * @return static
+     */
+    public static function create(): self
+    {
+        return new static();
+    }
 
     /**
      * @param array $apis  需要使用的 JS 接口列表

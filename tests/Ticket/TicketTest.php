@@ -68,7 +68,7 @@ class TicketTest extends RequestTestCase
         $response = ResponseFactory::createMockResponseWithJson($data);
         $client = new MockHttpClient($response);
 
-        $result = $this->request->send($client, ['token' => 'foo']);
+        $result = $this->request->setHttpClient($client)->send(['token' => 'foo']);
         static::assertSame($data, $result);
     }
 

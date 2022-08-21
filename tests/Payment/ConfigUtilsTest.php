@@ -16,7 +16,7 @@ class ConfigUtilsTest extends TestCase
 
     protected function setUp(): void
     {
-        $this->configUtils = new ConfigUtils();
+        $this->configUtils = ConfigUtils::create();
     }
 
     protected function tearDown(): void

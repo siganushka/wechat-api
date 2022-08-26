@@ -37,5 +37,3 @@ $client = RequestClientBuilder::create()
     ->addExtension(new WechatExtension($configuration))
     ->build()
 ;
-
-dd($client);

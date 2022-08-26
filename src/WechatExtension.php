@@ -5,7 +5,7 @@ declare(strict_types=1);
 namespace Siganushka\ApiClient\Wechat;
 
 use Psr\Cache\CacheItemPoolInterface;
-use Siganushka\ApiClient\RequestExtensionInterface;
+use Siganushka\ApiClient\ExtensionInterface;
 use Siganushka\ApiClient\Wechat\Core\CallbackIp;
 use Siganushka\ApiClient\Wechat\Core\ServerIp;
 use Siganushka\ApiClient\Wechat\Core\Token;
@@ -33,7 +33,7 @@ use Symfony\Component\Serializer\Serializer;
 use Symfony\Component\Serializer\SerializerInterface;
 use Symfony\Contracts\HttpClient\HttpClientInterface;
 
-class WechatExtension implements RequestExtensionInterface
+class WechatExtension implements ExtensionInterface
 {
     private Configuration $configuration;
     private HttpClientInterface $httpClient;

@@ -2,7 +2,7 @@
 
 declare(strict_types=1);
 
-namespace Siganushka\ApiClient\Wechat\Ticket;
+namespace Siganushka\ApiClient\Wechat\Core;
 
 use Psr\Cache\CacheItemPoolInterface;
 use Siganushka\ApiClient\AbstractRequest;

@@ -2,13 +2,13 @@
 
 declare(strict_types=1);
 
-namespace Siganushka\ApiClient\Wechat\Tests\Ticket;
+namespace Siganushka\ApiClient\Wechat\Tests\Core;
 
 use PHPUnit\Framework\TestCase;
 use Siganushka\ApiClient\Wechat\Configuration;
+use Siganushka\ApiClient\Wechat\Core\TicketOptions;
 use Siganushka\ApiClient\Wechat\Jsapi\ConfigUtils;
 use Siganushka\ApiClient\Wechat\Tests\ConfigurationTest;
-use Siganushka\ApiClient\Wechat\Ticket\TicketOptions;
 use Symfony\Component\Cache\Adapter\NullAdapter;
 use Symfony\Component\HttpClient\MockHttpClient;
 use Symfony\Component\HttpClient\Response\MockResponse;

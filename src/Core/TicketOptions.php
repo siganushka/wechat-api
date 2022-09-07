@@ -2,13 +2,12 @@
 
 declare(strict_types=1);
 
-namespace Siganushka\ApiClient\Wechat\Ticket;
+namespace Siganushka\ApiClient\Wechat\Core;
 
 use Psr\Cache\CacheItemPoolInterface;
 use Siganushka\ApiClient\OptionsExtensionInterface;
 use Siganushka\ApiClient\OptionsExtensionTrait;
 use Siganushka\ApiClient\Wechat\Configuration;
-use Siganushka\ApiClient\Wechat\Core\TokenOptions;
 use Siganushka\ApiClient\Wechat\Jsapi\ConfigUtils;
 use Symfony\Component\OptionsResolver\Options;
 use Symfony\Component\OptionsResolver\OptionsResolver;

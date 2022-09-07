@@ -4,8 +4,8 @@ declare(strict_types=1);
 
 namespace Siganushka\ApiClient\Wechat\Payment;
 
-use Siganushka\ApiClient\OptionsConfiguratorInterface;
-use Siganushka\ApiClient\OptionsConfiguratorTrait;
+use Siganushka\ApiClient\OptionsConfigurableInterface;
+use Siganushka\ApiClient\OptionsConfigurableTrait;
 use Siganushka\ApiClient\Wechat\OptionsUtils;
 use Symfony\Component\OptionsResolver\OptionsResolver;
 
@@ -14,9 +14,9 @@ use Symfony\Component\OptionsResolver\OptionsResolver;
  *
  * @see https://pay.weixin.qq.com/wiki/doc/api/jsapi.php?chapter=7_7&index=6
  */
-class ConfigUtils implements OptionsConfiguratorInterface
+class ConfigUtils implements OptionsConfigurableInterface
 {
-    use OptionsConfiguratorTrait;
+    use OptionsConfigurableTrait;
 
     final public function __construct()
     {

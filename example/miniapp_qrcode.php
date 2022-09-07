@@ -2,6 +2,7 @@
 
 declare(strict_types=1);
 
+use Siganushka\ApiClient\Wechat\Core\TokenOptions;
 use Siganushka\ApiClient\Wechat\Miniapp\Qrcode;
 
 require __DIR__.'/_autoload.php';
@@ -11,7 +12,10 @@ $options = [
     // 'width' => 200,
 ];
 
-$result = $client->send(Qrcode::class, $options);
+$request = new Qrcode();
+$request->extend(new TokenOptions($configuration));
+
+$result = $request->send($options);
 dd($result);
 
 // // 显示小程序码

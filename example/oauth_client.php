@@ -9,7 +9,7 @@ use Siganushka\ApiClient\Wechat\OAuth\Client;
 require __DIR__.'/_autoload.php';
 
 $client = new Client();
-$client->using(new ConfigurationOptions($mpConfiguration));
+$client->extend(new ConfigurationOptions($mpConfiguration));
 
 if (!isset($_GET['code'])) {
     $options = [

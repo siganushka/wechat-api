@@ -4,21 +4,33 @@ declare(strict_types=1);
 
 namespace Siganushka\ApiClient\Wechat\Tests\Payment;
 
+use PHPUnit\Framework\TestCase;
 use Siganushka\ApiClient\Exception\ParseResponseException;
-use Siganushka\ApiClient\Response\ResponseFactory;
-use Siganushka\ApiClient\Test\RequestTestCase;
 use Siganushka\ApiClient\Wechat\Payment\Refund;
 use Siganushka\ApiClient\Wechat\Payment\SignatureUtils;
 use Siganushka\ApiClient\Wechat\Tests\ConfigurationTest;
 use Symfony\Component\HttpClient\MockHttpClient;
+use Symfony\Component\HttpClient\Response\MockResponse;
 use Symfony\Component\OptionsResolver\Exception\MissingOptionsException;
 use Symfony\Component\OptionsResolver\OptionsResolver;
 use Symfony\Component\Serializer\Encoder\JsonEncoder;
 use Symfony\Component\Serializer\Encoder\XmlEncoder;
 use Symfony\Component\Serializer\Serializer;
 
-class RefundTest extends RequestTestCase
+class RefundTest extends TestCase
 {
+    protected ?Refund $request = null;
+
+    protected function setUp(): void
+    {
+        $this->request = new Refund();
+    }
+
+    protected function tearDown(): void
+    {
+        $this->request = null;
+    }
+
     public function testConfigure(): void
     {
         $resolver = new OptionsResolver();
@@ -125,7 +137,7 @@ class RefundTest extends RequestTestCase
         static::assertSame($requestOptions->toArray()['local_cert'], $configuration['mch_client_cert']);
         static::assertSame($requestOptions->toArray()['local_pk'], $configuration['mch_client_key']);
 
-        $body = $this->decodeXML($requestOptions->toArray()['body']);
+        $body = $this->createSerializer()->decode($requestOptions->toArray()['body'], 'xml');
 
         $signature = $body['sign'];
         unset($body['sign']);
@@ -156,7 +168,7 @@ class RefundTest extends RequestTestCase
             'notify_url' => 'test_notify_url',
         ]);
 
-        $body = $this->decodeXML($requestOptions->toArray()['body']);
+        $body = $this->createSerializer()->decode($requestOptions->toArray()['body'], 'xml');
 
         $signature = $body['sign'];
         unset($body['sign']);
@@ -205,31 +217,46 @@ class RefundTest extends RequestTestCase
             'result_code' => 'SUCCESS',
         ];
 
-        $xml = $this->encodeXML($data);
-        $response = ResponseFactory::createMockResponse($xml);
-        $client = new MockHttpClient($response);
+        $body = $this->createSerializer()->encode($data, 'xml');
 
-        $result = $this->request->setHttpClient($client)->send($options);
+        $mockResponse = new MockResponse($body);
+        $client = new MockHttpClient($mockResponse);
+
+        $result = (new Refund($client))->send($options);
         static::assertSame($data, $result);
     }
 
-    public function testParseResponseException(): void
+    public function testSendWithParseResponseException(): void
     {
         $this->expectException(ParseResponseException::class);
         $this->expectExceptionCode(0);
         $this->expectExceptionMessage('test_return_msg');
+
+        $configuration = ConfigurationTest::create();
+
+        $options = [
+            'appid' => $configuration['appid'],
+            'mchid' => $configuration['mchid'],
+            'mchkey' => $configuration['mchkey'],
+            'mch_client_cert' => $configuration['mch_client_cert'],
+            'mch_client_key' => $configuration['mch_client_key'],
+            'transaction_id' => 'test_transaction_id',
+            'out_refund_no' => 'test_out_refund_no',
+            'total_fee' => 12,
+            'refund_fee' => 10,
+        ];
 
         $data = [
             'return_code' => 'FAIL',
             'return_msg' => 'test_return_msg',
         ];
 
-        $xml = $this->encodeXML($data);
-        $response = ResponseFactory::createMockResponse($xml);
+        $body = $this->createSerializer()->encode($data, 'xml');
 
-        $parseResponseRef = new \ReflectionMethod($this->request, 'parseResponse');
-        $parseResponseRef->setAccessible(true);
-        $parseResponseRef->invoke($this->request, $response);
+        $mockResponse = new MockResponse($body);
+        $client = new MockHttpClient($mockResponse);
+
+        (new Refund($client))->send($options);
     }
 
     public function testResultCodeParseResponseException(): void
@@ -238,17 +265,31 @@ class RefundTest extends RequestTestCase
         $this->expectExceptionCode(0);
         $this->expectExceptionMessage('test_err_code_des');
 
+        $configuration = ConfigurationTest::create();
+
+        $options = [
+            'appid' => $configuration['appid'],
+            'mchid' => $configuration['mchid'],
+            'mchkey' => $configuration['mchkey'],
+            'mch_client_cert' => $configuration['mch_client_cert'],
+            'mch_client_key' => $configuration['mch_client_key'],
+            'transaction_id' => 'test_transaction_id',
+            'out_refund_no' => 'test_out_refund_no',
+            'total_fee' => 12,
+            'refund_fee' => 10,
+        ];
+
         $data = [
             'result_code' => 'FAIL',
             'err_code_des' => 'test_err_code_des',
         ];
 
-        $xml = $this->encodeXML($data);
-        $response = ResponseFactory::createMockResponse($xml);
+        $body = $this->createSerializer()->encode($data, 'xml');
 
-        $parseResponseRef = new \ReflectionMethod($this->request, 'parseResponse');
-        $parseResponseRef->setAccessible(true);
-        $parseResponseRef->invoke($this->request, $response);
+        $mockResponse = new MockResponse($body);
+        $client = new MockHttpClient($mockResponse);
+
+        (new Refund($client))->send($options);
     }
 
     public function testAppidMissingOptionsException(): void
@@ -305,20 +346,8 @@ class RefundTest extends RequestTestCase
         ]);
     }
 
-    protected function createRequest(): Refund
+    private function createSerializer(): Serializer
     {
-        $serializer = new Serializer([], [new XmlEncoder(), new JsonEncoder()]);
-
-        return new Refund($serializer);
-    }
-
-    protected function encodeXML(array $data): string
-    {
-        return (new XmlEncoder())->encode($data, 'xml');
-    }
-
-    protected function decodeXML(string $data): array
-    {
-        return (new XmlEncoder())->decode($data, 'xml');
+        return new Serializer([], [new XmlEncoder(), new JsonEncoder()]);
     }
 }

@@ -11,9 +11,10 @@ use Siganushka\ApiClient\Wechat\OptionsUtils;
 use Symfony\Component\OptionsResolver\Exception\MissingOptionsException;
 use Symfony\Component\OptionsResolver\Options;
 use Symfony\Component\OptionsResolver\OptionsResolver;
-use Symfony\Component\Serializer\Encoder\DecoderInterface;
-use Symfony\Component\Serializer\Encoder\EncoderInterface;
-use Symfony\Component\Serializer\SerializerInterface;
+use Symfony\Component\Serializer\Encoder\JsonEncoder;
+use Symfony\Component\Serializer\Encoder\XmlEncoder;
+use Symfony\Component\Serializer\Serializer;
+use Symfony\Contracts\HttpClient\HttpClientInterface;
 use Symfony\Contracts\HttpClient\ResponseInterface;
 
 /**
@@ -23,12 +24,13 @@ class Refund extends AbstractRequest
 {
     public const URL = 'https://api.mch.weixin.qq.com/secapi/pay/refund';
 
-    /** @var EncoderInterface|DecoderInterface */
-    private SerializerInterface $serializer;
+    private Serializer $serializer;
 
-    public function __construct(SerializerInterface $serializer)
+    public function __construct(HttpClientInterface $httpClient = null, Serializer $serializer = null)
     {
-        $this->serializer = $serializer;
+        $this->serializer = $serializer ?? new Serializer([], [new XmlEncoder(), new JsonEncoder()]);
+
+        parent::__construct($httpClient);
     }
 
     protected function configureOptions(OptionsResolver $resolver): void

@@ -4,17 +4,29 @@ declare(strict_types=1);
 
 namespace Siganushka\ApiClient\Wechat\Tests\Miniapp;
 
+use PHPUnit\Framework\TestCase;
 use Siganushka\ApiClient\Exception\ParseResponseException;
-use Siganushka\ApiClient\Response\ResponseFactory;
-use Siganushka\ApiClient\Test\RequestTestCase;
 use Siganushka\ApiClient\Wechat\Miniapp\Qrcode;
 use Symfony\Component\HttpClient\MockHttpClient;
+use Symfony\Component\HttpClient\Response\MockResponse;
 use Symfony\Component\OptionsResolver\Exception\InvalidOptionsException;
 use Symfony\Component\OptionsResolver\Exception\MissingOptionsException;
 use Symfony\Component\OptionsResolver\OptionsResolver;
 
-class QrcodeTest extends RequestTestCase
+class QrcodeTest extends TestCase
 {
+    protected ?Qrcode $request = null;
+
+    protected function setUp(): void
+    {
+        $this->request = new Qrcode();
+    }
+
+    protected function tearDown(): void
+    {
+        $this->request = null;
+    }
+
     public function testConfigure(): void
     {
         $resolver = new OptionsResolver();
@@ -67,21 +79,21 @@ class QrcodeTest extends RequestTestCase
 
     public function testSend(): void
     {
-        $data = 'bin_content';
+        $body = 'bin_content';
         $info = [
             'response_headers' => [
                 'Content-Type' => 'image/png',
             ],
         ];
 
-        $response = ResponseFactory::createMockResponse($data, $info);
-        $client = new MockHttpClient($response);
+        $mockResponse = new MockResponse($body, $info);
+        $client = new MockHttpClient($mockResponse);
 
-        $result = $this->request->setHttpClient($client)->send(['token' => 'foo', 'path' => '/bar']);
-        static::assertSame($data, $result);
+        $result = (new Qrcode($client))->send(['token' => 'foo', 'path' => '/bar']);
+        static::assertSame($body, $result);
     }
 
-    public function testParseResponseException(): void
+    public function testSendWithParseResponseException(): void
     {
         $this->expectException(ParseResponseException::class);
         $this->expectExceptionCode(16);
@@ -98,11 +110,12 @@ class QrcodeTest extends RequestTestCase
             ],
         ];
 
-        $response = ResponseFactory::createMockResponseWithJson($data, $info);
+        $body = json_encode($data);
 
-        $parseResponseRef = new \ReflectionMethod($this->request, 'parseResponse');
-        $parseResponseRef->setAccessible(true);
-        $parseResponseRef->invoke($this->request, $response);
+        $mockResponse = new MockResponse($body, $info);
+        $client = new MockHttpClient($mockResponse);
+
+        (new Qrcode($client))->send(['token' => 'foo', 'path' => '/bar']);
     }
 
     public function testTokenMissingOptionsException(): void
@@ -143,10 +156,5 @@ class QrcodeTest extends RequestTestCase
         $this->expectExceptionMessage('The option "width" with value "test" is expected to be of type "null" or "int", but is of type "string"');
 
         $this->request->build(['token' => 'foo', 'path' => '/bar', 'width' => 'test']);
-    }
-
-    protected function createRequest(): Qrcode
-    {
-        return new Qrcode();
     }
 }

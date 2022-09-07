@@ -2,6 +2,7 @@
 
 declare(strict_types=1);
 
+use Siganushka\ApiClient\Wechat\ConfigurationOptions;
 use Siganushka\ApiClient\Wechat\Payment\Refund;
 
 require __DIR__.'/_autoload.php';
@@ -14,5 +15,8 @@ $options = [
     'refund_fee' => 1,
 ];
 
-$result = $client->send(Refund::class, $options);
+$request = new Refund();
+$request->extend(new ConfigurationOptions($configuration));
+
+$result = $request->send($options);
 dd($result);

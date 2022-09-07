@@ -10,8 +10,6 @@ use Siganushka\ApiClient\OptionsExtensionTrait;
 use Siganushka\ApiClient\Wechat\Configuration;
 use Siganushka\ApiClient\Wechat\Core\TokenOptions;
 use Siganushka\ApiClient\Wechat\Jsapi\ConfigUtils;
-use Symfony\Component\Cache\Adapter\FilesystemAdapter;
-use Symfony\Component\HttpClient\HttpClient;
 use Symfony\Component\OptionsResolver\Options;
 use Symfony\Component\OptionsResolver\OptionsResolver;
 use Symfony\Contracts\HttpClient\HttpClientInterface;
@@ -21,26 +19,25 @@ class TicketOptions implements OptionsExtensionInterface
     use OptionsExtensionTrait;
 
     protected Configuration $configuration;
-    protected HttpClientInterface $httpClient;
-    protected CacheItemPoolInterface $cachePool;
+    protected ?HttpClientInterface $httpClient = null;
+    protected ?CacheItemPoolInterface $cachePool = null;
 
     public function __construct(Configuration $configuration, HttpClientInterface $httpClient = null, CacheItemPoolInterface $cachePool = null)
     {
         $this->configuration = $configuration;
-        $this->httpClient = $httpClient ?? HttpClient::create();
-        $this->cachePool = $cachePool ?? new FilesystemAdapter();
+        $this->httpClient = $httpClient;
+        $this->cachePool = $cachePool;
     }
 
     protected function configureOptions(OptionsResolver $resolver): void
     {
-        $ticket = new Ticket($this->cachePool);
-        $ticket->setHttpClient($this->httpClient);
+        $ticket = new Ticket($this->httpClient, $this->cachePool);
         $ticket->configure($resolver);
 
         $tokenOptions = new TokenOptions($this->configuration, $this->httpClient, $this->cachePool);
         $tokenOptions->configure($resolver);
 
-        $resolver->setDefault('ticket', function (Options $options) use ($ticket) {
+        $resolver->setDefault('ticket', function (Options $options) use ($ticket): string {
             $result = $ticket->send([
                 'token' => $options['token'],
                 'type' => $options['type'],

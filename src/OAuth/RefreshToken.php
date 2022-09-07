@@ -60,7 +60,7 @@ class RefreshToken extends AbstractRequest
         $errcode = (int) ($result['errcode'] ?? 0);
         $errmsg = (string) ($result['errmsg'] ?? '');
 
-        if (0 === $errcode && isset($result['access_token']) && isset($result['openid'])) {
+        if (0 === $errcode) {
             return $result;
         }
 

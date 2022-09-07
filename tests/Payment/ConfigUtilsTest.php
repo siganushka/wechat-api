@@ -65,7 +65,7 @@ class ConfigUtilsTest extends TestCase
 
     public function testGenerate(): void
     {
-        $this->configUtils->using(ConfigurationOptionsTest::create());
+        $this->configUtils->extend(ConfigurationOptionsTest::create());
 
         $payConfig = $this->configUtils->generate('baz');
         static::assertSame('test_appid', $payConfig['appId']);

@@ -14,8 +14,6 @@ use Siganushka\ApiClient\Wechat\Miniapp\Wxacode;
 use Siganushka\ApiClient\Wechat\Miniapp\WxacodeUnlimited;
 use Siganushka\ApiClient\Wechat\Template\Message;
 use Siganushka\ApiClient\Wechat\Ticket\Ticket;
-use Symfony\Component\Cache\Adapter\FilesystemAdapter;
-use Symfony\Component\HttpClient\HttpClient;
 use Symfony\Component\OptionsResolver\Options;
 use Symfony\Component\OptionsResolver\OptionsResolver;
 use Symfony\Contracts\HttpClient\HttpClientInterface;
@@ -25,14 +23,14 @@ class TokenOptions implements OptionsExtensionInterface
     use OptionsExtensionTrait;
 
     protected Configuration $configuration;
-    protected HttpClientInterface $httpClient;
-    protected CacheItemPoolInterface $cachePool;
+    protected ?HttpClientInterface $httpClient = null;
+    protected ?CacheItemPoolInterface $cachePool = null;
 
     public function __construct(Configuration $configuration, HttpClientInterface $httpClient = null, CacheItemPoolInterface $cachePool = null)
     {
         $this->configuration = $configuration;
-        $this->httpClient = $httpClient ?? HttpClient::create();
-        $this->cachePool = $cachePool ?? new FilesystemAdapter();
+        $this->httpClient = $httpClient;
+        $this->cachePool = $cachePool;
     }
 
     protected function configureOptions(OptionsResolver $resolver): void
@@ -40,9 +38,8 @@ class TokenOptions implements OptionsExtensionInterface
         $configurationOptions = new ConfigurationOptions($this->configuration);
         $configurationOptions->configure($resolver);
 
-        $resolver->setDefault('token', function (Options $options) {
-            $request = new Token($this->cachePool);
-            $request->setHttpClient($this->httpClient);
+        $resolver->setDefault('token', function (Options $options): string {
+            $request = new Token($this->httpClient, $this->cachePool);
 
             $result = $request->send([
                 'appid' => $options['appid'],

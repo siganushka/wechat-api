@@ -2,6 +2,7 @@
 
 declare(strict_types=1);
 
+use Siganushka\ApiClient\Wechat\ConfigurationOptions;
 use Siganushka\ApiClient\Wechat\Payment\Unifiedorder;
 
 require __DIR__.'/_autoload.php';
@@ -15,5 +16,8 @@ $options = [
     'openid' => 'oaAle41wmUsogcsdUKZF9HJOPf5Q',
 ];
 
-$result = $client->send(Unifiedorder::class, $options);
+$request = new Unifiedorder();
+$request->extend(new ConfigurationOptions($configuration));
+
+$result = $request->send($options);
 dd($result);

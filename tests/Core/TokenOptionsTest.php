@@ -5,7 +5,6 @@ declare(strict_types=1);
 namespace Siganushka\ApiClient\Wechat\Tests\Core;
 
 use PHPUnit\Framework\TestCase;
-use Siganushka\ApiClient\Response\ResponseFactory;
 use Siganushka\ApiClient\Wechat\Configuration;
 use Siganushka\ApiClient\Wechat\Core\CallbackIp;
 use Siganushka\ApiClient\Wechat\Core\ServerIp;
@@ -18,6 +17,7 @@ use Siganushka\ApiClient\Wechat\Tests\ConfigurationTest;
 use Siganushka\ApiClient\Wechat\Ticket\Ticket;
 use Symfony\Component\Cache\Adapter\NullAdapter;
 use Symfony\Component\HttpClient\MockHttpClient;
+use Symfony\Component\HttpClient\Response\MockResponse;
 use Symfony\Component\OptionsResolver\OptionsResolver;
 
 class TokenOptionsTest extends TestCase
@@ -82,14 +82,8 @@ class TokenOptionsTest extends TestCase
         }
 
         $client = new MockHttpClient([
-            ResponseFactory::createMockResponseWithJson([
-                'access_token' => 'test_token_1',
-                'expires_in' => 1024,
-            ]),
-            ResponseFactory::createMockResponseWithJson([
-                'access_token' => 'test_token_2',
-                'expires_in' => 1024,
-            ]),
+            new MockResponse(json_encode(['access_token' => 'test_token_1', 'expires_in' => 1024])),
+            new MockResponse(json_encode(['access_token' => 'test_token_2', 'expires_in' => 1024])),
         ]);
 
         $cache = new NullAdapter();

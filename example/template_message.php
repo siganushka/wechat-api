@@ -2,6 +2,7 @@
 
 declare(strict_types=1);
 
+use Siganushka\ApiClient\Wechat\Core\TokenOptions;
 use Siganushka\ApiClient\Wechat\Template\Message;
 use Siganushka\ApiClient\Wechat\Template\Template;
 
@@ -25,5 +26,8 @@ $options = [
     // 'client_msg_id' => uniqid(),
 ];
 
-$result = $client->send(Message::class, $options);
+$request = new Message();
+$request->extend(new TokenOptions($configuration));
+
+$result = $request->send($options);
 dd($result);

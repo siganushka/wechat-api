@@ -5,13 +5,13 @@ declare(strict_types=1);
 namespace Siganushka\ApiClient\Wechat\Tests\Ticket;
 
 use PHPUnit\Framework\TestCase;
-use Siganushka\ApiClient\Response\ResponseFactory;
 use Siganushka\ApiClient\Wechat\Configuration;
 use Siganushka\ApiClient\Wechat\Jsapi\ConfigUtils;
 use Siganushka\ApiClient\Wechat\Tests\ConfigurationTest;
 use Siganushka\ApiClient\Wechat\Ticket\TicketOptions;
 use Symfony\Component\Cache\Adapter\NullAdapter;
 use Symfony\Component\HttpClient\MockHttpClient;
+use Symfony\Component\HttpClient\Response\MockResponse;
 use Symfony\Component\OptionsResolver\OptionsResolver;
 
 class TicketOptionsTest extends TestCase
@@ -64,13 +64,8 @@ class TicketOptionsTest extends TestCase
         }
 
         $client = new MockHttpClient([
-            ResponseFactory::createMockResponseWithJson([
-                'access_token' => 'test_token',
-                'expires_in' => 1024,
-            ]),
-            ResponseFactory::createMockResponseWithJson([
-                'ticket' => 'test_ticket',
-            ]),
+            new MockResponse(json_encode(['access_token' => 'test_token', 'expires_in' => 1024])),
+            new MockResponse(json_encode(['ticket' => 'test_ticket'])),
         ]);
 
         $cache = new NullAdapter();

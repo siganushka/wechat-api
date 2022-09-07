@@ -2,9 +2,7 @@
 
 declare(strict_types=1);
 
-use Siganushka\ApiClient\RequestClientBuilder;
 use Siganushka\ApiClient\Wechat\Configuration;
-use Siganushka\ApiClient\Wechat\WechatExtension;
 use Symfony\Component\ErrorHandler\Debug;
 
 require __DIR__.'/../vendor/autoload.php';
@@ -32,8 +30,3 @@ $configuration = new Configuration($configs['miniapp']);
 $mpConfiguration = new Configuration($configs['mp']);
 // 开放平台配置
 $openConfiguration = new Configuration($configs['open']);
-
-$client = RequestClientBuilder::create()
-    ->addExtension(new WechatExtension($configuration))
-    ->build()
-;

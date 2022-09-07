@@ -4,17 +4,29 @@ declare(strict_types=1);
 
 namespace Siganushka\ApiClient\Wechat\Tests\OAuth;
 
+use PHPUnit\Framework\TestCase;
 use Siganushka\ApiClient\Exception\ParseResponseException;
-use Siganushka\ApiClient\Response\ResponseFactory;
-use Siganushka\ApiClient\Test\RequestTestCase;
 use Siganushka\ApiClient\Wechat\OAuth\RefreshToken;
 use Symfony\Component\HttpClient\MockHttpClient;
+use Symfony\Component\HttpClient\Response\MockResponse;
 use Symfony\Component\OptionsResolver\Exception\InvalidOptionsException;
 use Symfony\Component\OptionsResolver\Exception\MissingOptionsException;
 use Symfony\Component\OptionsResolver\OptionsResolver;
 
-class RefreshTokenTest extends RequestTestCase
+class RefreshTokenTest extends TestCase
 {
+    protected ?RefreshToken $request = null;
+
+    protected function setUp(): void
+    {
+        $this->request = new RefreshToken();
+    }
+
+    protected function tearDown(): void
+    {
+        $this->request = null;
+    }
+
     public function testConfigure(): void
     {
         $resolver = new OptionsResolver();
@@ -56,14 +68,16 @@ class RefreshTokenTest extends RequestTestCase
             'scope' => 'test_scope',
         ];
 
-        $response = ResponseFactory::createMockResponseWithJson($data);
-        $client = new MockHttpClient($response);
+        $body = json_encode($data);
 
-        $result = $this->request->setHttpClient($client)->send(['appid' => 'foo', 'refresh_token' => 'bar']);
+        $mockResponse = new MockResponse($body);
+        $client = new MockHttpClient($mockResponse);
+
+        $result = (new RefreshToken($client))->send(['appid' => 'foo', 'refresh_token' => 'bar']);
         static::assertSame($data, $result);
     }
 
-    public function testParseResponseException(): void
+    public function testSendWithParseResponseException(): void
     {
         $this->expectException(ParseResponseException::class);
         $this->expectExceptionCode(16);
@@ -74,11 +88,12 @@ class RefreshTokenTest extends RequestTestCase
             'errmsg' => 'test error',
         ];
 
-        $response = ResponseFactory::createMockResponseWithJson($data);
+        $body = json_encode($data);
 
-        $parseResponseRef = new \ReflectionMethod($this->request, 'parseResponse');
-        $parseResponseRef->setAccessible(true);
-        $parseResponseRef->invoke($this->request, $response);
+        $mockResponse = new MockResponse($body);
+        $client = new MockHttpClient($mockResponse);
+
+        (new RefreshToken($client))->send(['appid' => 'foo', 'refresh_token' => 'bar']);
     }
 
     public function testAppidMissingOptionsException(): void
@@ -86,8 +101,7 @@ class RefreshTokenTest extends RequestTestCase
         $this->expectException(MissingOptionsException::class);
         $this->expectExceptionMessage('The required option "appid" is missing');
 
-        $request = static::createRequest();
-        $request->build(['refresh_token' => 'bar']);
+        $this->request->build(['refresh_token' => 'bar']);
     }
 
     public function testAppidInvalidOptionsException(): void
@@ -103,8 +117,7 @@ class RefreshTokenTest extends RequestTestCase
         $this->expectException(MissingOptionsException::class);
         $this->expectExceptionMessage('The required option "refresh_token" is missing');
 
-        $request = static::createRequest();
-        $request->build(['appid' => 'foo']);
+        $this->request->build(['appid' => 'foo']);
     }
 
     public function testRefreshTokenInvalidOptionsException(): void
@@ -113,10 +126,5 @@ class RefreshTokenTest extends RequestTestCase
         $this->expectExceptionMessage('The option "refresh_token" with value 123 is expected to be of type "string", but is of type "int"');
 
         $this->request->build(['appid' => 'foo', 'refresh_token' => 123]);
-    }
-
-    protected function createRequest(): RefreshToken
-    {
-        return new RefreshToken();
     }
 }

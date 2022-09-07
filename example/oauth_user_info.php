@@ -13,5 +13,7 @@ $options = [
     // 'lang' => 'zh_CN',
 ];
 
-$result = $client->send(UserInfo::class, $options);
+$request = new UserInfo();
+
+$result = $request->send($options);
 dd($result);

@@ -4,17 +4,29 @@ declare(strict_types=1);
 
 namespace Siganushka\ApiClient\Wechat\Tests\OAuth;
 
+use PHPUnit\Framework\TestCase;
 use Siganushka\ApiClient\Exception\ParseResponseException;
-use Siganushka\ApiClient\Response\ResponseFactory;
-use Siganushka\ApiClient\Test\RequestTestCase;
 use Siganushka\ApiClient\Wechat\OAuth\UserInfo;
 use Symfony\Component\HttpClient\MockHttpClient;
+use Symfony\Component\HttpClient\Response\MockResponse;
 use Symfony\Component\OptionsResolver\Exception\InvalidOptionsException;
 use Symfony\Component\OptionsResolver\Exception\MissingOptionsException;
 use Symfony\Component\OptionsResolver\OptionsResolver;
 
-class UserInfoTest extends RequestTestCase
+class UserInfoTest extends TestCase
 {
+    protected ?UserInfo $request = null;
+
+    protected function setUp(): void
+    {
+        $this->request = new UserInfo();
+    }
+
+    protected function tearDown(): void
+    {
+        $this->request = null;
+    }
+
     public function testConfigure(): void
     {
         $resolver = new OptionsResolver();
@@ -71,14 +83,16 @@ class UserInfoTest extends RequestTestCase
             'nickname' => 'test_nickname',
         ];
 
-        $response = ResponseFactory::createMockResponseWithJson($data);
-        $client = new MockHttpClient($response);
+        $body = json_encode($data);
 
-        $result = $this->request->setHttpClient($client)->send(['access_token' => 'foo', 'openid' => 'bar']);
+        $mockResponse = new MockResponse($body);
+        $client = new MockHttpClient($mockResponse);
+
+        $result = (new UserInfo($client))->send(['access_token' => 'foo', 'openid' => 'bar']);
         static::assertSame($data, $result);
     }
 
-    public function testParseResponseException(): void
+    public function testSendWithParseResponseException(): void
     {
         $this->expectException(ParseResponseException::class);
         $this->expectExceptionCode(16);
@@ -89,11 +103,12 @@ class UserInfoTest extends RequestTestCase
             'errmsg' => 'test error',
         ];
 
-        $response = ResponseFactory::createMockResponseWithJson($data);
+        $body = json_encode($data);
 
-        $parseResponseRef = new \ReflectionMethod($this->request, 'parseResponse');
-        $parseResponseRef->setAccessible(true);
-        $parseResponseRef->invoke($this->request, $response);
+        $mockResponse = new MockResponse($body);
+        $client = new MockHttpClient($mockResponse);
+
+        (new UserInfo($client))->send(['access_token' => 'foo', 'openid' => 'bar']);
     }
 
     public function testAccessTokenMissingOptionsException(): void
@@ -134,10 +149,5 @@ class UserInfoTest extends RequestTestCase
         $this->expectExceptionMessage('The option "lang" with value "baz" is invalid. Accepted values are: "zh_CN", "zh_TW", "en"');
 
         $this->request->build(['access_token' => 'foo', 'openid' => 'bar', 'lang' => 'baz']);
-    }
-
-    protected function createRequest(): UserInfo
-    {
-        return new UserInfo();
     }
 }

@@ -60,7 +60,7 @@ class SignatureUtilsTest extends TestCase
     {
         $data = ['foo' => 'hello'];
 
-        $this->signatureUtils->using(ConfigurationOptionsTest::create());
+        $this->signatureUtils->extend(ConfigurationOptionsTest::create());
         $signature = $this->signatureUtils->generate($data);
 
         static::assertSame('44C65B2286547046D4DEF419020A6425', $signature);

@@ -4,20 +4,32 @@ declare(strict_types=1);
 
 namespace Siganushka\ApiClient\Wechat\Tests\Payment;
 
+use PHPUnit\Framework\TestCase;
 use Siganushka\ApiClient\Exception\ParseResponseException;
-use Siganushka\ApiClient\Response\ResponseFactory;
-use Siganushka\ApiClient\Test\RequestTestCase;
 use Siganushka\ApiClient\Wechat\Payment\SignatureUtils;
 use Siganushka\ApiClient\Wechat\Payment\Unifiedorder;
 use Symfony\Component\HttpClient\MockHttpClient;
+use Symfony\Component\HttpClient\Response\MockResponse;
 use Symfony\Component\OptionsResolver\Exception\MissingOptionsException;
 use Symfony\Component\OptionsResolver\OptionsResolver;
 use Symfony\Component\Serializer\Encoder\JsonEncoder;
 use Symfony\Component\Serializer\Encoder\XmlEncoder;
 use Symfony\Component\Serializer\Serializer;
 
-class UnifiedorderTest extends RequestTestCase
+class UnifiedorderTest extends TestCase
 {
+    protected ?Unifiedorder $request = null;
+
+    protected function setUp(): void
+    {
+        $this->request = new Unifiedorder();
+    }
+
+    protected function tearDown(): void
+    {
+        $this->request = null;
+    }
+
     public function testConfigure(): void
     {
         $resolver = new OptionsResolver();
@@ -160,7 +172,7 @@ class UnifiedorderTest extends RequestTestCase
         static::assertSame('POST', $requestOptions->getMethod());
         static::assertSame(Unifiedorder::URL, $requestOptions->getUrl());
 
-        $body = $this->decodeXML($requestOptions->toArray()['body']);
+        $body = $this->createSerializer()->decode($requestOptions->toArray()['body'], 'xml');
 
         $signature = $body['sign'];
         unset($body['sign']);
@@ -207,7 +219,7 @@ class UnifiedorderTest extends RequestTestCase
 
         $requestOptions = $this->request->build($options);
 
-        $body = $this->decodeXML($requestOptions->toArray()['body']);
+        $body = $this->createSerializer()->decode($requestOptions->toArray()['body'], 'xml');
 
         $signature = $body['sign'];
         unset($body['sign']);
@@ -264,31 +276,44 @@ class UnifiedorderTest extends RequestTestCase
             'result_code' => 'SUCCESS',
         ];
 
-        $xml = $this->encodeXML($data);
-        $response = ResponseFactory::createMockResponse($xml);
-        $client = new MockHttpClient($response);
+        $body = $this->createSerializer()->encode($data, 'xml');
 
-        $result = $this->request->setHttpClient($client)->send($options);
+        $mockResponse = new MockResponse($body);
+        $client = new MockHttpClient($mockResponse);
+
+        $result = (new Unifiedorder($client))->send($options);
         static::assertSame($data, $result);
     }
 
-    public function testParseResponseException(): void
+    public function testSendWithParseResponseException(): void
     {
         $this->expectException(ParseResponseException::class);
         $this->expectExceptionCode(0);
         $this->expectExceptionMessage('test_return_msg');
+
+        $options = [
+            'appid' => 'test_appid',
+            'mchid' => 'test_mchid',
+            'mchkey' => 'test_mchkey',
+            'body' => 'test_body',
+            'notify_url' => 'test_notify_url',
+            'out_trade_no' => 'test_out_trade_no',
+            'total_fee' => 1,
+            'trade_type' => 'JSAPI',
+            'openid' => 'test_openid',
+        ];
 
         $data = [
             'return_code' => 'FAIL',
             'return_msg' => 'test_return_msg',
         ];
 
-        $xml = $this->encodeXML($data);
-        $response = ResponseFactory::createMockResponse($xml);
+        $body = $this->createSerializer()->encode($data, 'xml');
 
-        $parseResponseRef = new \ReflectionMethod($this->request, 'parseResponse');
-        $parseResponseRef->setAccessible(true);
-        $parseResponseRef->invoke($this->request, $response);
+        $mockResponse = new MockResponse($body);
+        $client = new MockHttpClient($mockResponse);
+
+        (new Unifiedorder($client))->send($options);
     }
 
     public function testResultCodeParseResponseException(): void
@@ -297,17 +322,29 @@ class UnifiedorderTest extends RequestTestCase
         $this->expectExceptionCode(0);
         $this->expectExceptionMessage('test_err_code_des');
 
+        $options = [
+            'appid' => 'test_appid',
+            'mchid' => 'test_mchid',
+            'mchkey' => 'test_mchkey',
+            'body' => 'test_body',
+            'notify_url' => 'test_notify_url',
+            'out_trade_no' => 'test_out_trade_no',
+            'total_fee' => 1,
+            'trade_type' => 'JSAPI',
+            'openid' => 'test_openid',
+        ];
+
         $data = [
             'result_code' => 'FAIL',
             'err_code_des' => 'test_err_code_des',
         ];
 
-        $xml = $this->encodeXML($data);
-        $response = ResponseFactory::createMockResponse($xml);
+        $body = $this->createSerializer()->encode($data, 'xml');
 
-        $parseResponseRef = new \ReflectionMethod($this->request, 'parseResponse');
-        $parseResponseRef->setAccessible(true);
-        $parseResponseRef->invoke($this->request, $response);
+        $mockResponse = new MockResponse($body);
+        $client = new MockHttpClient($mockResponse);
+
+        (new Unifiedorder($client))->send($options);
     }
 
     public function testAppidMissingOptionsException(): void
@@ -361,20 +398,8 @@ class UnifiedorderTest extends RequestTestCase
         ]);
     }
 
-    protected function createRequest(): Unifiedorder
+    private function createSerializer(): Serializer
     {
-        $serializer = new Serializer([], [new XmlEncoder(), new JsonEncoder()]);
-
-        return new Unifiedorder($serializer);
-    }
-
-    protected function encodeXML(array $data): string
-    {
-        return (new XmlEncoder())->encode($data, 'xml');
-    }
-
-    protected function decodeXML(string $data): array
-    {
-        return (new XmlEncoder())->decode($data, 'xml');
+        return new Serializer([], [new XmlEncoder(), new JsonEncoder()]);
     }
 }

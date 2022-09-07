@@ -9,7 +9,7 @@ use Siganushka\ApiClient\Wechat\OAuth\Qrcode;
 require __DIR__.'/_autoload.php';
 
 $client = new Qrcode();
-$client->using(new ConfigurationOptions($openConfiguration));
+$client->extend(new ConfigurationOptions($openConfiguration));
 
 if (!isset($_GET['code'])) {
     $options = [

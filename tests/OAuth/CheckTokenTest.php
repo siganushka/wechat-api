@@ -4,17 +4,29 @@ declare(strict_types=1);
 
 namespace Siganushka\ApiClient\Wechat\Tests\OAuth;
 
+use PHPUnit\Framework\TestCase;
 use Siganushka\ApiClient\Exception\ParseResponseException;
-use Siganushka\ApiClient\Response\ResponseFactory;
-use Siganushka\ApiClient\Test\RequestTestCase;
 use Siganushka\ApiClient\Wechat\OAuth\CheckToken;
 use Symfony\Component\HttpClient\MockHttpClient;
+use Symfony\Component\HttpClient\Response\MockResponse;
 use Symfony\Component\OptionsResolver\Exception\InvalidOptionsException;
 use Symfony\Component\OptionsResolver\Exception\MissingOptionsException;
 use Symfony\Component\OptionsResolver\OptionsResolver;
 
-class CheckTokenTest extends RequestTestCase
+class CheckTokenTest extends TestCase
 {
+    protected ?CheckToken $request = null;
+
+    protected function setUp(): void
+    {
+        $this->request = new CheckToken();
+    }
+
+    protected function tearDown(): void
+    {
+        $this->request = null;
+    }
+
     public function testConfigure(): void
     {
         $resolver = new OptionsResolver();
@@ -52,14 +64,16 @@ class CheckTokenTest extends RequestTestCase
             'errmsg' => 'ok',
         ];
 
-        $response = ResponseFactory::createMockResponseWithJson($data);
-        $client = new MockHttpClient($response);
+        $body = json_encode($data);
 
-        $result = $this->request->setHttpClient($client)->send(['access_token' => 'foo', 'openid' => 'bar']);
+        $mockResponse = new MockResponse($body);
+        $client = new MockHttpClient($mockResponse);
+
+        $result = (new CheckToken($client))->send(['access_token' => 'foo', 'openid' => 'bar']);
         static::assertSame($data, $result);
     }
 
-    public function testParseResponseException(): void
+    public function testSendWithParseResponseException(): void
     {
         $this->expectException(ParseResponseException::class);
         $this->expectExceptionCode(16);
@@ -70,11 +84,12 @@ class CheckTokenTest extends RequestTestCase
             'errmsg' => 'test error',
         ];
 
-        $response = ResponseFactory::createMockResponseWithJson($data);
+        $body = json_encode($data);
 
-        $parseResponseRef = new \ReflectionMethod($this->request, 'parseResponse');
-        $parseResponseRef->setAccessible(true);
-        $parseResponseRef->invoke($this->request, $response);
+        $mockResponse = new MockResponse($body);
+        $client = new MockHttpClient($mockResponse);
+
+        (new CheckToken($client))->send(['access_token' => 'foo', 'openid' => 'bar']);
     }
 
     public function testAccessTokenMissingOptionsException(): void
@@ -107,10 +122,5 @@ class CheckTokenTest extends RequestTestCase
         $this->expectExceptionMessage('The option "openid" with value 123 is expected to be of type "string", but is of type "int"');
 
         $this->request->build(['access_token' => 'foo', 'openid' => 123]);
-    }
-
-    protected function createRequest(): CheckToken
-    {
-        return new CheckToken();
     }
 }

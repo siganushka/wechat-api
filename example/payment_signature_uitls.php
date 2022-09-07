@@ -18,7 +18,7 @@ $data = [
 ];
 
 $signatureUtils = SignatureUtils::create();
-$signatureUtils->using(new ConfigurationOptions($configuration));
+$signatureUtils->extend(new ConfigurationOptions($configuration));
 
 // 生成签名
 $sign = $signatureUtils->generate($data);

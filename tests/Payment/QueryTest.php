@@ -4,20 +4,32 @@ declare(strict_types=1);
 
 namespace Siganushka\ApiClient\Wechat\Tests\Payment;
 
+use PHPUnit\Framework\TestCase;
 use Siganushka\ApiClient\Exception\ParseResponseException;
-use Siganushka\ApiClient\Response\ResponseFactory;
-use Siganushka\ApiClient\Test\RequestTestCase;
 use Siganushka\ApiClient\Wechat\Payment\Query;
 use Siganushka\ApiClient\Wechat\Payment\SignatureUtils;
 use Symfony\Component\HttpClient\MockHttpClient;
+use Symfony\Component\HttpClient\Response\MockResponse;
 use Symfony\Component\OptionsResolver\Exception\MissingOptionsException;
 use Symfony\Component\OptionsResolver\OptionsResolver;
 use Symfony\Component\Serializer\Encoder\JsonEncoder;
 use Symfony\Component\Serializer\Encoder\XmlEncoder;
 use Symfony\Component\Serializer\Serializer;
 
-class QueryTest extends RequestTestCase
+class QueryTest extends TestCase
 {
+    protected ?Query $request = null;
+
+    protected function setUp(): void
+    {
+        $this->request = new Query();
+    }
+
+    protected function tearDown(): void
+    {
+        $this->request = null;
+    }
+
     public function testConfigure(): void
     {
         $resolver = new OptionsResolver();
@@ -83,7 +95,7 @@ class QueryTest extends RequestTestCase
         static::assertSame('POST', $requestOptions->getMethod());
         static::assertSame(Query::URL, $requestOptions->getUrl());
 
-        $body = $this->decodeXML($requestOptions->toArray()['body']);
+        $body = $this->createSerializer()->decode($requestOptions->toArray()['body'], 'xml');
 
         $signature = $body['sign'];
         unset($body['sign']);
@@ -110,7 +122,7 @@ class QueryTest extends RequestTestCase
 
         static::assertSame(Query::URL2, $requestOptions->getUrl());
 
-        $body = $this->decodeXML($requestOptions->toArray()['body']);
+        $body = $this->createSerializer()->decode($requestOptions->toArray()['body'], 'xml');
 
         $signature = $body['sign'];
         unset($body['sign']);
@@ -145,31 +157,39 @@ class QueryTest extends RequestTestCase
             'result_code' => 'SUCCESS',
         ];
 
-        $xml = $this->encodeXML($data);
-        $response = ResponseFactory::createMockResponse($xml);
-        $client = new MockHttpClient($response);
+        $body = $this->createSerializer()->encode($data, 'xml');
 
-        $result = $this->request->setHttpClient($client)->send($options);
+        $mockResponse = new MockResponse($body);
+        $client = new MockHttpClient($mockResponse);
+
+        $result = (new Query($client))->send($options);
         static::assertSame($data, $result);
     }
 
-    public function testParseResponseException(): void
+    public function testSendWithParseResponseException(): void
     {
         $this->expectException(ParseResponseException::class);
         $this->expectExceptionCode(0);
         $this->expectExceptionMessage('test_return_msg');
+
+        $options = [
+            'appid' => 'foo',
+            'mchid' => 'bar',
+            'mchkey' => 'test_mchkey',
+            'transaction_id' => 'test_transaction_id',
+        ];
 
         $data = [
             'return_code' => 'FAIL',
             'return_msg' => 'test_return_msg',
         ];
 
-        $xml = $this->encodeXML($data);
-        $response = ResponseFactory::createMockResponse($xml);
+        $body = $this->createSerializer()->encode($data, 'xml');
 
-        $parseResponseRef = new \ReflectionMethod($this->request, 'parseResponse');
-        $parseResponseRef->setAccessible(true);
-        $parseResponseRef->invoke($this->request, $response);
+        $mockResponse = new MockResponse($body);
+        $client = new MockHttpClient($mockResponse);
+
+        (new Query($client))->send($options);
     }
 
     public function testResultCodeParseResponseException(): void
@@ -178,17 +198,24 @@ class QueryTest extends RequestTestCase
         $this->expectExceptionCode(0);
         $this->expectExceptionMessage('test_err_code_des');
 
+        $options = [
+            'appid' => 'foo',
+            'mchid' => 'bar',
+            'mchkey' => 'test_mchkey',
+            'transaction_id' => 'test_transaction_id',
+        ];
+
         $data = [
             'result_code' => 'FAIL',
             'err_code_des' => 'test_err_code_des',
         ];
 
-        $xml = $this->encodeXML($data);
-        $response = ResponseFactory::createMockResponse($xml);
+        $body = $this->createSerializer()->encode($data, 'xml');
 
-        $parseResponseRef = new \ReflectionMethod($this->request, 'parseResponse');
-        $parseResponseRef->setAccessible(true);
-        $parseResponseRef->invoke($this->request, $response);
+        $mockResponse = new MockResponse($body);
+        $client = new MockHttpClient($mockResponse);
+
+        (new Query($client))->send($options);
     }
 
     public function testAppidMissingOptionsException(): void
@@ -230,20 +257,8 @@ class QueryTest extends RequestTestCase
         ]);
     }
 
-    protected function createRequest(): Query
+    private function createSerializer(): Serializer
     {
-        $serializer = new Serializer([], [new XmlEncoder(), new JsonEncoder()]);
-
-        return new Query($serializer);
-    }
-
-    protected function encodeXML(array $data): string
-    {
-        return (new XmlEncoder())->encode($data, 'xml');
-    }
-
-    protected function decodeXML(string $data): array
-    {
-        return (new XmlEncoder())->decode($data, 'xml');
+        return new Serializer([], [new XmlEncoder(), new JsonEncoder()]);
     }
 }

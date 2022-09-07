@@ -12,5 +12,7 @@ $options = [
     'openid' => 'your_openid',
 ];
 
-$result = $client->send(CheckToken::class, $options);
+$request = new CheckToken();
+
+$result = $request->send($options);
 dd($result);

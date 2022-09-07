@@ -4,8 +4,8 @@ declare(strict_types=1);
 
 namespace Siganushka\ApiClient\Wechat\Jsapi;
 
-use Siganushka\ApiClient\OptionsConfiguratorInterface;
-use Siganushka\ApiClient\OptionsConfiguratorTrait;
+use Siganushka\ApiClient\OptionsConfigurableInterface;
+use Siganushka\ApiClient\OptionsConfigurableTrait;
 use Siganushka\ApiClient\Wechat\GenericUtils;
 use Siganushka\ApiClient\Wechat\OptionsUtils;
 use Symfony\Component\OptionsResolver\OptionsResolver;
@@ -15,9 +15,9 @@ use Symfony\Component\OptionsResolver\OptionsResolver;
  *
  * @see https://developers.weixin.qq.com/doc/offiaccount/OA_Web_Apps/JS-SDK.html
  */
-class ConfigUtils implements OptionsConfiguratorInterface
+class ConfigUtils implements OptionsConfigurableInterface
 {
-    use OptionsConfiguratorTrait;
+    use OptionsConfigurableTrait;
 
     final public function __construct()
     {
@@ -49,7 +49,7 @@ class ConfigUtils implements OptionsConfiguratorInterface
      *  timestamp?: string,
      *  nonce_str?: string,
      *  url?: string,
-     *  apis?: array,
+     *  apis?: array<int, string>,
      *  debug?: bool
      * } $options 自定义 JSSDK 配置选项
      *
@@ -58,7 +58,7 @@ class ConfigUtils implements OptionsConfiguratorInterface
      *  timestamp: string,
      *  nonceStr: string,
      *  signature: string,
-     *  jsApiList: array,
+     *  jsApiList: array<int, string>,
      *  debug: bool
      * } JSSDK 配置参数
      */

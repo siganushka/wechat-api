@@ -5,12 +5,10 @@ declare(strict_types=1);
 namespace Siganushka\ApiClient\Wechat\OAuth;
 
 use Psr\Cache\CacheItemPoolInterface;
-use Siganushka\ApiClient\OptionsConfiguratorInterface;
-use Siganushka\ApiClient\OptionsConfiguratorTrait;
+use Siganushka\ApiClient\OptionsConfigurableInterface;
+use Siganushka\ApiClient\OptionsConfigurableTrait;
 use Siganushka\ApiClient\Wechat\ConfigurationOptions;
 use Siganushka\ApiClient\Wechat\OptionsUtils;
-use Symfony\Component\Cache\Adapter\FilesystemAdapter;
-use Symfony\Component\HttpClient\HttpClient;
 use Symfony\Component\OptionsResolver\OptionsResolver;
 use Symfony\Contracts\HttpClient\HttpClientInterface;
 
@@ -19,19 +17,19 @@ use Symfony\Contracts\HttpClient\HttpClientInterface;
  *
  * @see https://developers.weixin.qq.com/doc/offiaccount/OA_Web_Apps/Wechat_webpage_authorization.html
  */
-class Client implements OptionsConfiguratorInterface
+class Client implements OptionsConfigurableInterface
 {
-    use OptionsConfiguratorTrait;
+    use OptionsConfigurableTrait;
 
     public const URL = 'https://open.weixin.qq.com/connect/oauth2/authorize';
 
-    private HttpClientInterface $httpClient;
-    private CacheItemPoolInterface $cachePool;
+    private ?HttpClientInterface $httpClient = null;
+    private ?CacheItemPoolInterface $cachePool = null;
 
     public function __construct(HttpClientInterface $httpClient = null, CacheItemPoolInterface $cachePool = null)
     {
-        $this->httpClient = $httpClient ?? HttpClient::create();
-        $this->cachePool = $cachePool ?? new FilesystemAdapter();
+        $this->httpClient = $httpClient;
+        $this->cachePool = $cachePool;
     }
 
     public function getRedirectUrl(array $options = []): string
@@ -59,11 +57,10 @@ class Client implements OptionsConfiguratorInterface
 
     public function getAccessToken(array $options = []): array
     {
-        $accessToken = new AccessToken($this->cachePool);
-        $accessToken->setHttpClient($this->httpClient);
+        $accessToken = new AccessToken($this->httpClient, $this->cachePool);
 
         if (isset($this->extensions[ConfigurationOptions::class])) {
-            $accessToken->using($this->extensions[ConfigurationOptions::class]);
+            $accessToken->extend($this->extensions[ConfigurationOptions::class]);
         }
 
         return $accessToken->send($options);
@@ -71,19 +68,17 @@ class Client implements OptionsConfiguratorInterface
 
     public function getUserInfo(array $options = []): array
     {
-        $userInfo = new UserInfo();
-        $userInfo->setHttpClient($this->httpClient);
+        $userInfo = new UserInfo($this->httpClient);
 
         return $userInfo->send($options);
     }
 
     public function refreshToken(array $options = []): array
     {
-        $refreshToken = new RefreshToken();
-        $refreshToken->setHttpClient($this->httpClient);
+        $refreshToken = new RefreshToken($this->httpClient);
 
         if (isset($this->extensions[ConfigurationOptions::class])) {
-            $refreshToken->using($this->extensions[ConfigurationOptions::class]);
+            $refreshToken->extend($this->extensions[ConfigurationOptions::class]);
         }
 
         return $refreshToken->send($options);
@@ -91,8 +86,7 @@ class Client implements OptionsConfiguratorInterface
 
     public function checkToken(array $options = []): array
     {
-        $checkToken = new CheckToken();
-        $checkToken->setHttpClient($this->httpClient);
+        $checkToken = new CheckToken($this->httpClient);
 
         return $checkToken->send($options);
     }

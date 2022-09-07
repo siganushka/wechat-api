@@ -4,17 +4,30 @@ declare(strict_types=1);
 
 namespace Siganushka\ApiClient\Wechat\Tests\Core;
 
+use PHPUnit\Framework\TestCase;
 use Siganushka\ApiClient\Exception\ParseResponseException;
-use Siganushka\ApiClient\Response\ResponseFactory;
-use Siganushka\ApiClient\Test\RequestTestCase;
 use Siganushka\ApiClient\Wechat\Core\Token;
+use Symfony\Component\Cache\Adapter\NullAdapter;
 use Symfony\Component\HttpClient\MockHttpClient;
+use Symfony\Component\HttpClient\Response\MockResponse;
 use Symfony\Component\OptionsResolver\Exception\InvalidOptionsException;
 use Symfony\Component\OptionsResolver\Exception\MissingOptionsException;
 use Symfony\Component\OptionsResolver\OptionsResolver;
 
-class TokenTest extends RequestTestCase
+class TokenTest extends TestCase
 {
+    protected ?Token $request = null;
+
+    protected function setUp(): void
+    {
+        $this->request = new Token();
+    }
+
+    protected function tearDown(): void
+    {
+        $this->request = null;
+    }
+
     public function testConfigure(): void
     {
         $resolver = new OptionsResolver();
@@ -47,34 +60,31 @@ class TokenTest extends RequestTestCase
 
     public function testSend(): void
     {
-        $data = [
-            'access_token' => 'foo',
-            'expires_in' => 1024,
-        ];
+        $data = ['access_token' => 'foo', 'expires_in' => 1024];
+        $body = json_encode($data);
 
-        $response = ResponseFactory::createMockResponseWithJson($data);
-        $client = new MockHttpClient($response);
+        $mockResponse = new MockResponse($body);
+        $client = new MockHttpClient($mockResponse);
 
-        $result = $this->request->setHttpClient($client)->send(['appid' => 'foo', 'secret' => 'bar']);
+        $result = (new Token($client))->send(['appid' => 'foo', 'secret' => 'bar']);
         static::assertSame($data, $result);
     }
 
-    public function testParseResponseException(): void
+    public function testSendWithParseResponseException(): void
     {
         $this->expectException(ParseResponseException::class);
         $this->expectExceptionCode(16);
         $this->expectExceptionMessage('test error');
 
-        $data = [
-            'errcode' => 16,
-            'errmsg' => 'test error',
-        ];
+        $data = ['errcode' => 16, 'errmsg' => 'test error'];
+        $body = json_encode($data);
 
-        $response = ResponseFactory::createMockResponseWithJson($data);
+        $mockResponse = new MockResponse($body);
+        $client = new MockHttpClient($mockResponse);
 
-        $parseResponseRef = new \ReflectionMethod($this->request, 'parseResponse');
-        $parseResponseRef->setAccessible(true);
-        $parseResponseRef->invoke($this->request, $response);
+        $cachePool = new NullAdapter();
+
+        (new Token($client, $cachePool))->send(['appid' => 'foo', 'secret' => 'bar']);
     }
 
     public function testAppidMissingOptionsException(): void
@@ -107,10 +117,5 @@ class TokenTest extends RequestTestCase
         $this->expectExceptionMessage('The option "secret" with value 123 is expected to be of type "string", but is of type "int"');
 
         $this->request->build(['appid' => 'foo', 'secret' => 123]);
-    }
-
-    protected function createRequest(): Token
-    {
-        return new Token();
     }
 }

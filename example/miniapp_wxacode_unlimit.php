@@ -2,6 +2,7 @@
 
 declare(strict_types=1);
 
+use Siganushka\ApiClient\Wechat\Core\TokenOptions;
 use Siganushka\ApiClient\Wechat\Miniapp\WxacodeUnlimited;
 
 require __DIR__.'/_autoload.php';
@@ -17,7 +18,10 @@ $options = [
     // 'line_color' => '#FFB6C1',
 ];
 
-$result = $client->send(WxacodeUnlimited::class, $options);
+$request = new WxacodeUnlimited();
+$request->extend(new TokenOptions($configuration));
+
+$result = $request->send($options);
 dd($result);
 
 // // 显示小程序码

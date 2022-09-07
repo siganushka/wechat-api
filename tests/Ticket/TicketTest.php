@@ -4,17 +4,30 @@ declare(strict_types=1);
 
 namespace Siganushka\ApiClient\Wechat\Tests\Ticket;
 
+use PHPUnit\Framework\TestCase;
 use Siganushka\ApiClient\Exception\ParseResponseException;
-use Siganushka\ApiClient\Response\ResponseFactory;
-use Siganushka\ApiClient\Test\RequestTestCase;
 use Siganushka\ApiClient\Wechat\Ticket\Ticket;
+use Symfony\Component\Cache\Adapter\NullAdapter;
 use Symfony\Component\HttpClient\MockHttpClient;
+use Symfony\Component\HttpClient\Response\MockResponse;
 use Symfony\Component\OptionsResolver\Exception\InvalidOptionsException;
 use Symfony\Component\OptionsResolver\Exception\MissingOptionsException;
 use Symfony\Component\OptionsResolver\OptionsResolver;
 
-class TicketTest extends RequestTestCase
+class TicketTest extends TestCase
 {
+    protected ?Ticket $request = null;
+
+    protected function setUp(): void
+    {
+        $this->request = new Ticket();
+    }
+
+    protected function tearDown(): void
+    {
+        $this->request = null;
+    }
+
     public function testConfigure(): void
     {
         $resolver = new OptionsResolver();
@@ -65,14 +78,16 @@ class TicketTest extends RequestTestCase
             'ticket' => 'test_ticket',
         ];
 
-        $response = ResponseFactory::createMockResponseWithJson($data);
-        $client = new MockHttpClient($response);
+        $body = json_encode($data);
 
-        $result = $this->request->setHttpClient($client)->send(['token' => 'foo']);
+        $mockResponse = new MockResponse($body);
+        $client = new MockHttpClient($mockResponse);
+
+        $result = (new Ticket($client))->send(['token' => 'foo']);
         static::assertSame($data, $result);
     }
 
-    public function testParseResponseException(): void
+    public function testSendWithParseResponseException(): void
     {
         $this->expectException(ParseResponseException::class);
         $this->expectExceptionCode(16);
@@ -83,11 +98,14 @@ class TicketTest extends RequestTestCase
             'errmsg' => 'test error',
         ];
 
-        $response = ResponseFactory::createMockResponseWithJson($data);
+        $body = json_encode($data);
 
-        $parseResponseRef = new \ReflectionMethod($this->request, 'parseResponse');
-        $parseResponseRef->setAccessible(true);
-        $parseResponseRef->invoke($this->request, $response);
+        $mockResponse = new MockResponse($body);
+        $client = new MockHttpClient($mockResponse);
+
+        $cachePool = new NullAdapter();
+
+        (new Ticket($client, $cachePool))->send(['token' => 'foo']);
     }
 
     public function testTokenMissingOptionsException(): void
@@ -112,10 +130,5 @@ class TicketTest extends RequestTestCase
         $this->expectExceptionMessage('The option "type" with value "bar" is invalid. Accepted values are: "jsapi", "wx_card"');
 
         $this->request->build(['token' => 'foo', 'type' => 'bar']);
-    }
-
-    protected function createRequest(): Ticket
-    {
-        return new Ticket();
     }
 }

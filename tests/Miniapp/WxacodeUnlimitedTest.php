@@ -4,17 +4,29 @@ declare(strict_types=1);
 
 namespace Siganushka\ApiClient\Wechat\Tests\Miniapp;
 
+use PHPUnit\Framework\TestCase;
 use Siganushka\ApiClient\Exception\ParseResponseException;
-use Siganushka\ApiClient\Response\ResponseFactory;
-use Siganushka\ApiClient\Test\RequestTestCase;
 use Siganushka\ApiClient\Wechat\Miniapp\WxacodeUnlimited;
 use Symfony\Component\HttpClient\MockHttpClient;
+use Symfony\Component\HttpClient\Response\MockResponse;
 use Symfony\Component\OptionsResolver\Exception\InvalidOptionsException;
 use Symfony\Component\OptionsResolver\Exception\MissingOptionsException;
 use Symfony\Component\OptionsResolver\OptionsResolver;
 
-class WxacodeUnlimitedTest extends RequestTestCase
+class WxacodeUnlimitedTest extends TestCase
 {
+    protected ?WxacodeUnlimited $request = null;
+
+    protected function setUp(): void
+    {
+        $this->request = new WxacodeUnlimited();
+    }
+
+    protected function tearDown(): void
+    {
+        $this->request = null;
+    }
+
     public function testConfigure(): void
     {
         $resolver = new OptionsResolver();
@@ -124,21 +136,21 @@ class WxacodeUnlimitedTest extends RequestTestCase
 
     public function testSend(): void
     {
-        $data = 'bin_content';
+        $body = 'bin_content';
         $info = [
             'response_headers' => [
                 'Content-Type' => 'image/png',
             ],
         ];
 
-        $response = ResponseFactory::createMockResponse($data, $info);
-        $client = new MockHttpClient($response);
+        $mockResponse = new MockResponse($body, $info);
+        $client = new MockHttpClient($mockResponse);
 
-        $result = $this->request->setHttpClient($client)->send(['token' => 'foo', 'scene' => 'bar']);
-        static::assertSame($data, $result);
+        $result = (new WxacodeUnlimited($client))->send(['token' => 'foo', 'scene' => 'bar']);
+        static::assertSame($body, $result);
     }
 
-    public function testParseResponseException(): void
+    public function testSendWithParseResponseException(): void
     {
         $this->expectException(ParseResponseException::class);
         $this->expectExceptionCode(16);
@@ -155,11 +167,12 @@ class WxacodeUnlimitedTest extends RequestTestCase
             ],
         ];
 
-        $response = ResponseFactory::createMockResponseWithJson($data, $info);
+        $body = json_encode($data);
 
-        $parseResponseRef = new \ReflectionMethod($this->request, 'parseResponse');
-        $parseResponseRef->setAccessible(true);
-        $parseResponseRef->invoke($this->request, $response);
+        $mockResponse = new MockResponse($body, $info);
+        $client = new MockHttpClient($mockResponse);
+
+        (new WxacodeUnlimited($client))->send(['token' => 'foo', 'scene' => 'bar']);
     }
 
     public function testTokenMissingOptionsException(): void
@@ -264,10 +277,5 @@ class WxacodeUnlimitedTest extends RequestTestCase
         $this->expectExceptionMessage('The option "auto_color" with value 123 is expected to be of type "null" or "bool", but is of type "int"');
 
         $this->request->build(['token' => 'foo', 'scene' => 'bar', 'auto_color' => 123]);
-    }
-
-    protected function createRequest(): WxacodeUnlimited
-    {
-        return new WxacodeUnlimited();
     }
 }

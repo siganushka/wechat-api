@@ -2,6 +2,7 @@
 
 declare(strict_types=1);
 
+use Siganushka\ApiClient\Wechat\ConfigurationOptions;
 use Siganushka\ApiClient\Wechat\Payment\Transfer;
 
 require __DIR__.'/_autoload.php';
@@ -15,5 +16,8 @@ $options = [
     // 're_user_name' => 'foo',
 ];
 
-$result = $client->send(Transfer::class, $options);
+$request = new Transfer();
+$request->extend(new ConfigurationOptions($configuration));
+
+$result = $request->send($options);
 dd($result);

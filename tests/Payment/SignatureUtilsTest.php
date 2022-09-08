@@ -6,7 +6,6 @@ namespace Siganushka\ApiClient\Wechat\Tests\Payment;
 
 use PHPUnit\Framework\TestCase;
 use Siganushka\ApiClient\Wechat\Payment\SignatureUtils;
-use Siganushka\ApiClient\Wechat\Tests\ConfigurationOptionsTest;
 use Symfony\Component\OptionsResolver\Exception\MissingOptionsException;
 use Symfony\Component\OptionsResolver\OptionsResolver;
 
@@ -56,21 +55,10 @@ class SignatureUtilsTest extends TestCase
         ]));
     }
 
-    public function testGenerate(): void
-    {
-        $data = ['foo' => 'hello'];
-
-        $this->signatureUtils->extend(ConfigurationOptionsTest::create());
-        $signature = $this->signatureUtils->generate($data);
-
-        static::assertSame('44C65B2286547046D4DEF419020A6425', $signature);
-        static::assertTrue($this->signatureUtils->check('44C65B2286547046D4DEF419020A6425', $data));
-    }
-
     /**
      * @dataProvider getSignatureProvider
      */
-    public function testGenerateFromOptions(string $key, array $data, string $sign, string $signType): void
+    public function testGenerate(string $key, array $data, string $sign, string $signType): void
     {
         $options = [
             'mchkey' => $key,
@@ -78,8 +66,8 @@ class SignatureUtilsTest extends TestCase
             'data' => $data,
         ];
 
-        static::assertSame($sign, $this->signatureUtils->generateFromOptions($options));
-        static::assertTrue($this->signatureUtils->checkFromOptions($sign, $options));
+        static::assertSame($sign, $this->signatureUtils->generate($options));
+        static::assertTrue($this->signatureUtils->check($sign, $options));
     }
 
     public function testMchkeyMissingOptionsException(): void
@@ -87,7 +75,7 @@ class SignatureUtilsTest extends TestCase
         $this->expectException(MissingOptionsException::class);
         $this->expectExceptionMessage('The required option "mchkey" is missing');
 
-        $this->signatureUtils->generateFromOptions([
+        $this->signatureUtils->generate([
             'data' => ['foo' => 'hello'],
         ]);
     }

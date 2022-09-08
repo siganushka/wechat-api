@@ -20,8 +20,12 @@ $data = [
 $signatureUtils = SignatureUtils::create();
 $signatureUtils->extend(new ConfigurationOptions($configuration));
 
-// 生成签名
-$sign = $signatureUtils->generate($data);
+$options = [
+    'data' => $data,
+];
 
-// 生成 & 验证签名
-dd($sign, $signatureUtils->check($sign, $data));
+// 生成签名
+$sign = $signatureUtils->generate($options);
+
+// 验证签名
+dd($sign, $signatureUtils->check($sign, $options));

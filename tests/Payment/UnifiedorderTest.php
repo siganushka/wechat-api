@@ -40,7 +40,7 @@ class UnifiedorderTest extends TestCase
             'mchid',
             'mchkey',
             'sign_type',
-            'nonce_str',
+            'noncestr',
             'client_ip',
             'using_slave_url',
             'device_info',
@@ -67,7 +67,7 @@ class UnifiedorderTest extends TestCase
             'appid' => 'test_appid',
             'mchid' => 'test_mchid',
             'mchkey' => 'test_mchkey',
-            'nonce_str' => 'test_nonce_str',
+            'noncestr' => 'test_noncestr',
             'body' => 'test_body',
             'notify_url' => 'test_notify_url',
             'out_trade_no' => 'test_out_trade_no',
@@ -81,7 +81,7 @@ class UnifiedorderTest extends TestCase
             'mchid' => $options['mchid'],
             'mchkey' => $options['mchkey'],
             'sign_type' => 'MD5',
-            'nonce_str' => $options['nonce_str'],
+            'noncestr' => $options['noncestr'],
             'client_ip' => '0.0.0.0',
             'using_slave_url' => false,
             'device_info' => null,
@@ -129,7 +129,7 @@ class UnifiedorderTest extends TestCase
             'mchid' => $options['mchid'],
             'mchkey' => $options['mchkey'],
             'sign_type' => $options['sign_type'],
-            'nonce_str' => $options['nonce_str'],
+            'noncestr' => $options['noncestr'],
             'client_ip' => $options['client_ip'],
             'using_slave_url' => $options['using_slave_url'],
             'device_info' => $options['device_info'],
@@ -159,7 +159,7 @@ class UnifiedorderTest extends TestCase
             'appid' => 'test_appid',
             'mchid' => 'test_mchid',
             'mchkey' => 'test_mchkey',
-            'nonce_str' => 'test_nonce_str',
+            'noncestr' => 'test_noncestr',
             'body' => 'test_body',
             'notify_url' => 'test_notify_url',
             'out_trade_no' => 'test_out_trade_no',
@@ -178,7 +178,7 @@ class UnifiedorderTest extends TestCase
         unset($body['sign']);
 
         $signatureUtils = SignatureUtils::create();
-        static::assertSame($signature, $signatureUtils->generateFromOptions([
+        static::assertSame($signature, $signatureUtils->generate([
             'mchkey' => $options['mchkey'],
             'data' => $body,
         ]));
@@ -186,7 +186,7 @@ class UnifiedorderTest extends TestCase
         static::assertSame([
             'appid' => $options['appid'],
             'mch_id' => $options['mchid'],
-            'nonce_str' => $options['nonce_str'],
+            'nonce_str' => $options['noncestr'],
             'sign_type' => 'MD5',
             'body' => $options['body'],
             'out_trade_no' => $options['out_trade_no'],
@@ -224,7 +224,7 @@ class UnifiedorderTest extends TestCase
         $signature = $body['sign'];
         unset($body['sign']);
 
-        static::assertSame($signature, $signatureUtils->generateFromOptions([
+        static::assertSame($signature, $signatureUtils->generate([
             'mchkey' => $options['mchkey'],
             'sign_type' => $options['sign_type'],
             'data' => $body,
@@ -234,7 +234,7 @@ class UnifiedorderTest extends TestCase
             'appid' => $options['appid'],
             'mch_id' => $options['mchid'],
             'device_info' => $options['device_info'],
-            'nonce_str' => $options['nonce_str'],
+            'nonce_str' => $options['noncestr'],
             'sign_type' => $options['sign_type'],
             'body' => $options['body'],
             'detail' => $options['detail'],

@@ -31,25 +31,18 @@ class SignatureUtils implements OptionsConfigurableInterface
     }
 
     /**
-     * @param array $data 要发送的数据集合
+     * 生成数据签名.
      *
-     * @return string JSAPI 支付参数
+     * @param array $options 数据签名选项
+     *
+     * @return string 数据签名
      */
-    public function generate(array $data): string
-    {
-        return $this->generateFromOptions(['data' => $data]);
-    }
-
-    /**
-     * @param array $options 自定义 JSAPI 支付参数
-     */
-    public function generateFromOptions(array $options = []): string
+    public function generate(array $options = []): string
     {
         $resolver = new OptionsResolver();
         $this->configure($resolver);
 
         $resolved = $resolver->resolve($options);
-        // data to signature
         $data = $resolved['data'];
 
         ksort($data);
@@ -65,14 +58,9 @@ class SignatureUtils implements OptionsConfigurableInterface
         return strtoupper($signature);
     }
 
-    public function check(string $sign, array $data): bool
+    public function check(string $sign, array $options = []): bool
     {
-        return 0 === strcmp($sign, $this->generate($data));
-    }
-
-    public function checkFromOptions(string $sign, array $options = []): bool
-    {
-        return 0 === strcmp($sign, $this->generateFromOptions($options));
+        return 0 === strcmp($sign, $this->generate($options));
     }
 
     protected function configureOptions(OptionsResolver $resolver): void

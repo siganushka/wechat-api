@@ -40,7 +40,7 @@ class Unifiedorder extends AbstractRequest
         OptionsUtils::mchid($resolver);
         OptionsUtils::mchkey($resolver);
         OptionsUtils::sign_type($resolver);
-        OptionsUtils::nonce_str($resolver);
+        OptionsUtils::noncestr($resolver);
         OptionsUtils::client_ip($resolver);
         OptionsUtils::using_slave_url($resolver);
 
@@ -179,7 +179,7 @@ class Unifiedorder extends AbstractRequest
             'appid' => $options['appid'],
             'mch_id' => $options['mchid'],
             'device_info' => $options['device_info'],
-            'nonce_str' => $options['nonce_str'],
+            'nonce_str' => $options['noncestr'],
             'sign_type' => $options['sign_type'],
             'body' => $options['body'],
             'detail' => $options['detail'],
@@ -202,7 +202,7 @@ class Unifiedorder extends AbstractRequest
         ], fn ($value) => null !== $value);
 
         // Generate signature
-        $body['sign'] = SignatureUtils::create()->generateFromOptions([
+        $body['sign'] = SignatureUtils::create()->generate([
             'mchkey' => $options['mchkey'],
             'sign_type' => $options['sign_type'],
             'data' => $body,

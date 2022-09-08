@@ -40,7 +40,7 @@ class Query extends AbstractRequest
         OptionsUtils::mchid($resolver);
         OptionsUtils::mchkey($resolver);
         OptionsUtils::sign_type($resolver);
-        OptionsUtils::nonce_str($resolver);
+        OptionsUtils::noncestr($resolver);
         OptionsUtils::using_slave_url($resolver);
 
         $resolver
@@ -70,12 +70,12 @@ class Query extends AbstractRequest
             'mch_id' => $options['mchid'],
             'transaction_id' => $options['transaction_id'],
             'out_trade_no' => $options['out_trade_no'],
-            'nonce_str' => $options['nonce_str'],
+            'nonce_str' => $options['noncestr'],
             'sign_type' => $options['sign_type'],
         ], fn ($value) => null !== $value);
 
         // Generate signature
-        $body['sign'] = SignatureUtils::create()->generateFromOptions([
+        $body['sign'] = SignatureUtils::create()->generate([
             'mchkey' => $options['mchkey'],
             'sign_type' => $options['sign_type'],
             'data' => $body,

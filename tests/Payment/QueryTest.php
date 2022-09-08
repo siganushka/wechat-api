@@ -40,7 +40,7 @@ class QueryTest extends TestCase
             'mchid',
             'mchkey',
             'sign_type',
-            'nonce_str',
+            'noncestr',
             'using_slave_url',
             'transaction_id',
             'out_trade_no',
@@ -51,12 +51,12 @@ class QueryTest extends TestCase
             'mchid' => 'test_mchid',
             'mchkey' => 'test_mchkey',
             'transaction_id' => 'test_transaction_id',
-            'nonce_str' => 'test_nonce_str',
+            'noncestr' => 'test_noncestr',
         ];
 
         static::assertSame([
             'sign_type' => 'MD5',
-            'nonce_str' => $options['nonce_str'],
+            'noncestr' => $options['noncestr'],
             'using_slave_url' => false,
             'transaction_id' => $options['transaction_id'],
             'out_trade_no' => null,
@@ -67,7 +67,7 @@ class QueryTest extends TestCase
 
         static::assertSame([
             'sign_type' => 'HMAC-SHA256',
-            'nonce_str' => $options['nonce_str'],
+            'noncestr' => $options['noncestr'],
             'using_slave_url' => true,
             'transaction_id' => $options['transaction_id'],
             'out_trade_no' => 'test_out_trade_no',
@@ -87,7 +87,7 @@ class QueryTest extends TestCase
             'appid' => 'foo',
             'mchid' => 'bar',
             'mchkey' => 'test_mchkey',
-            'nonce_str' => uniqid(),
+            'noncestr' => uniqid(),
             'transaction_id' => 'test_transaction_id',
         ];
 
@@ -101,7 +101,7 @@ class QueryTest extends TestCase
         unset($body['sign']);
 
         $signatureUtils = SignatureUtils::create();
-        static::assertSame($signature, $signatureUtils->generateFromOptions([
+        static::assertSame($signature, $signatureUtils->generate([
             'mchkey' => $options['mchkey'],
             'data' => $body,
         ]));
@@ -110,7 +110,7 @@ class QueryTest extends TestCase
             'appid' => $options['appid'],
             'mch_id' => $options['mchid'],
             'transaction_id' => $options['transaction_id'],
-            'nonce_str' => $options['nonce_str'],
+            'nonce_str' => $options['noncestr'],
             'sign_type' => 'MD5',
         ], $body);
 
@@ -127,7 +127,7 @@ class QueryTest extends TestCase
         $signature = $body['sign'];
         unset($body['sign']);
 
-        static::assertSame($signature, $signatureUtils->generateFromOptions([
+        static::assertSame($signature, $signatureUtils->generate([
             'mchkey' => $options['mchkey'],
             'sign_type' => 'HMAC-SHA256',
             'data' => $body,
@@ -138,7 +138,7 @@ class QueryTest extends TestCase
             'mch_id' => $options['mchid'],
             'transaction_id' => $options['transaction_id'],
             'out_trade_no' => 'test_out_trade_no',
-            'nonce_str' => $options['nonce_str'],
+            'nonce_str' => $options['noncestr'],
             'sign_type' => 'HMAC-SHA256',
         ], $body);
     }
@@ -227,7 +227,7 @@ class QueryTest extends TestCase
             'mchid' => 'test_mchid',
             'mchkey' => 'test_mchkey',
             'transaction_id' => 'test_transaction_id',
-            'nonce_str' => 'test_nonce_str',
+            'noncestr' => 'test_noncestr',
         ]);
     }
 
@@ -240,7 +240,7 @@ class QueryTest extends TestCase
             'appid' => 'test_appid',
             'mchkey' => 'test_mchkey',
             'transaction_id' => 'test_transaction_id',
-            'nonce_str' => 'test_nonce_str',
+            'noncestr' => 'test_noncestr',
         ]);
     }
 
@@ -253,7 +253,7 @@ class QueryTest extends TestCase
             'appid' => 'test_appid',
             'mchid' => 'test_mchid',
             'transaction_id' => 'test_transaction_id',
-            'nonce_str' => 'test_nonce_str',
+            'noncestr' => 'test_noncestr',
         ]);
     }
 

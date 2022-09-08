@@ -109,10 +109,10 @@ final class OptionsUtils
         ;
     }
 
-    public static function nonce_str(OptionsResolver $resolver): OptionConfigurator
+    public static function noncestr(OptionsResolver $resolver): OptionConfigurator
     {
         return $resolver
-            ->define('nonce_str')
+            ->define('noncestr')
             ->default(GenericUtils::getNonceStr())
             ->allowedTypes('string')
         ;

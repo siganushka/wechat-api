@@ -41,7 +41,7 @@ class Refund extends AbstractRequest
         OptionsUtils::mch_client_cert($resolver);
         OptionsUtils::mch_client_key($resolver);
         OptionsUtils::sign_type($resolver);
-        OptionsUtils::nonce_str($resolver);
+        OptionsUtils::noncestr($resolver);
 
         $resolver
             ->define('transaction_id')
@@ -111,7 +111,7 @@ class Refund extends AbstractRequest
             'appid' => $options['appid'],
             'mch_id' => $options['mchid'],
             'sign_type' => $options['sign_type'],
-            'nonce_str' => $options['nonce_str'],
+            'nonce_str' => $options['noncestr'],
             'transaction_id' => $options['transaction_id'],
             'out_trade_no' => $options['out_trade_no'],
             'out_refund_no' => $options['out_refund_no'],
@@ -124,7 +124,7 @@ class Refund extends AbstractRequest
         ], fn ($value) => null !== $value);
 
         // Generate signature
-        $body['sign'] = SignatureUtils::create()->generateFromOptions([
+        $body['sign'] = SignatureUtils::create()->generate([
             'mchkey' => $options['mchkey'],
             'sign_type' => $options['sign_type'],
             'data' => $body,

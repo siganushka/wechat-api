@@ -43,7 +43,7 @@ class RefundTest extends TestCase
             'mch_client_cert',
             'mch_client_key',
             'sign_type',
-            'nonce_str',
+            'noncestr',
             'transaction_id',
             'out_trade_no',
             'out_refund_no',
@@ -61,7 +61,7 @@ class RefundTest extends TestCase
             'mchkey' => 'test_mchkey',
             'mch_client_cert' => ConfigurationTest::MCH_CLIENT_CERT,
             'mch_client_key' => ConfigurationTest::MCH_CLIENT_KEY,
-            'nonce_str' => 'test_nonce_str',
+            'noncestr' => 'test_noncestr',
             'transaction_id' => 'test_transaction_id',
             'out_refund_no' => 'test_out_refund_no',
             'total_fee' => 12,
@@ -70,7 +70,7 @@ class RefundTest extends TestCase
 
         static::assertSame([
             'sign_type' => 'MD5',
-            'nonce_str' => $options['nonce_str'],
+            'noncestr' => $options['noncestr'],
             'transaction_id' => $options['transaction_id'],
             'out_trade_no' => null,
             'refund_fee_type' => null,
@@ -89,7 +89,7 @@ class RefundTest extends TestCase
 
         static::assertSame([
             'sign_type' => 'HMAC-SHA256',
-            'nonce_str' => $options['nonce_str'],
+            'noncestr' => $options['noncestr'],
             'transaction_id' => $options['transaction_id'],
             'out_trade_no' => 'test_out_trade_no',
             'refund_fee_type' => 'CNY',
@@ -124,7 +124,7 @@ class RefundTest extends TestCase
             'mchkey' => $configuration['mchkey'],
             'mch_client_cert' => $configuration['mch_client_cert'],
             'mch_client_key' => $configuration['mch_client_key'],
-            'nonce_str' => uniqid(),
+            'noncestr' => uniqid(),
             'transaction_id' => 'test_transaction_id',
             'out_refund_no' => 'test_out_refund_no',
             'total_fee' => 12,
@@ -143,7 +143,7 @@ class RefundTest extends TestCase
         unset($body['sign']);
 
         $signatureUtils = SignatureUtils::create();
-        static::assertSame($signature, $signatureUtils->generateFromOptions([
+        static::assertSame($signature, $signatureUtils->generate([
             'mchkey' => $options['mchkey'],
             'data' => $body,
         ]));
@@ -152,7 +152,7 @@ class RefundTest extends TestCase
             'appid' => $options['appid'],
             'mch_id' => $options['mchid'],
             'sign_type' => 'MD5',
-            'nonce_str' => $options['nonce_str'],
+            'nonce_str' => $options['noncestr'],
             'transaction_id' => $options['transaction_id'],
             'out_refund_no' => $options['out_refund_no'],
             'total_fee' => (string) $options['total_fee'],
@@ -173,7 +173,7 @@ class RefundTest extends TestCase
         $signature = $body['sign'];
         unset($body['sign']);
 
-        static::assertSame($signature, $signatureUtils->generateFromOptions([
+        static::assertSame($signature, $signatureUtils->generate([
             'mchkey' => $options['mchkey'],
             'sign_type' => 'HMAC-SHA256',
             'data' => $body,
@@ -183,7 +183,7 @@ class RefundTest extends TestCase
             'appid' => $options['appid'],
             'mch_id' => $options['mchid'],
             'sign_type' => 'HMAC-SHA256',
-            'nonce_str' => $options['nonce_str'],
+            'nonce_str' => $options['noncestr'],
             'transaction_id' => $options['transaction_id'],
             'out_trade_no' => 'test_out_trade_no',
             'out_refund_no' => $options['out_refund_no'],
@@ -302,7 +302,7 @@ class RefundTest extends TestCase
             'mchkey' => 'test_mchkey',
             'mch_client_cert' => ConfigurationTest::MCH_CLIENT_CERT,
             'mch_client_key' => ConfigurationTest::MCH_CLIENT_KEY,
-            'nonce_str' => 'test_nonce_str',
+            'noncestr' => 'test_noncestr',
             'transaction_id' => 'test_transaction_id',
             'out_refund_no' => 'test_out_refund_no',
             'total_fee' => 12,
@@ -320,7 +320,7 @@ class RefundTest extends TestCase
             'mchkey' => 'test_mchkey',
             'mch_client_cert' => ConfigurationTest::MCH_CLIENT_CERT,
             'mch_client_key' => ConfigurationTest::MCH_CLIENT_KEY,
-            'nonce_str' => 'test_nonce_str',
+            'noncestr' => 'test_noncestr',
             'transaction_id' => 'test_transaction_id',
             'out_refund_no' => 'test_out_refund_no',
             'total_fee' => 12,
@@ -338,7 +338,7 @@ class RefundTest extends TestCase
             'mchid' => 'test_mchid',
             'mch_client_cert' => ConfigurationTest::MCH_CLIENT_CERT,
             'mch_client_key' => ConfigurationTest::MCH_CLIENT_KEY,
-            'nonce_str' => 'test_nonce_str',
+            'noncestr' => 'test_noncestr',
             'transaction_id' => 'test_transaction_id',
             'out_refund_no' => 'test_out_refund_no',
             'total_fee' => 12,

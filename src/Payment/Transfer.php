@@ -41,7 +41,7 @@ class Transfer extends AbstractRequest
         OptionsUtils::mch_client_cert($resolver);
         OptionsUtils::mch_client_key($resolver);
         OptionsUtils::sign_type($resolver);
-        OptionsUtils::nonce_str($resolver);
+        OptionsUtils::noncestr($resolver);
         OptionsUtils::client_ip($resolver);
 
         $resolver
@@ -118,7 +118,7 @@ class Transfer extends AbstractRequest
             'mch_appid' => $options['appid'],
             'mchid' => $options['mchid'],
             'device_info' => $options['device_info'],
-            'nonce_str' => $options['nonce_str'],
+            'nonce_str' => $options['noncestr'],
             'partner_trade_no' => $options['partner_trade_no'],
             'openid' => $options['openid'],
             'check_name' => $options['check_name'],
@@ -132,7 +132,7 @@ class Transfer extends AbstractRequest
         ], fn ($value) => null !== $value);
 
         // Generate signature
-        $body['sign'] = SignatureUtils::create()->generateFromOptions([
+        $body['sign'] = SignatureUtils::create()->generate([
             'mchkey' => $options['mchkey'],
             'sign_type' => $options['sign_type'],
             'data' => $body,

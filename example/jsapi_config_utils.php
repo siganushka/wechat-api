@@ -10,5 +10,5 @@ require __DIR__.'/_autoload.php';
 $configUtils = ConfigUtils::create();
 $configUtils->extend(new TicketOptions($configuration));
 
-$config = $configUtils->generateFromOptions();
+$config = $configUtils->generate();
 dd($config);

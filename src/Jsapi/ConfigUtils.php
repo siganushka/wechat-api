@@ -32,37 +32,13 @@ class ConfigUtils implements OptionsConfigurableInterface
     }
 
     /**
-     * @param array $apis  需要使用的 JS 接口列表
-     * @param bool  $debug 是否开启调试模式
+     * 生成 JSSDK 配置参数.
+     *
+     * @param array $options 自定义配置参数
      *
      * @return array JSSDK 配置参数
      */
-    public function generate(array $apis = [], bool $debug = false): array
-    {
-        return $this->generateFromOptions(['apis' => $apis, 'debug' => $debug]);
-    }
-
-    /**
-     * @param array{
-     *  appid?: string,
-     *  ticket?: string,
-     *  timestamp?: string,
-     *  nonce_str?: string,
-     *  url?: string,
-     *  apis?: array<int, string>,
-     *  debug?: bool
-     * } $options 自定义 JSSDK 配置选项
-     *
-     * @return array{
-     *  appId: string,
-     *  timestamp: string,
-     *  nonceStr: string,
-     *  signature: string,
-     *  jsApiList: array<int, string>,
-     *  debug: bool
-     * } JSSDK 配置参数
-     */
-    public function generateFromOptions(array $options = []): array
+    public function generate(array $options = []): array
     {
         $resolver = new OptionsResolver();
         $this->configure($resolver);
@@ -71,7 +47,7 @@ class ConfigUtils implements OptionsConfigurableInterface
         $data = [
             'jsapi_ticket' => $resolved['ticket'],
             'timestamp' => $resolved['timestamp'],
-            'noncestr' => $resolved['nonce_str'],
+            'noncestr' => $resolved['noncestr'],
             'url' => $resolved['url'],
         ];
 
@@ -83,7 +59,7 @@ class ConfigUtils implements OptionsConfigurableInterface
         $config = [
             'appId' => $resolved['appid'],
             'timestamp' => $resolved['timestamp'],
-            'nonceStr' => $resolved['nonce_str'],
+            'nonceStr' => $resolved['noncestr'],
             'signature' => $signature,
             'jsApiList' => $resolved['apis'],
             'debug' => $resolved['debug'],
@@ -97,7 +73,7 @@ class ConfigUtils implements OptionsConfigurableInterface
         OptionsUtils::appid($resolver);
         OptionsUtils::ticket($resolver);
         OptionsUtils::timestamp($resolver);
-        OptionsUtils::nonce_str($resolver);
+        OptionsUtils::noncestr($resolver);
 
         $resolver
             ->define('url')

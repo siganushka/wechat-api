@@ -43,7 +43,7 @@ class TransferTest extends TestCase
             'mch_client_cert',
             'mch_client_key',
             'sign_type',
-            'nonce_str',
+            'noncestr',
             'client_ip',
             'device_info',
             'partner_trade_no',
@@ -63,7 +63,7 @@ class TransferTest extends TestCase
             'mchkey' => 'test_mchkey',
             'mch_client_cert' => ConfigurationTest::MCH_CLIENT_CERT,
             'mch_client_key' => ConfigurationTest::MCH_CLIENT_KEY,
-            'nonce_str' => 'test_nonce_str',
+            'noncestr' => 'test_noncestr',
             'partner_trade_no' => 'test_partner_trade_no',
             'openid' => 'test_openid',
             'amount' => 1,
@@ -72,7 +72,7 @@ class TransferTest extends TestCase
 
         static::assertSame([
             'sign_type' => 'MD5',
-            'nonce_str' => $options['nonce_str'],
+            'noncestr' => $options['noncestr'],
             'client_ip' => '0.0.0.0',
             'device_info' => null,
             'check_name' => 'NO_CHECK',
@@ -93,7 +93,7 @@ class TransferTest extends TestCase
 
         static::assertSame([
             'sign_type' => 'HMAC-SHA256',
-            'nonce_str' => $options['nonce_str'],
+            'noncestr' => $options['noncestr'],
             'client_ip' => '127.0.0.1',
             'device_info' => 'test_device_info',
             'check_name' => 'FORCE_CHECK',
@@ -132,7 +132,7 @@ class TransferTest extends TestCase
             'mchkey' => $configuration['mchkey'],
             'mch_client_cert' => $configuration['mch_client_cert'],
             'mch_client_key' => $configuration['mch_client_key'],
-            'nonce_str' => uniqid(),
+            'noncestr' => uniqid(),
             'partner_trade_no' => 'test_partner_trade_no',
             'openid' => 'test_openid',
             'amount' => 1,
@@ -151,7 +151,7 @@ class TransferTest extends TestCase
         unset($body['sign']);
 
         $signatureUtils = SignatureUtils::create();
-        static::assertSame($signature, $signatureUtils->generateFromOptions([
+        static::assertSame($signature, $signatureUtils->generate([
             'mchkey' => $options['mchkey'],
             'data' => $body,
         ]));
@@ -159,7 +159,7 @@ class TransferTest extends TestCase
         static::assertSame([
             'mch_appid' => $options['appid'],
             'mchid' => $options['mchid'],
-            'nonce_str' => $options['nonce_str'],
+            'nonce_str' => $options['noncestr'],
             'partner_trade_no' => $options['partner_trade_no'],
             'openid' => $options['openid'],
             'check_name' => 'NO_CHECK',
@@ -182,7 +182,7 @@ class TransferTest extends TestCase
         $signature = $body['sign'];
         unset($body['sign']);
 
-        static::assertSame($signature, $signatureUtils->generateFromOptions([
+        static::assertSame($signature, $signatureUtils->generate([
             'mchkey' => $options['mchkey'],
             'sign_type' => 'HMAC-SHA256',
             'data' => $body,
@@ -192,7 +192,7 @@ class TransferTest extends TestCase
             'mch_appid' => $options['appid'],
             'mchid' => $options['mchid'],
             'device_info' => 'test_device_info',
-            'nonce_str' => $options['nonce_str'],
+            'nonce_str' => $options['noncestr'],
             'partner_trade_no' => $options['partner_trade_no'],
             'openid' => $options['openid'],
             'check_name' => 'NO_CHECK',
@@ -216,7 +216,7 @@ class TransferTest extends TestCase
             'mchkey' => $configuration['mchkey'],
             'mch_client_cert' => $configuration['mch_client_cert'],
             'mch_client_key' => $configuration['mch_client_key'],
-            'nonce_str' => uniqid(),
+            'noncestr' => uniqid(),
             'partner_trade_no' => 'test_partner_trade_no',
             'openid' => 'test_openid',
             'amount' => 1,
@@ -251,7 +251,7 @@ class TransferTest extends TestCase
             'mchkey' => $configuration['mchkey'],
             'mch_client_cert' => $configuration['mch_client_cert'],
             'mch_client_key' => $configuration['mch_client_key'],
-            'nonce_str' => uniqid(),
+            'noncestr' => uniqid(),
             'partner_trade_no' => 'test_partner_trade_no',
             'openid' => 'test_openid',
             'amount' => 1,
@@ -285,7 +285,7 @@ class TransferTest extends TestCase
             'mchkey' => $configuration['mchkey'],
             'mch_client_cert' => $configuration['mch_client_cert'],
             'mch_client_key' => $configuration['mch_client_key'],
-            'nonce_str' => uniqid(),
+            'noncestr' => uniqid(),
             'partner_trade_no' => 'test_partner_trade_no',
             'openid' => 'test_openid',
             'amount' => 1,

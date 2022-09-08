@@ -33,7 +33,7 @@ class ParameterUtils implements OptionsConfigurableInterface
      *
      * @see https://pay.weixin.qq.com/wiki/doc/apiv3/apis/chapter3_1_4.shtml
      *
-     * @param string $prepayId 统一下单接口返回的 prepay_id 参数
+     * @param array $options JSAPI 支付参数
      *
      * @return array JSAPI 支付参数
      */
@@ -63,9 +63,7 @@ class ParameterUtils implements OptionsConfigurableInterface
      *
      * @see https://pay.weixin.qq.com/wiki/doc/apiv3/apis/chapter3_2_4.shtml
      *
-     * @param string $prepayId 统一下单接口返回的 prepay_id 参数
-     *
-     * @return array APP 支付参数
+     * @param array $options APP 支付参数选项
      */
     public function app(array $options = []): array
     {

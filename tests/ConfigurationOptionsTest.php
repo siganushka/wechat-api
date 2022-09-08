@@ -13,7 +13,7 @@ use Siganushka\ApiClient\Wechat\OAuth\AccessToken;
 use Siganushka\ApiClient\Wechat\OAuth\Client;
 use Siganushka\ApiClient\Wechat\OAuth\Qrcode;
 use Siganushka\ApiClient\Wechat\OAuth\RefreshToken;
-use Siganushka\ApiClient\Wechat\Payment\ConfigUtils;
+use Siganushka\ApiClient\Wechat\Payment\ParameterUtils;
 use Siganushka\ApiClient\Wechat\Payment\Query;
 use Siganushka\ApiClient\Wechat\Payment\Refund;
 use Siganushka\ApiClient\Wechat\Payment\SignatureUtils;
@@ -77,7 +77,7 @@ class ConfigurationOptionsTest extends TestCase
             Query::class,
             Refund::class,
             Transfer::class,
-            ConfigUtils::class,
+            ParameterUtils::class,
             SignatureUtils::class,
             Unifiedorder::class,
         ], $configurationOptions::getExtendedClasses());

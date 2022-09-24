@@ -2,15 +2,8 @@
 
 declare(strict_types=1);
 
-// 以下演示为多应用配置，如果只有单个应用（比如只有小程序没有公众号和开放平台
-// 就只需要配置 miniapp 即可），每组配置具体包含以下配置项：
-//
-// appid （必填）微信公众号/小程序/开放平台帐号
-// secret （必填）微信公众号/小程序/开放平台秘钥
-// mchid （选填）微信支付商户号
-// mchkey （选填）微信支付商户密钥
-// mch_client_cert （选填）微信支付商户客户端证书
-// mch_client_key （选填）微信支付商户客户端证书 Key
+// appid 微信公众号/小程序/开放平台帐号
+// secret 微信公众号/小程序/开放平台秘钥
 
 return [
     // 小程序
@@ -27,5 +20,5 @@ return [
     'open' => [
         'appid' => 'your_appid',
         'secret' => 'your_secret',
-    ]
+    ],
 ];

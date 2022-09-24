@@ -16,10 +16,6 @@ class Configuration extends AbstractConfiguration
     {
         OptionsUtils::appid($resolver);
         OptionsUtils::secret($resolver);
-        OptionsUtils::mchid($resolver);
-        OptionsUtils::mchkey($resolver);
-        OptionsUtils::mch_client_cert($resolver);
-        OptionsUtils::mch_client_key($resolver);
 
         foreach ($resolver->getDefinedOptions() as $option) {
             $resolver->setDefault($option, null);

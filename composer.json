@@ -1,7 +1,7 @@
 {
     "name": "siganushka/wechat-api",
     "description": "Wechat API.",
-    "keywords": ["wechat", "wechat-api", "wechat-sdk", "weixin"],
+    "keywords": ["wechat", "weixin", "wechat-api"],
     "homepage": "https://github.com/siganushka/wechat-api",
     "type": "library",
     "license": "MIT",
@@ -14,8 +14,7 @@
     "require": {
         "php": ">=7.4",
         "siganushka/api-client": "dev-main",
-        "symfony/cache": "^5.4|^6.0",
-        "symfony/serializer": "^5.4|^6.0"
+        "symfony/cache": "^5.4|^6.0"
     },
     "require-dev": {
         "symfony/error-handler": "^5.4|^6.0",

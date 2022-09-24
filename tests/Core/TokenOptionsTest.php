@@ -32,28 +32,16 @@ class TokenOptionsTest extends TestCase
         static::assertSame([
             'appid',
             'secret',
-            'mchid',
-            'mchkey',
-            'mch_client_cert',
-            'mch_client_key',
             'token',
         ], $resolver->getDefinedOptions());
 
         static::assertSame([
             'appid' => 'test_appid',
             'secret' => 'test_secret',
-            'mchid' => 'test_mchid',
-            'mchkey' => 'test_mchkey',
-            'mch_client_cert' => ConfigurationTest::MCH_CLIENT_CERT,
-            'mch_client_key' => ConfigurationTest::MCH_CLIENT_KEY,
             'token' => 'test_token_1',
         ], $resolver->resolve());
 
         static::assertSame([
-            'mchid' => 'test_mchid',
-            'mchkey' => 'test_mchkey',
-            'mch_client_cert' => ConfigurationTest::MCH_CLIENT_CERT,
-            'mch_client_key' => ConfigurationTest::MCH_CLIENT_KEY,
             'appid' => 'foo',
             'secret' => 'bar',
             'token' => 'test_token_2',

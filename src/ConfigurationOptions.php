@@ -12,12 +12,6 @@ use Siganushka\ApiClient\Wechat\OAuth\AccessToken;
 use Siganushka\ApiClient\Wechat\OAuth\Client;
 use Siganushka\ApiClient\Wechat\OAuth\Qrcode;
 use Siganushka\ApiClient\Wechat\OAuth\RefreshToken;
-use Siganushka\ApiClient\Wechat\Payment\ParameterUtils;
-use Siganushka\ApiClient\Wechat\Payment\Query;
-use Siganushka\ApiClient\Wechat\Payment\Refund;
-use Siganushka\ApiClient\Wechat\Payment\SignatureUtils;
-use Siganushka\ApiClient\Wechat\Payment\Transfer;
-use Siganushka\ApiClient\Wechat\Payment\Unifiedorder;
 use Symfony\Component\OptionsResolver\OptionsResolver;
 
 class ConfigurationOptions implements OptionsExtensionInterface
@@ -49,12 +43,6 @@ class ConfigurationOptions implements OptionsExtensionInterface
             Qrcode::class,
             AccessToken::class,
             RefreshToken::class,
-            Query::class,
-            Refund::class,
-            Transfer::class,
-            ParameterUtils::class,
-            SignatureUtils::class,
-            Unifiedorder::class,
         ];
     }
 }

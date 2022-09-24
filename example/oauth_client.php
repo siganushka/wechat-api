@@ -3,7 +3,6 @@
 declare(strict_types=1);
 
 use Siganushka\ApiClient\Wechat\ConfigurationOptions;
-use Siganushka\ApiClient\Wechat\GenericUtils;
 use Siganushka\ApiClient\Wechat\OAuth\Client;
 
 require __DIR__.'/_autoload.php';
@@ -12,8 +11,12 @@ $client = new Client();
 $client->extend(new ConfigurationOptions($mpConfiguration));
 
 if (!isset($_GET['code'])) {
+    $currentUrl = (isset($_SERVER['HTTPS']) ? 'https://' : 'http://').
+        ($_SERVER['HTTP_HOST'] ?? 'localhost').
+        ($_SERVER['REQUEST_URI'] ?? '');
+
     $options = [
-        'redirect_uri' => GenericUtils::getCurrentUrl(),
+        'redirect_uri' => $currentUrl,
     ];
 
     $redirectUrl = $client->getRedirectUrl($options);

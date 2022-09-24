@@ -45,29 +45,20 @@ final class OptionsUtils
         ;
     }
 
-    public static function noncestr(OptionsResolver $resolver): OptionConfigurator
-    {
-        return $resolver
-            ->define('noncestr')
-            ->default(GenericUtils::getNonceStr())
-            ->allowedTypes('string')
-        ;
-    }
-
     public static function timestamp(OptionsResolver $resolver): OptionConfigurator
     {
         return $resolver
             ->define('timestamp')
-            ->default(GenericUtils::getTimestamp())
+            ->default((string) time())
             ->allowedTypes('string')
         ;
     }
 
-    public static function client_ip(OptionsResolver $resolver): OptionConfigurator
+    public static function noncestr(OptionsResolver $resolver): OptionConfigurator
     {
         return $resolver
-            ->define('client_ip')
-            ->default(GenericUtils::getClientIp())
+            ->define('noncestr')
+            ->default(bin2hex(random_bytes(16)))
             ->allowedTypes('string')
         ;
     }

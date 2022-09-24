@@ -6,7 +6,6 @@ namespace Siganushka\ApiClient\Wechat\Jsapi;
 
 use Siganushka\ApiClient\OptionsConfigurableInterface;
 use Siganushka\ApiClient\OptionsConfigurableTrait;
-use Siganushka\ApiClient\Wechat\GenericUtils;
 use Siganushka\ApiClient\Wechat\OptionsUtils;
 use Symfony\Component\OptionsResolver\OptionsResolver;
 
@@ -75,9 +74,13 @@ class ConfigUtils implements OptionsConfigurableInterface
         OptionsUtils::timestamp($resolver);
         OptionsUtils::noncestr($resolver);
 
+        $currentUrl = (isset($_SERVER['HTTPS']) ? 'https://' : 'http://').
+            ($_SERVER['HTTP_HOST'] ?? 'localhost').
+            ($_SERVER['REQUEST_URI'] ?? '');
+
         $resolver
             ->define('url')
-            ->default(GenericUtils::getCurrentUrl())
+            ->default($currentUrl)
             ->allowedTypes('string')
         ;
 

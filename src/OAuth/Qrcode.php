@@ -2,13 +2,11 @@
 
 declare(strict_types=1);
 
-namespace Siganushka\ApiClient\Wechat\OAuth;
+namespace Siganushka\ApiFactory\Wechat\OAuth;
 
 use Symfony\Component\OptionsResolver\OptionsResolver;
 
 /**
- * Wechat oauth client class for open platform.
- *
  * @see https://developers.weixin.qq.com/doc/oplatform/Website_App/WeChat_Login/Wechat_Login.html
  */
 class Qrcode extends Client

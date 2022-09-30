@@ -2,22 +2,19 @@
 
 declare(strict_types=1);
 
-namespace Siganushka\ApiClient\Wechat;
+namespace Siganushka\ApiFactory\Wechat;
 
-use Siganushka\ApiClient\OptionsExtensionInterface;
-use Siganushka\ApiClient\OptionsExtensionTrait;
-use Siganushka\ApiClient\Wechat\Core\Token;
-use Siganushka\ApiClient\Wechat\Miniapp\SessionKey;
-use Siganushka\ApiClient\Wechat\OAuth\AccessToken;
-use Siganushka\ApiClient\Wechat\OAuth\Client;
-use Siganushka\ApiClient\Wechat\OAuth\Qrcode;
-use Siganushka\ApiClient\Wechat\OAuth\RefreshToken;
+use Siganushka\ApiFactory\ResolverExtensionInterface;
+use Siganushka\ApiFactory\Wechat\Core\Token;
+use Siganushka\ApiFactory\Wechat\Miniapp\SessionKey;
+use Siganushka\ApiFactory\Wechat\OAuth\AccessToken;
+use Siganushka\ApiFactory\Wechat\OAuth\Client;
+use Siganushka\ApiFactory\Wechat\OAuth\Qrcode;
+use Siganushka\ApiFactory\Wechat\OAuth\RefreshToken;
 use Symfony\Component\OptionsResolver\OptionsResolver;
 
-class ConfigurationOptions implements OptionsExtensionInterface
+class ConfigurationExtension implements ResolverExtensionInterface
 {
-    use OptionsExtensionTrait;
-
     private Configuration $configuration;
 
     public function __construct(Configuration $configuration)
@@ -25,7 +22,7 @@ class ConfigurationOptions implements OptionsExtensionInterface
         $this->configuration = $configuration;
     }
 
-    protected function configureOptions(OptionsResolver $resolver): void
+    public function configureOptions(OptionsResolver $resolver): void
     {
         foreach ($this->configuration as $key => $value) {
             if (null !== $value) {
@@ -34,7 +31,7 @@ class ConfigurationOptions implements OptionsExtensionInterface
         }
     }
 
-    public static function getExtendedClasses(): array
+    public static function getExtendedClasses(): iterable
     {
         return [
             Token::class,

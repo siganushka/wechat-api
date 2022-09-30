@@ -2,9 +2,9 @@
 
 declare(strict_types=1);
 
-use Siganushka\ApiClient\Wechat\Core\TokenOptions;
-use Siganushka\ApiClient\Wechat\Template\Message;
-use Siganushka\ApiClient\Wechat\Template\Template;
+use Siganushka\ApiFactory\Wechat\Core\TokenExtension;
+use Siganushka\ApiFactory\Wechat\Template\Message;
+use Siganushka\ApiFactory\Wechat\Template\Template;
 
 require __DIR__.'/_autoload.php';
 
@@ -27,7 +27,7 @@ $options = [
 ];
 
 $request = new Message();
-$request->extend(new TokenOptions($configuration));
+$request->extend(new TokenExtension($configuration));
 
 $result = $request->send($options);
-dd($result);
+dump($result);

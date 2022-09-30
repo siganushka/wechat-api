@@ -2,8 +2,8 @@
 
 declare(strict_types=1);
 
-use Siganushka\ApiClient\Wechat\ConfigurationOptions;
-use Siganushka\ApiClient\Wechat\OAuth\RefreshToken;
+use Siganushka\ApiFactory\Wechat\ConfigurationExtension;
+use Siganushka\ApiFactory\Wechat\OAuth\RefreshToken;
 
 require __DIR__.'/_autoload.php';
 
@@ -12,7 +12,7 @@ $options = [
 ];
 
 $request = new RefreshToken();
-$request->extend(new ConfigurationOptions($configuration));
+$request->extend(new ConfigurationExtension($configuration));
 
 $result = $request->send($options);
-dd($result);
+dump($result);

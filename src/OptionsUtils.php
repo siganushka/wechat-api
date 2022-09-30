@@ -2,7 +2,7 @@
 
 declare(strict_types=1);
 
-namespace Siganushka\ApiClient\Wechat;
+namespace Siganushka\ApiFactory\Wechat;
 
 use Symfony\Component\OptionsResolver\OptionConfigurator;
 use Symfony\Component\OptionsResolver\OptionsResolver;

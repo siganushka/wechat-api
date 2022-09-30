@@ -2,12 +2,12 @@
 
 declare(strict_types=1);
 
-namespace Siganushka\ApiClient\Wechat\Miniapp;
+namespace Siganushka\ApiFactory\Wechat\Miniapp;
 
-use Siganushka\ApiClient\AbstractRequest;
-use Siganushka\ApiClient\Exception\ParseResponseException;
-use Siganushka\ApiClient\RequestOptions;
-use Siganushka\ApiClient\Wechat\OptionsUtils;
+use Siganushka\ApiFactory\AbstractRequest;
+use Siganushka\ApiFactory\Exception\ParseResponseException;
+use Siganushka\ApiFactory\RequestOptions;
+use Siganushka\ApiFactory\Wechat\OptionsUtils;
 use Symfony\Component\OptionsResolver\OptionsResolver;
 use Symfony\Contracts\HttpClient\ResponseInterface;
 

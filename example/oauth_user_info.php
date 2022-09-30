@@ -2,7 +2,7 @@
 
 declare(strict_types=1);
 
-use Siganushka\ApiClient\Wechat\OAuth\UserInfo;
+use Siganushka\ApiFactory\Wechat\OAuth\UserInfo;
 
 require __DIR__.'/_autoload.php';
 
@@ -16,4 +16,4 @@ $options = [
 $request = new UserInfo();
 
 $result = $request->send($options);
-dd($result);
+dump($result);

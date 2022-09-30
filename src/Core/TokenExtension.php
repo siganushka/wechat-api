@@ -2,25 +2,22 @@
 
 declare(strict_types=1);
 
-namespace Siganushka\ApiClient\Wechat\Core;
+namespace Siganushka\ApiFactory\Wechat\Core;
 
 use Psr\Cache\CacheItemPoolInterface;
-use Siganushka\ApiClient\OptionsExtensionInterface;
-use Siganushka\ApiClient\OptionsExtensionTrait;
-use Siganushka\ApiClient\Wechat\Configuration;
-use Siganushka\ApiClient\Wechat\ConfigurationOptions;
-use Siganushka\ApiClient\Wechat\Miniapp\Qrcode;
-use Siganushka\ApiClient\Wechat\Miniapp\Wxacode;
-use Siganushka\ApiClient\Wechat\Miniapp\WxacodeUnlimited;
-use Siganushka\ApiClient\Wechat\Template\Message;
+use Siganushka\ApiFactory\ResolverExtensionInterface;
+use Siganushka\ApiFactory\Wechat\Configuration;
+use Siganushka\ApiFactory\Wechat\ConfigurationExtension;
+use Siganushka\ApiFactory\Wechat\Miniapp\Qrcode;
+use Siganushka\ApiFactory\Wechat\Miniapp\Wxacode;
+use Siganushka\ApiFactory\Wechat\Miniapp\WxacodeUnlimited;
+use Siganushka\ApiFactory\Wechat\Template\Message;
 use Symfony\Component\OptionsResolver\Options;
 use Symfony\Component\OptionsResolver\OptionsResolver;
 use Symfony\Contracts\HttpClient\HttpClientInterface;
 
-class TokenOptions implements OptionsExtensionInterface
+class TokenExtension implements ResolverExtensionInterface
 {
-    use OptionsExtensionTrait;
-
     protected Configuration $configuration;
     protected ?HttpClientInterface $httpClient = null;
     protected ?CacheItemPoolInterface $cachePool = null;
@@ -32,10 +29,10 @@ class TokenOptions implements OptionsExtensionInterface
         $this->cachePool = $cachePool;
     }
 
-    protected function configureOptions(OptionsResolver $resolver): void
+    public function configureOptions(OptionsResolver $resolver): void
     {
-        $configurationOptions = new ConfigurationOptions($this->configuration);
-        $configurationOptions->configure($resolver);
+        $configurationExtension = new ConfigurationExtension($this->configuration);
+        $configurationExtension->configureOptions($resolver);
 
         $resolver->setDefault('token', function (Options $options): string {
             $request = new Token($this->httpClient, $this->cachePool);
@@ -49,7 +46,7 @@ class TokenOptions implements OptionsExtensionInterface
         });
     }
 
-    public static function getExtendedClasses(): array
+    public static function getExtendedClasses(): iterable
     {
         return [
             CallbackIp::class,

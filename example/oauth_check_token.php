@@ -2,7 +2,7 @@
 
 declare(strict_types=1);
 
-use Siganushka\ApiClient\Wechat\OAuth\CheckToken;
+use Siganushka\ApiFactory\Wechat\OAuth\CheckToken;
 
 require __DIR__.'/_autoload.php';
 
@@ -15,4 +15,4 @@ $options = [
 $request = new CheckToken();
 
 $result = $request->send($options);
-dd($result);
+dump($result);

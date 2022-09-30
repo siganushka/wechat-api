@@ -2,16 +2,15 @@
 
 declare(strict_types=1);
 
-namespace Siganushka\ApiClient\Wechat\Tests\OAuth;
+namespace Siganushka\ApiFactory\Wechat\Tests\OAuth;
 
 use PHPUnit\Framework\TestCase;
-use Siganushka\ApiClient\Exception\ParseResponseException;
-use Siganushka\ApiClient\Wechat\OAuth\UserInfo;
+use Siganushka\ApiFactory\Exception\ParseResponseException;
+use Siganushka\ApiFactory\Wechat\OAuth\UserInfo;
 use Symfony\Component\HttpClient\MockHttpClient;
 use Symfony\Component\HttpClient\Response\MockResponse;
 use Symfony\Component\OptionsResolver\Exception\InvalidOptionsException;
 use Symfony\Component\OptionsResolver\Exception\MissingOptionsException;
-use Symfony\Component\OptionsResolver\OptionsResolver;
 
 class UserInfoTest extends TestCase
 {
@@ -27,28 +26,19 @@ class UserInfoTest extends TestCase
         $this->request = null;
     }
 
-    public function testConfigure(): void
+    public function testResolve(): void
     {
-        $resolver = new OptionsResolver();
-        $this->request->configure($resolver);
-
-        static::assertSame([
-            'access_token',
-            'openid',
-            'lang',
-        ], $resolver->getDefinedOptions());
-
-        static::assertSame([
+        static::assertEquals([
             'lang' => 'zh_CN',
             'access_token' => 'foo',
             'openid' => 'bar',
-        ], $resolver->resolve(['access_token' => 'foo', 'openid' => 'bar']));
+        ], $this->request->resolve(['access_token' => 'foo', 'openid' => 'bar']));
 
-        static::assertSame([
+        static::assertEquals([
             'lang' => 'en',
             'access_token' => 'foo',
             'openid' => 'bar',
-        ], $resolver->resolve(['access_token' => 'foo', 'openid' => 'bar', 'lang' => 'en']));
+        ], $this->request->resolve(['access_token' => 'foo', 'openid' => 'bar', 'lang' => 'en']));
     }
 
     public function testBuild(): void
@@ -57,7 +47,7 @@ class UserInfoTest extends TestCase
 
         static::assertSame('GET', $requestOptions->getMethod());
         static::assertSame(UserInfo::URL, $requestOptions->getUrl());
-        static::assertSame([
+        static::assertEquals([
             'query' => [
                 'access_token' => 'foo',
                 'openid' => 'bar',
@@ -67,7 +57,7 @@ class UserInfoTest extends TestCase
 
         $requestOptions = $this->request->build(['access_token' => 'foo', 'openid' => 'bar', 'lang' => 'en']);
 
-        static::assertSame([
+        static::assertEquals([
             'query' => [
                 'access_token' => 'foo',
                 'openid' => 'bar',

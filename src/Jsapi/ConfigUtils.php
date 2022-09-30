@@ -2,33 +2,19 @@
 
 declare(strict_types=1);
 
-namespace Siganushka\ApiClient\Wechat\Jsapi;
+namespace Siganushka\ApiFactory\Wechat\Jsapi;
 
-use Siganushka\ApiClient\OptionsConfigurableInterface;
-use Siganushka\ApiClient\OptionsConfigurableTrait;
-use Siganushka\ApiClient\Wechat\OptionsUtils;
+use Siganushka\ApiFactory\ResolverInterface;
+use Siganushka\ApiFactory\ResolverTrait;
+use Siganushka\ApiFactory\Wechat\OptionsUtils;
 use Symfony\Component\OptionsResolver\OptionsResolver;
 
 /**
- * Wechat jsapi config utils class.
- *
  * @see https://developers.weixin.qq.com/doc/offiaccount/OA_Web_Apps/JS-SDK.html
  */
-class ConfigUtils implements OptionsConfigurableInterface
+class ConfigUtils implements ResolverInterface
 {
-    use OptionsConfigurableTrait;
-
-    final public function __construct()
-    {
-    }
-
-    /**
-     * @return static
-     */
-    public static function create(): self
-    {
-        return new static();
-    }
+    use ResolverTrait;
 
     /**
      * 生成 JSSDK 配置参数.
@@ -39,10 +25,7 @@ class ConfigUtils implements OptionsConfigurableInterface
      */
     public function generate(array $options = []): array
     {
-        $resolver = new OptionsResolver();
-        $this->configure($resolver);
-
-        $resolved = $resolver->resolve($options);
+        $resolved = $this->resolve($options);
         $data = [
             'jsapi_ticket' => $resolved['ticket'],
             'timestamp' => $resolved['timestamp'],

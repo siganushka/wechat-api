@@ -2,17 +2,16 @@
 
 declare(strict_types=1);
 
-namespace Siganushka\ApiClient\Wechat\Tests\Core;
+namespace Siganushka\ApiFactory\Wechat\Tests\Core;
 
 use PHPUnit\Framework\TestCase;
-use Siganushka\ApiClient\Exception\ParseResponseException;
-use Siganushka\ApiClient\Wechat\Core\Token;
+use Siganushka\ApiFactory\Exception\ParseResponseException;
+use Siganushka\ApiFactory\Wechat\Core\Token;
 use Symfony\Component\Cache\Adapter\NullAdapter;
 use Symfony\Component\HttpClient\MockHttpClient;
 use Symfony\Component\HttpClient\Response\MockResponse;
 use Symfony\Component\OptionsResolver\Exception\InvalidOptionsException;
 use Symfony\Component\OptionsResolver\Exception\MissingOptionsException;
-use Symfony\Component\OptionsResolver\OptionsResolver;
 
 class TokenTest extends TestCase
 {
@@ -28,20 +27,12 @@ class TokenTest extends TestCase
         $this->request = null;
     }
 
-    public function testConfigure(): void
+    public function testResolve(): void
     {
-        $resolver = new OptionsResolver();
-        $this->request->configure($resolver);
-
-        static::assertSame([
-            'appid',
-            'secret',
-        ], $resolver->getDefinedOptions());
-
-        static::assertSame([
+        static::assertEquals([
             'appid' => 'foo',
             'secret' => 'bar',
-        ], $resolver->resolve(['appid' => 'foo', 'secret' => 'bar']));
+        ], $this->request->resolve(['appid' => 'foo', 'secret' => 'bar']));
     }
 
     public function testBuild(): void
@@ -49,7 +40,7 @@ class TokenTest extends TestCase
         $requestOptions = $this->request->build(['appid' => 'foo', 'secret' => 'bar']);
         static::assertSame('GET', $requestOptions->getMethod());
         static::assertSame(Token::URL, $requestOptions->getUrl());
-        static::assertSame([
+        static::assertEquals([
             'query' => [
                 'appid' => 'foo',
                 'secret' => 'bar',

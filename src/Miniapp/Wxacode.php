@@ -2,12 +2,12 @@
 
 declare(strict_types=1);
 
-namespace Siganushka\ApiClient\Wechat\Miniapp;
+namespace Siganushka\ApiFactory\Wechat\Miniapp;
 
-use Siganushka\ApiClient\AbstractRequest;
-use Siganushka\ApiClient\Exception\ParseResponseException;
-use Siganushka\ApiClient\RequestOptions;
-use Siganushka\ApiClient\Wechat\OptionsUtils;
+use Siganushka\ApiFactory\AbstractRequest;
+use Siganushka\ApiFactory\Exception\ParseResponseException;
+use Siganushka\ApiFactory\RequestOptions;
+use Siganushka\ApiFactory\Wechat\OptionsUtils;
 use Symfony\Component\OptionsResolver\Options;
 use Symfony\Component\OptionsResolver\OptionsResolver;
 use Symfony\Contracts\HttpClient\ResponseInterface;
@@ -51,9 +51,7 @@ class Wxacode extends AbstractRequest
             ->define('line_color')
             ->default(null)
             ->allowedTypes('null', 'string')
-            ->allowedValues(function (?string $value) {
-                return null === $value || preg_match('/^#[0-9a-f]{6}$/i', $value);
-            })
+            ->allowedValues(fn (?string $value) => null === $value || preg_match('/^#[0-9a-f]{6}$/i', $value))
         ;
 
         $resolver
@@ -74,9 +72,7 @@ class Wxacode extends AbstractRequest
 
         $resolver
             ->define('auto_color')
-            ->default(function (Options $options) {
-                return null === $options['line_color'] && null === $options['line_color_value'] ? null : false;
-            })
+            ->default(fn (Options $options) => null === $options['line_color'] && null === $options['line_color_value'] ? null : false)
             ->allowedTypes('null', 'bool')
         ;
     }

@@ -2,13 +2,13 @@
 
 declare(strict_types=1);
 
-use Siganushka\ApiClient\Wechat\ConfigurationOptions;
-use Siganushka\ApiClient\Wechat\Core\Token;
+use Siganushka\ApiFactory\Wechat\ConfigurationExtension;
+use Siganushka\ApiFactory\Wechat\Core\Token;
 
 require __DIR__.'/_autoload.php';
 
 $request = new Token();
-$request->extend(new ConfigurationOptions($configuration));
+$request->extend(new ConfigurationExtension($configuration));
 
 $result = $request->send();
-dd($result);
+dump($result);

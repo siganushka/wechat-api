@@ -2,13 +2,13 @@
 
 declare(strict_types=1);
 
-use Siganushka\ApiClient\Wechat\Core\ServerIp;
-use Siganushka\ApiClient\Wechat\Core\TokenOptions;
+use Siganushka\ApiFactory\Wechat\Core\ServerIp;
+use Siganushka\ApiFactory\Wechat\Core\TokenExtension;
 
 require __DIR__.'/_autoload.php';
 
 $request = new ServerIp();
-$request->extend(new TokenOptions($configuration));
+$request->extend(new TokenExtension($configuration));
 
 $result = $request->send();
-dd($result);
+dump($result);

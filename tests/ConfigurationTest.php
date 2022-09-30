@@ -2,38 +2,14 @@
 
 declare(strict_types=1);
 
-namespace Siganushka\ApiClient\Wechat\Tests;
+namespace Siganushka\ApiFactory\Wechat\Tests;
 
 use PHPUnit\Framework\TestCase;
-use Siganushka\ApiClient\Wechat\Configuration;
+use Siganushka\ApiFactory\Wechat\Configuration;
 use Symfony\Component\OptionsResolver\Exception\InvalidOptionsException;
-use Symfony\Component\OptionsResolver\OptionsResolver;
 
 class ConfigurationTest extends TestCase
 {
-    public function testConfigure(): void
-    {
-        $resolver = new OptionsResolver();
-
-        $configuration = static::create();
-        $configuration->configure($resolver);
-
-        static::assertSame([
-            'appid',
-            'secret',
-        ], $resolver->getDefinedOptions());
-
-        static::assertSame([
-            'appid' => null,
-            'secret' => null,
-        ], $resolver->resolve());
-
-        static::assertSame([
-            'appid' => 'foo',
-            'secret' => 'bar',
-        ], $resolver->resolve(['appid' => 'foo', 'secret' => 'bar']));
-    }
-
     public function testAll(): void
     {
         $configuration = static::create();
@@ -43,7 +19,7 @@ class ConfigurationTest extends TestCase
         static::assertInstanceOf(\ArrayAccess::class, $configuration);
         static::assertSame(2, $configuration->count());
 
-        static::assertSame([
+        static::assertEquals([
             'appid' => 'test_appid',
             'secret' => 'test_secret',
         ], $configuration->toArray());
@@ -53,26 +29,50 @@ class ConfigurationTest extends TestCase
             'secret' => 'bar',
         ]);
 
-        static::assertSame([
+        static::assertEquals([
             'appid' => 'foo',
             'secret' => 'bar',
         ], $configuration->toArray());
     }
 
+    public function testResolve(): void
+    {
+        $configuration = static::create();
+
+        $configs = [
+            'appid' => 'test_appid',
+            'secret' => 'test_secret',
+        ];
+
+        static::assertEquals([
+            'appid' => 'test_appid',
+            'secret' => 'test_secret',
+        ], $configuration->resolve($configs));
+
+        $configuration = static::create($configs);
+        static::assertEquals($configuration->toArray(), $configuration->resolve($configs));
+    }
+
     public function testAppidInvalidOptionsException(): void
     {
         $this->expectException(InvalidOptionsException::class);
-        $this->expectExceptionMessage('The option "appid" with value 123 is expected to be of type "string" or "null", but is of type "int"');
+        $this->expectExceptionMessage('The option "appid" with value 123 is expected to be of type "string", but is of type "int"');
 
-        static::create(['appid' => 123]);
+        static::create([
+            'appid' => 123,
+            'secret' => 'test_secret',
+        ]);
     }
 
     public function testSecretInvalidOptionsException(): void
     {
         $this->expectException(InvalidOptionsException::class);
-        $this->expectExceptionMessage('The option "secret" with value 123 is expected to be of type "string" or "null", but is of type "int"');
+        $this->expectExceptionMessage('The option "secret" with value 123 is expected to be of type "string", but is of type "int"');
 
-        static::create(['secret' => 123]);
+        static::create([
+            'appid' => 'test_appid',
+            'secret' => 123,
+        ]);
     }
 
     public static function create(array $configs = null): Configuration

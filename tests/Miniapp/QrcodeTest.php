@@ -2,16 +2,15 @@
 
 declare(strict_types=1);
 
-namespace Siganushka\ApiClient\Wechat\Tests\Miniapp;
+namespace Siganushka\ApiFactory\Wechat\Tests\Miniapp;
 
 use PHPUnit\Framework\TestCase;
-use Siganushka\ApiClient\Exception\ParseResponseException;
-use Siganushka\ApiClient\Wechat\Miniapp\Qrcode;
+use Siganushka\ApiFactory\Exception\ParseResponseException;
+use Siganushka\ApiFactory\Wechat\Miniapp\Qrcode;
 use Symfony\Component\HttpClient\MockHttpClient;
 use Symfony\Component\HttpClient\Response\MockResponse;
 use Symfony\Component\OptionsResolver\Exception\InvalidOptionsException;
 use Symfony\Component\OptionsResolver\Exception\MissingOptionsException;
-use Symfony\Component\OptionsResolver\OptionsResolver;
 
 class QrcodeTest extends TestCase
 {
@@ -27,28 +26,19 @@ class QrcodeTest extends TestCase
         $this->request = null;
     }
 
-    public function testConfigure(): void
+    public function testResolve(): void
     {
-        $resolver = new OptionsResolver();
-        $this->request->configure($resolver);
-
-        static::assertSame([
-            'token',
-            'path',
-            'width',
-        ], $resolver->getDefinedOptions());
-
-        static::assertSame([
+        static::assertEquals([
             'width' => null,
             'token' => 'foo',
             'path' => '/bar',
-        ], $resolver->resolve(['token' => 'foo', 'path' => '/bar']));
+        ], $this->request->resolve(['token' => 'foo', 'path' => '/bar']));
 
-        static::assertSame([
+        static::assertEquals([
             'width' => 240,
             'token' => 'foo',
             'path' => '/bar',
-        ], $resolver->resolve(['token' => 'foo', 'path' => '/bar', 'width' => 240]));
+        ], $this->request->resolve(['token' => 'foo', 'path' => '/bar', 'width' => 240]));
     }
 
     public function testBuild(): void
@@ -56,7 +46,7 @@ class QrcodeTest extends TestCase
         $requestOptions = $this->request->build(['token' => 'foo', 'path' => '/bar']);
         static::assertSame('POST', $requestOptions->getMethod());
         static::assertSame(Qrcode::URL, $requestOptions->getUrl());
-        static::assertSame([
+        static::assertEquals([
             'query' => [
                 'access_token' => 'foo',
             ],
@@ -66,7 +56,7 @@ class QrcodeTest extends TestCase
         ], $requestOptions->toArray());
 
         $requestOptions = $this->request->build(['token' => 'foo', 'path' => '/bar', 'width' => 240]);
-        static::assertSame([
+        static::assertEquals([
             'query' => [
                 'access_token' => 'foo',
             ],

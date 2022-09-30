@@ -2,17 +2,17 @@
 
 declare(strict_types=1);
 
-namespace Siganushka\ApiClient\Wechat\Tests\Template;
+namespace Siganushka\ApiFactory\Wechat\Tests\Template;
 
 use PHPUnit\Framework\TestCase;
-use Siganushka\ApiClient\Wechat\Template\Template;
+use Siganushka\ApiFactory\Wechat\Template\Template;
 
 class TemplateTest extends TestCase
 {
     public function testAll(): void
     {
         $template = new Template('xyz');
-        static::assertSame([], $template->getData());
+        static::assertEquals([], $template->getData());
 
         $template->addData('foo', 'value111', '#ff0000');
         $template->addData('bar', 'value222');
@@ -20,7 +20,7 @@ class TemplateTest extends TestCase
         static::assertTrue($template->hasData('foo'));
         static::assertTrue($template->hasData('bar'));
         static::assertSame('xyz', $template->getId());
-        static::assertSame([
+        static::assertEquals([
             'foo' => ['value' => 'value111', 'color' => '#ff0000'],
             'bar' => ['value' => 'value222'],
         ], $template->getData());
@@ -28,7 +28,7 @@ class TemplateTest extends TestCase
         $template->removeData('foo');
         static::assertFalse($template->hasData('foo'));
         static::assertTrue($template->hasData('bar'));
-        static::assertSame([
+        static::assertEquals([
             'bar' => ['value' => 'value222'],
         ], $template->getData());
     }

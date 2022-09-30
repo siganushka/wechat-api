@@ -2,13 +2,12 @@
 
 declare(strict_types=1);
 
-namespace Siganushka\ApiClient\Wechat\Tests\Jsapi;
+namespace Siganushka\ApiFactory\Wechat\Tests\Jsapi;
 
 use PHPUnit\Framework\TestCase;
-use Siganushka\ApiClient\Wechat\Jsapi\ConfigUtils;
+use Siganushka\ApiFactory\Wechat\Jsapi\ConfigUtils;
 use Symfony\Component\OptionsResolver\Exception\InvalidOptionsException;
 use Symfony\Component\OptionsResolver\Exception\MissingOptionsException;
-use Symfony\Component\OptionsResolver\OptionsResolver;
 
 class ConfigUtilsTest extends TestCase
 {
@@ -16,7 +15,7 @@ class ConfigUtilsTest extends TestCase
 
     protected function setUp(): void
     {
-        $this->configUtils = ConfigUtils::create();
+        $this->configUtils = new ConfigUtils();
     }
 
     protected function tearDown(): void
@@ -24,22 +23,9 @@ class ConfigUtilsTest extends TestCase
         $this->configUtils = null;
     }
 
-    public function testConfigure(): void
+    public function testResolve(): void
     {
-        $resolver = new OptionsResolver();
-        $this->configUtils->configure($resolver);
-
-        static::assertSame([
-            'appid',
-            'ticket',
-            'timestamp',
-            'noncestr',
-            'url',
-            'apis',
-            'debug',
-        ], $resolver->getDefinedOptions());
-
-        static::assertSame([
+        static::assertEquals([
             'timestamp' => 'test_timestamp',
             'noncestr' => 'test_noncestr',
             'url' => 'test_url',
@@ -47,7 +33,7 @@ class ConfigUtilsTest extends TestCase
             'debug' => false,
             'appid' => 'test_appid',
             'ticket' => 'test_ticket',
-        ], $resolver->resolve([
+        ], $this->configUtils->resolve([
             'appid' => 'test_appid',
             'ticket' => 'test_ticket',
             'timestamp' => 'test_timestamp',
@@ -55,7 +41,7 @@ class ConfigUtilsTest extends TestCase
             'url' => 'test_url',
         ]));
 
-        static::assertSame([
+        static::assertEquals([
             'timestamp' => 'test_timestamp',
             'noncestr' => 'test_noncestr',
             'url' => 'test_url',
@@ -63,7 +49,7 @@ class ConfigUtilsTest extends TestCase
             'debug' => true,
             'appid' => 'test_appid',
             'ticket' => 'test_ticket',
-        ], $resolver->resolve([
+        ], $this->configUtils->resolve([
             'appid' => 'test_appid',
             'ticket' => 'test_ticket',
             'timestamp' => 'test_timestamp',
@@ -81,7 +67,7 @@ class ConfigUtilsTest extends TestCase
         static::assertArrayHasKey('timestamp', $configs);
         static::assertArrayHasKey('nonceStr', $configs);
         static::assertArrayHasKey('signature', $configs);
-        static::assertSame([], $configs['jsApiList']);
+        static::assertEquals([], $configs['jsApiList']);
         static::assertFalse($configs['debug']);
 
         $configs = $this->configUtils->generate([
@@ -98,7 +84,7 @@ class ConfigUtilsTest extends TestCase
         static::assertArrayHasKey('timestamp', $configs);
         static::assertArrayHasKey('nonceStr', $configs);
         static::assertArrayHasKey('signature', $configs);
-        static::assertSame(['a', 'b', 'c'], $configs['jsApiList']);
+        static::assertEquals(['a', 'b', 'c'], $configs['jsApiList']);
         static::assertTrue($configs['debug']);
     }
 

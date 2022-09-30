@@ -2,9 +2,9 @@
 
 declare(strict_types=1);
 
-namespace Siganushka\ApiClient\Wechat\Miniapp;
+namespace Siganushka\ApiFactory\Wechat\Miniapp;
 
-use Siganushka\ApiClient\RequestOptions;
+use Siganushka\ApiFactory\RequestOptions;
 use Symfony\Component\OptionsResolver\OptionsResolver;
 
 /**

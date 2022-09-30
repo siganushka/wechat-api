@@ -2,9 +2,9 @@
 
 declare(strict_types=1);
 
-namespace Siganushka\ApiClient\Wechat;
+namespace Siganushka\ApiFactory\Wechat;
 
-use Siganushka\ApiClient\AbstractConfiguration;
+use Siganushka\ApiFactory\AbstractConfiguration;
 use Symfony\Component\OptionsResolver\OptionsResolver;
 
 /**
@@ -16,10 +16,5 @@ class Configuration extends AbstractConfiguration
     {
         OptionsUtils::appid($resolver);
         OptionsUtils::secret($resolver);
-
-        foreach ($resolver->getDefinedOptions() as $option) {
-            $resolver->setDefault($option, null);
-            $resolver->addAllowedTypes($option, 'null');
-        }
     }
 }

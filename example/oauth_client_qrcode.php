@@ -2,13 +2,13 @@
 
 declare(strict_types=1);
 
-use Siganushka\ApiClient\Wechat\ConfigurationOptions;
-use Siganushka\ApiClient\Wechat\OAuth\Qrcode;
+use Siganushka\ApiFactory\Wechat\ConfigurationExtension;
+use Siganushka\ApiFactory\Wechat\OAuth\Qrcode;
 
 require __DIR__.'/_autoload.php';
 
 $client = new Qrcode();
-$client->extend(new ConfigurationOptions($openConfiguration));
+$client->extend(new ConfigurationExtension($openConfiguration));
 
 if (!isset($_GET['code'])) {
     $currentUrl = (isset($_SERVER['HTTPS']) ? 'https://' : 'http://').

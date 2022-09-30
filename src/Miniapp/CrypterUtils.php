@@ -2,7 +2,7 @@
 
 declare(strict_types=1);
 
-namespace Siganushka\ApiClient\Wechat\Miniapp;
+namespace Siganushka\ApiFactory\Wechat\Miniapp;
 
 class CrypterUtils
 {
@@ -15,10 +15,10 @@ class CrypterUtils
      * @param string $encryptedData 包括敏感数据在内的完整用户信息的加密数据
      * @param string $iv            加密算法的初始向量
      *
+     * @return array 已解密的用户数据
+     *
      * @throws \InvalidArgumentException 输入参数无效
      * @throws \RuntimeException         数据解密失败
-     *
-     * @return array 已解密的用户数据
      */
     public static function decrypt(string $sessionKey, string $encryptedData, string $iv): array
     {

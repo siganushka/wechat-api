@@ -2,16 +2,15 @@
 
 declare(strict_types=1);
 
-namespace Siganushka\ApiClient\Wechat\Tests\Miniapp;
+namespace Siganushka\ApiFactory\Wechat\Tests\Miniapp;
 
 use PHPUnit\Framework\TestCase;
-use Siganushka\ApiClient\Exception\ParseResponseException;
-use Siganushka\ApiClient\Wechat\Miniapp\Wxacode;
+use Siganushka\ApiFactory\Exception\ParseResponseException;
+use Siganushka\ApiFactory\Wechat\Miniapp\Wxacode;
 use Symfony\Component\HttpClient\MockHttpClient;
 use Symfony\Component\HttpClient\Response\MockResponse;
 use Symfony\Component\OptionsResolver\Exception\InvalidOptionsException;
 use Symfony\Component\OptionsResolver\Exception\MissingOptionsException;
-use Symfony\Component\OptionsResolver\OptionsResolver;
 
 class WxacodeTest extends TestCase
 {
@@ -27,23 +26,9 @@ class WxacodeTest extends TestCase
         $this->request = null;
     }
 
-    public function testConfigure(): void
+    public function testResolve(): void
     {
-        $resolver = new OptionsResolver();
-        $this->request->configure($resolver);
-
-        static::assertSame([
-            'token',
-            'path',
-            'env_version',
-            'width',
-            'is_hyaline',
-            'line_color',
-            'line_color_value',
-            'auto_color',
-        ], $resolver->getDefinedOptions());
-
-        static::assertSame([
+        static::assertEquals([
             'env_version' => null,
             'width' => null,
             'is_hyaline' => null,
@@ -52,9 +37,9 @@ class WxacodeTest extends TestCase
             'auto_color' => null,
             'token' => 'foo',
             'path' => '/bar',
-        ], $resolver->resolve(['token' => 'foo', 'path' => '/bar']));
+        ], $this->request->resolve(['token' => 'foo', 'path' => '/bar']));
 
-        static::assertSame([
+        static::assertEquals([
             'env_version' => 'develop',
             'width' => 240,
             'is_hyaline' => true,
@@ -63,7 +48,7 @@ class WxacodeTest extends TestCase
             'auto_color' => false,
             'token' => 'foo',
             'path' => '/bar',
-        ], $resolver->resolve([
+        ], $this->request->resolve([
             'token' => 'foo',
             'path' => '/bar',
             'env_version' => 'develop',
@@ -72,14 +57,14 @@ class WxacodeTest extends TestCase
             'line_color' => '#FFB6C1',
         ]));
 
-        $resolved = $resolver->resolve([
+        $resolved = $this->request->resolve([
             'token' => 'foo',
             'path' => '/bar',
             'line_color_value' => ['r' => 255, 'g' => 0, 'b' => 0],
         ]);
 
         // auto_color=false when line_color or line_color_value has been setting.
-        static::assertSame(['r' => 255, 'g' => 0, 'b' => 0], $resolved['line_color_value']);
+        static::assertEquals(['r' => 255, 'g' => 0, 'b' => 0], $resolved['line_color_value']);
         static::assertFalse($resolved['auto_color']);
     }
 
@@ -89,7 +74,7 @@ class WxacodeTest extends TestCase
 
         static::assertSame('POST', $requestOptions->getMethod());
         static::assertSame(Wxacode::URL, $requestOptions->getUrl());
-        static::assertSame([
+        static::assertEquals([
             'query' => [
                 'access_token' => 'foo',
             ],
@@ -107,7 +92,7 @@ class WxacodeTest extends TestCase
             'line_color' => '#FFB6C1',
         ]);
 
-        static::assertSame([
+        static::assertEquals([
             'query' => [
                 'access_token' => 'foo',
             ],

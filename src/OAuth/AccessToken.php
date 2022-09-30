@@ -2,14 +2,14 @@
 
 declare(strict_types=1);
 
-namespace Siganushka\ApiClient\Wechat\OAuth;
+namespace Siganushka\ApiFactory\Wechat\OAuth;
 
 use Psr\Cache\CacheItemPoolInterface;
-use Siganushka\ApiClient\AbstractRequest;
-use Siganushka\ApiClient\Exception\ParseResponseException;
-use Siganushka\ApiClient\RequestOptions;
-use Siganushka\ApiClient\Response\CachedResponse;
-use Siganushka\ApiClient\Wechat\OptionsUtils;
+use Siganushka\ApiFactory\AbstractRequest;
+use Siganushka\ApiFactory\Exception\ParseResponseException;
+use Siganushka\ApiFactory\RequestOptions;
+use Siganushka\ApiFactory\Response\CachedResponse;
+use Siganushka\ApiFactory\Wechat\OptionsUtils;
 use Symfony\Component\Cache\Adapter\FilesystemAdapter;
 use Symfony\Component\OptionsResolver\OptionsResolver;
 use Symfony\Contracts\HttpClient\HttpClientInterface;

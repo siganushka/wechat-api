@@ -2,10 +2,10 @@
 
 declare(strict_types=1);
 
-namespace Siganushka\ApiClient\Wechat\Tests\Miniapp;
+namespace Siganushka\ApiFactory\Wechat\Tests\Miniapp;
 
 use PHPUnit\Framework\TestCase;
-use Siganushka\ApiClient\Wechat\Miniapp\CrypterUtils;
+use Siganushka\ApiFactory\Wechat\Miniapp\CrypterUtils;
 
 class CrypterUtilsTest extends TestCase
 {

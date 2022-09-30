@@ -2,16 +2,15 @@
 
 declare(strict_types=1);
 
-namespace Siganushka\ApiClient\Wechat\Tests\OAuth;
+namespace Siganushka\ApiFactory\Wechat\Tests\OAuth;
 
 use PHPUnit\Framework\TestCase;
-use Siganushka\ApiClient\Exception\ParseResponseException;
-use Siganushka\ApiClient\Wechat\OAuth\RefreshToken;
+use Siganushka\ApiFactory\Exception\ParseResponseException;
+use Siganushka\ApiFactory\Wechat\OAuth\RefreshToken;
 use Symfony\Component\HttpClient\MockHttpClient;
 use Symfony\Component\HttpClient\Response\MockResponse;
 use Symfony\Component\OptionsResolver\Exception\InvalidOptionsException;
 use Symfony\Component\OptionsResolver\Exception\MissingOptionsException;
-use Symfony\Component\OptionsResolver\OptionsResolver;
 
 class RefreshTokenTest extends TestCase
 {
@@ -27,20 +26,12 @@ class RefreshTokenTest extends TestCase
         $this->request = null;
     }
 
-    public function testConfigure(): void
+    public function testResolve(): void
     {
-        $resolver = new OptionsResolver();
-        $this->request->configure($resolver);
-
-        static::assertSame([
-            'appid',
-            'refresh_token',
-        ], $resolver->getDefinedOptions());
-
-        static::assertSame([
+        static::assertEquals([
             'appid' => 'foo',
             'refresh_token' => 'bar',
-        ], $resolver->resolve(['appid' => 'foo', 'refresh_token' => 'bar']));
+        ], $this->request->resolve(['appid' => 'foo', 'refresh_token' => 'bar']));
     }
 
     public function testBuild(): void
@@ -49,7 +40,7 @@ class RefreshTokenTest extends TestCase
 
         static::assertSame('GET', $requestOptions->getMethod());
         static::assertSame(RefreshToken::URL, $requestOptions->getUrl());
-        static::assertSame([
+        static::assertEquals([
             'query' => [
                 'appid' => 'foo',
                 'refresh_token' => 'bar',

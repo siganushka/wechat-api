@@ -2,17 +2,16 @@
 
 declare(strict_types=1);
 
-namespace Siganushka\ApiClient\Wechat\Tests\Template;
+namespace Siganushka\ApiFactory\Wechat\Tests\Template;
 
 use PHPUnit\Framework\TestCase;
-use Siganushka\ApiClient\Exception\ParseResponseException;
-use Siganushka\ApiClient\Wechat\Template\Message;
-use Siganushka\ApiClient\Wechat\Template\Template;
+use Siganushka\ApiFactory\Exception\ParseResponseException;
+use Siganushka\ApiFactory\Wechat\Template\Message;
+use Siganushka\ApiFactory\Wechat\Template\Template;
 use Symfony\Component\HttpClient\MockHttpClient;
 use Symfony\Component\HttpClient\Response\MockResponse;
 use Symfony\Component\OptionsResolver\Exception\InvalidOptionsException;
 use Symfony\Component\OptionsResolver\Exception\MissingOptionsException;
-use Symfony\Component\OptionsResolver\OptionsResolver;
 
 class MessageTest extends TestCase
 {
@@ -28,36 +27,24 @@ class MessageTest extends TestCase
         $this->request = null;
     }
 
-    public function testConfigure(): void
+    public function testResolve(): void
     {
-        $resolver = new OptionsResolver();
-        $this->request->configure($resolver);
-
-        static::assertSame([
-            'token',
-            'touser',
-            'template',
-            'url',
-            'miniprogram',
-            'client_msg_id',
-        ], $resolver->getDefinedOptions());
-
         $template = new Template('baz');
 
-        static::assertSame([
+        static::assertEquals([
             'url' => null,
             'miniprogram' => [],
             'client_msg_id' => null,
             'token' => 'foo',
             'touser' => 'bar',
             'template' => $template,
-        ], $resolver->resolve([
+        ], $this->request->resolve([
             'token' => 'foo',
             'touser' => 'bar',
             'template' => $template,
         ]));
 
-        static::assertSame([
+        static::assertEquals([
             'url' => '/baz',
             'miniprogram' => [
                 'appid' => 'foo',
@@ -67,7 +54,7 @@ class MessageTest extends TestCase
             'token' => 'foo',
             'touser' => 'bar',
             'template' => $template,
-        ], $resolver->resolve([
+        ], $this->request->resolve([
             'token' => 'foo',
             'touser' => 'bar',
             'template' => $template,
@@ -87,7 +74,7 @@ class MessageTest extends TestCase
 
         static::assertSame('POST', $requestOptions->getMethod());
         static::assertSame(Message::URL, $requestOptions->getUrl());
-        static::assertSame([
+        static::assertEquals([
             'query' => [
                 'access_token' => 'foo',
             ],
@@ -112,7 +99,7 @@ class MessageTest extends TestCase
             'client_msg_id' => 'test_client_msg_id',
         ]);
 
-        static::assertSame([
+        static::assertEquals([
             'query' => [
                 'access_token' => 'foo',
             ],

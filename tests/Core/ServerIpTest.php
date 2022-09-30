@@ -2,16 +2,15 @@
 
 declare(strict_types=1);
 
-namespace Siganushka\ApiClient\Wechat\Tests\Core;
+namespace Siganushka\ApiFactory\Wechat\Tests\Core;
 
 use PHPUnit\Framework\TestCase;
-use Siganushka\ApiClient\Exception\ParseResponseException;
-use Siganushka\ApiClient\Wechat\Core\ServerIp;
+use Siganushka\ApiFactory\Exception\ParseResponseException;
+use Siganushka\ApiFactory\Wechat\Core\ServerIp;
 use Symfony\Component\HttpClient\MockHttpClient;
 use Symfony\Component\HttpClient\Response\MockResponse;
 use Symfony\Component\OptionsResolver\Exception\InvalidOptionsException;
 use Symfony\Component\OptionsResolver\Exception\MissingOptionsException;
-use Symfony\Component\OptionsResolver\OptionsResolver;
 
 class ServerIpTest extends TestCase
 {
@@ -27,18 +26,11 @@ class ServerIpTest extends TestCase
         $this->request = null;
     }
 
-    public function testConfigure(): void
+    public function testResolve(): void
     {
-        $resolver = new OptionsResolver();
-        $this->request->configure($resolver);
-
-        static::assertSame([
-            'token',
-        ], $resolver->getDefinedOptions());
-
-        static::assertSame([
+        static::assertEquals([
             'token' => 'foo',
-        ], $resolver->resolve(['token' => 'foo']));
+        ], $this->request->resolve(['token' => 'foo']));
     }
 
     public function testBuild(): void
@@ -46,7 +38,7 @@ class ServerIpTest extends TestCase
         $requestOptions = $this->request->build(['token' => 'foo']);
         static::assertSame('GET', $requestOptions->getMethod());
         static::assertSame(ServerIp::URL, $requestOptions->getUrl());
-        static::assertSame([
+        static::assertEquals([
             'query' => [
                 'access_token' => 'foo',
             ],

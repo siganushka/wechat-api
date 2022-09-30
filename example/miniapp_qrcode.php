@@ -2,8 +2,8 @@
 
 declare(strict_types=1);
 
-use Siganushka\ApiClient\Wechat\Core\TokenOptions;
-use Siganushka\ApiClient\Wechat\Miniapp\Qrcode;
+use Siganushka\ApiFactory\Wechat\Core\TokenExtension;
+use Siganushka\ApiFactory\Wechat\Miniapp\Qrcode;
 
 require __DIR__.'/_autoload.php';
 
@@ -13,10 +13,10 @@ $options = [
 ];
 
 $request = new Qrcode();
-$request->extend(new TokenOptions($configuration));
+$request->extend(new TokenExtension($configuration));
 
 $result = $request->send($options);
-dd($result);
+dump($result);
 
 // // 显示小程序码
 // $base64Content = base64_encode($result);

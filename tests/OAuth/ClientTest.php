@@ -2,13 +2,12 @@
 
 declare(strict_types=1);
 
-namespace Siganushka\ApiClient\Wechat\Tests\OAuth;
+namespace Siganushka\ApiFactory\Wechat\Tests\OAuth;
 
 use PHPUnit\Framework\TestCase;
-use Siganushka\ApiClient\Wechat\OAuth\Client;
+use Siganushka\ApiFactory\Wechat\OAuth\Client;
 use Symfony\Component\OptionsResolver\Exception\InvalidOptionsException;
 use Symfony\Component\OptionsResolver\Exception\MissingOptionsException;
-use Symfony\Component\OptionsResolver\OptionsResolver;
 
 class ClientTest extends TestCase
 {
@@ -24,31 +23,21 @@ class ClientTest extends TestCase
         $this->client = null;
     }
 
-    public function testConfigure(): void
+    public function testResolve(): void
     {
-        $resolver = new OptionsResolver();
-        $this->client->configure($resolver);
-
-        static::assertSame([
-            'appid',
-            'redirect_uri',
-            'state',
-            'scope',
-        ], $resolver->getDefinedOptions());
-
-        static::assertSame([
+        static::assertEquals([
             'state' => null,
             'scope' => 'snsapi_base',
             'appid' => 'foo',
             'redirect_uri' => '/bar',
-        ], $resolver->resolve(['appid' => 'foo', 'redirect_uri' => '/bar']));
+        ], $this->client->resolve(['appid' => 'foo', 'redirect_uri' => '/bar']));
 
-        static::assertSame([
+        static::assertEquals([
             'state' => 'baz',
             'scope' => 'snsapi_userinfo',
             'appid' => 'foo',
             'redirect_uri' => '/bar',
-        ], $resolver->resolve(['appid' => 'foo', 'redirect_uri' => '/bar', 'state' => 'baz', 'scope' => 'snsapi_userinfo']));
+        ], $this->client->resolve(['appid' => 'foo', 'redirect_uri' => '/bar', 'state' => 'baz', 'scope' => 'snsapi_userinfo']));
     }
 
     public function testGetRedirectUrl(): void

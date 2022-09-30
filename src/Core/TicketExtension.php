@@ -2,21 +2,18 @@
 
 declare(strict_types=1);
 
-namespace Siganushka\ApiClient\Wechat\Core;
+namespace Siganushka\ApiFactory\Wechat\Core;
 
 use Psr\Cache\CacheItemPoolInterface;
-use Siganushka\ApiClient\OptionsExtensionInterface;
-use Siganushka\ApiClient\OptionsExtensionTrait;
-use Siganushka\ApiClient\Wechat\Configuration;
-use Siganushka\ApiClient\Wechat\Jsapi\ConfigUtils;
+use Siganushka\ApiFactory\ResolverExtensionInterface;
+use Siganushka\ApiFactory\Wechat\Configuration;
+use Siganushka\ApiFactory\Wechat\Jsapi\ConfigUtils;
 use Symfony\Component\OptionsResolver\Options;
 use Symfony\Component\OptionsResolver\OptionsResolver;
 use Symfony\Contracts\HttpClient\HttpClientInterface;
 
-class TicketOptions implements OptionsExtensionInterface
+class TicketExtension implements ResolverExtensionInterface
 {
-    use OptionsExtensionTrait;
-
     protected Configuration $configuration;
     protected ?HttpClientInterface $httpClient = null;
     protected ?CacheItemPoolInterface $cachePool = null;
@@ -28,16 +25,21 @@ class TicketOptions implements OptionsExtensionInterface
         $this->cachePool = $cachePool;
     }
 
-    protected function configureOptions(OptionsResolver $resolver): void
+    public function configureOptions(OptionsResolver $resolver): void
     {
-        $ticket = new Ticket($this->httpClient, $this->cachePool);
-        $ticket->configure($resolver);
+        $resolver
+            ->define('type')
+            ->default('jsapi')
+            ->allowedValues('jsapi', 'wx_card')
+        ;
 
-        $tokenOptions = new TokenOptions($this->configuration, $this->httpClient, $this->cachePool);
-        $tokenOptions->configure($resolver);
+        $tokenExtension = new TokenExtension($this->configuration, $this->httpClient, $this->cachePool);
+        $tokenExtension->configureOptions($resolver);
 
-        $resolver->setDefault('ticket', function (Options $options) use ($ticket): string {
-            $result = $ticket->send([
+        $resolver->setDefault('ticket', function (Options $options): string {
+            $request = new Ticket($this->httpClient, $this->cachePool);
+
+            $result = $request->send([
                 'token' => $options['token'],
                 'type' => $options['type'],
             ]);
@@ -46,7 +48,7 @@ class TicketOptions implements OptionsExtensionInterface
         });
     }
 
-    public static function getExtendedClasses(): array
+    public static function getExtendedClasses(): iterable
     {
         return [
             ConfigUtils::class,

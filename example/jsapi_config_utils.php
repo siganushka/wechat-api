@@ -2,13 +2,13 @@
 
 declare(strict_types=1);
 
-use Siganushka\ApiClient\Wechat\Core\TicketOptions;
-use Siganushka\ApiClient\Wechat\Jsapi\ConfigUtils;
+use Siganushka\ApiFactory\Wechat\Core\TicketExtension;
+use Siganushka\ApiFactory\Wechat\Jsapi\ConfigUtils;
 
 require __DIR__.'/_autoload.php';
 
-$configUtils = ConfigUtils::create();
-$configUtils->extend(new TicketOptions($configuration));
+$configUtils = new ConfigUtils();
+$configUtils->extend(new TicketExtension($configuration));
 
 $config = $configUtils->generate();
-dd($config);
+dump($config);

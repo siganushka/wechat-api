@@ -35,24 +35,6 @@ class ConfigurationTest extends TestCase
         ], $configuration->toArray());
     }
 
-    public function testResolve(): void
-    {
-        $configuration = static::create();
-
-        $configs = [
-            'appid' => 'test_appid',
-            'secret' => 'test_secret',
-        ];
-
-        static::assertEquals([
-            'appid' => 'test_appid',
-            'secret' => 'test_secret',
-        ], $configuration->resolve($configs));
-
-        $configuration = static::create($configs);
-        static::assertEquals($configuration->toArray(), $configuration->resolve($configs));
-    }
-
     public function testAppidInvalidOptionsException(): void
     {
         $this->expectException(InvalidOptionsException::class);

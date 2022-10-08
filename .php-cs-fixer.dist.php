@@ -23,6 +23,7 @@ return (new PhpCsFixer\Config())
         'modernize_strpos' => true,
         'get_class_to_class_keyword' => true,
         'declare_strict_types' => true,
+        'phpdoc_separation' => false,
     ])
     ->setRiskyAllowed(true)
     ->setFinder($finder)

@@ -28,7 +28,7 @@ $ composer require siganushka/wechat-api dev-main
 | example/oauth_client.php | 网页授权 |
 | example/oauth_client_qrcode.php | 网页授权（扫码登录） |
 | example/oauth_user_info.php | 根据用户 access_token 获取用户信息 |
-| example/oauth_check_token.php | 检验用户授权凭证 access_token 是否有效 |
+| example/oauth_check_token.php | 检验用户 access_token 是否有效 |
 | example/oauth_refresh_token.php | 刷新用户 access_token |
 | example/template_message.php | 发送模板消息 |
 

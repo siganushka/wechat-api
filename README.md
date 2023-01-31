@@ -10,7 +10,7 @@ $ composer require siganushka/wechat-api dev-main
 
 ### 使用
 
-具体使用参考 `example` 示例目录，运行示例前请复制 `_config.php.dist` 文件为 `_config.php` 并修改相关参数，由于示例中包含了小程序、公众号和开放平台相关功能，因此对应功能修改对应参数即可。
+具体使用参考 `./example` 示例目录，运行示例前请复制 `_config.php.dist` 文件为 `_config.php` 并修改相关参数，由于示例中包含了小程序、公众号和开放平台相关功能，因此对应功能修改对应参数即可。
 
 该目录包含以下示例：
 
@@ -63,7 +63,7 @@ use Symfony\Bundle\FrameworkBundle\Controller\AbstractController;
 
 class DefaultController extends AbstractController
 {
-    public function getToken(Token $request)
+    public function index(Token $request)
     {
         $result = $request->send();
         var_dump($result);

@@ -10,5 +10,10 @@ require __DIR__.'/_autoload.php';
 $configUtils = new ConfigUtils();
 $configUtils->extend(new TicketExtension($configuration));
 
-$config = $configUtils->generate();
+$options = [
+    'apis' => ['chooseImage', 'previewImage'],
+    'debug' => true,
+];
+
+$config = $configUtils->generate($options);
 dump($config);

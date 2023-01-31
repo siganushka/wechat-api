@@ -15,5 +15,9 @@ return static function (ContainerConfigurator $configurator): void {
 
     $ref = new \ReflectionClass(Configuration::class);
     $services->load($ref->getNamespaceName().'\\', '../src/')
-        ->exclude(['../src/{Configuration.php,OptionsUtils.php}', '../src/Miniapp/CrypterUtils.php']);
+        ->exclude([
+            '../src/{Configuration.php,OptionsUtils.php}',
+            '../src/Miniapp/CrypterUtils.php',
+            '../src/Template/Template.php',
+        ]);
 };

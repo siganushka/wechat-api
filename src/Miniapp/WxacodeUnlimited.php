@@ -12,6 +12,9 @@ use Symfony\Component\OptionsResolver\OptionsResolver;
  */
 class WxacodeUnlimited extends Wxacode
 {
+    /**
+     * @var string
+     */
     public const URL = 'https://api.weixin.qq.com/wxa/getwxacodeunlimit';
 
     protected function configureOptions(OptionsResolver $resolver): void
@@ -58,7 +61,7 @@ class WxacodeUnlimited extends Wxacode
 
         $request
             ->setMethod('POST')
-            ->setUrl(static::URL)
+            ->setUrl(self::URL)
             ->setQuery($query)
             ->setJson($body)
         ;

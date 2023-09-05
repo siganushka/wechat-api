@@ -17,6 +17,9 @@ use Symfony\Contracts\HttpClient\ResponseInterface;
  */
 class Wxacode extends AbstractRequest
 {
+    /**
+     * @var string
+     */
     public const URL = 'https://api.weixin.qq.com/wxa/getwxacode';
 
     protected function configureOptions(OptionsResolver $resolver): void
@@ -94,7 +97,7 @@ class Wxacode extends AbstractRequest
 
         $request
             ->setMethod('POST')
-            ->setUrl(static::URL)
+            ->setUrl(self::URL)
             ->setQuery($query)
             ->setJson($body)
         ;

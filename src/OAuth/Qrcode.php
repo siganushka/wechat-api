@@ -11,6 +11,9 @@ use Symfony\Component\OptionsResolver\OptionsResolver;
  */
 class Qrcode extends Client
 {
+    /**
+     * @var string
+     */
     public const URL = 'https://open.weixin.qq.com/connect/qrconnect';
 
     protected function configureOptions(OptionsResolver $resolver): void

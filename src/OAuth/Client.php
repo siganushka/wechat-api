@@ -19,6 +19,9 @@ class Client implements ResolverInterface
 {
     use ResolverTrait;
 
+    /**
+     * @var string
+     */
     public const URL = 'https://open.weixin.qq.com/connect/oauth2/authorize';
 
     private ?HttpClientInterface $httpClient = null;
@@ -46,7 +49,7 @@ class Client implements ResolverInterface
 
         ksort($query);
 
-        return sprintf('%s?%s#wechat_redirect', static::URL, http_build_query($query));
+        return sprintf('%s?%s#wechat_redirect', self::URL, http_build_query($query));
     }
 
     public function getAccessToken(array $options = []): array

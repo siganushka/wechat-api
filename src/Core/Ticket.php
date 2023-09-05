@@ -9,7 +9,7 @@ use Siganushka\ApiFactory\AbstractRequest;
 use Siganushka\ApiFactory\Exception\ParseResponseException;
 use Siganushka\ApiFactory\RequestOptions;
 use Siganushka\ApiFactory\Response\CachedResponse;
-use Siganushka\ApiFactory\Wechat\OptionsUtils;
+use Siganushka\ApiFactory\Wechat\OptionSet;
 use Symfony\Component\Cache\Adapter\FilesystemAdapter;
 use Symfony\Component\OptionsResolver\OptionsResolver;
 use Symfony\Contracts\HttpClient\HttpClientInterface;
@@ -33,7 +33,7 @@ class Ticket extends AbstractRequest
 
     protected function configureOptions(OptionsResolver $resolver): void
     {
-        OptionsUtils::token($resolver);
+        OptionSet::token($resolver);
 
         $resolver
             ->define('type')

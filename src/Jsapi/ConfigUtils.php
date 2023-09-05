@@ -6,7 +6,7 @@ namespace Siganushka\ApiFactory\Wechat\Jsapi;
 
 use Siganushka\ApiFactory\ResolverInterface;
 use Siganushka\ApiFactory\ResolverTrait;
-use Siganushka\ApiFactory\Wechat\OptionsUtils;
+use Siganushka\ApiFactory\Wechat\OptionSet;
 use Symfony\Component\OptionsResolver\OptionsResolver;
 
 /**
@@ -52,10 +52,10 @@ class ConfigUtils implements ResolverInterface
 
     protected function configureOptions(OptionsResolver $resolver): void
     {
-        OptionsUtils::appid($resolver);
-        OptionsUtils::ticket($resolver);
-        OptionsUtils::timestamp($resolver);
-        OptionsUtils::noncestr($resolver);
+        OptionSet::appid($resolver);
+        OptionSet::ticket($resolver);
+        OptionSet::timestamp($resolver);
+        OptionSet::noncestr($resolver);
 
         $currentUrl = (isset($_SERVER['HTTPS']) ? 'https://' : 'http://').
             ($_SERVER['HTTP_HOST'] ?? 'localhost').

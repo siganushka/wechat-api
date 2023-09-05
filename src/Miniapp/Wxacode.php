@@ -7,7 +7,7 @@ namespace Siganushka\ApiFactory\Wechat\Miniapp;
 use Siganushka\ApiFactory\AbstractRequest;
 use Siganushka\ApiFactory\Exception\ParseResponseException;
 use Siganushka\ApiFactory\RequestOptions;
-use Siganushka\ApiFactory\Wechat\OptionsUtils;
+use Siganushka\ApiFactory\Wechat\OptionSet;
 use Symfony\Component\OptionsResolver\Options;
 use Symfony\Component\OptionsResolver\OptionsResolver;
 use Symfony\Contracts\HttpClient\ResponseInterface;
@@ -24,7 +24,7 @@ class Wxacode extends AbstractRequest
 
     protected function configureOptions(OptionsResolver $resolver): void
     {
-        OptionsUtils::token($resolver);
+        OptionSet::token($resolver);
 
         $resolver
             ->define('path')

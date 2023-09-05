@@ -8,7 +8,7 @@ use Psr\Cache\CacheItemPoolInterface;
 use Siganushka\ApiFactory\ResolverInterface;
 use Siganushka\ApiFactory\ResolverTrait;
 use Siganushka\ApiFactory\Wechat\ConfigurationExtension;
-use Siganushka\ApiFactory\Wechat\OptionsUtils;
+use Siganushka\ApiFactory\Wechat\OptionSet;
 use Symfony\Component\OptionsResolver\OptionsResolver;
 use Symfony\Contracts\HttpClient\HttpClientInterface;
 
@@ -90,7 +90,7 @@ class Client implements ResolverInterface
 
     protected function configureOptions(OptionsResolver $resolver): void
     {
-        OptionsUtils::appid($resolver);
+        OptionSet::appid($resolver);
 
         $resolver
             ->define('redirect_uri')

@@ -14,7 +14,7 @@ class Configuration extends AbstractConfiguration
 {
     public static function configureOptions(OptionsResolver $resolver): void
     {
-        OptionsUtils::appid($resolver);
-        OptionsUtils::secret($resolver);
+        OptionSet::appid($resolver);
+        OptionSet::secret($resolver);
     }
 }

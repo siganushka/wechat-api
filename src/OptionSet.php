@@ -7,7 +7,7 @@ namespace Siganushka\ApiFactory\Wechat;
 use Symfony\Component\OptionsResolver\OptionConfigurator;
 use Symfony\Component\OptionsResolver\OptionsResolver;
 
-final class OptionsUtils
+final class OptionSet
 {
     public static function appid(OptionsResolver $resolver): OptionConfigurator
     {

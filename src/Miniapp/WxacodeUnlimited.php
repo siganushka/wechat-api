@@ -61,7 +61,7 @@ class WxacodeUnlimited extends Wxacode
 
         $request
             ->setMethod('POST')
-            ->setUrl(self::URL)
+            ->setUrl(static::URL)
             ->setQuery($query)
             ->setJson($body)
         ;

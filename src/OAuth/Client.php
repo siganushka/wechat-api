@@ -49,7 +49,9 @@ class Client implements ResolverInterface
 
         ksort($query);
 
-        return sprintf('%s?%s#wechat_redirect', self::URL, http_build_query($query));
+        // impronent
+        // @see https://www.php.net/manual/en/language.oop5.late-static-bindings.php
+        return sprintf('%s?%s#wechat_redirect', static::URL, http_build_query($query));
     }
 
     public function getAccessToken(array $options = []): array

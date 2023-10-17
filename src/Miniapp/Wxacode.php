@@ -97,7 +97,7 @@ class Wxacode extends AbstractRequest
 
         $request
             ->setMethod('POST')
-            ->setUrl(self::URL)
+            ->setUrl(static::URL)
             ->setQuery($query)
             ->setJson($body)
         ;

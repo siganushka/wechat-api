@@ -34,18 +34,16 @@ class CrypterUtils
         $aesCipher = base64_decode($encryptedData);
         $aesIV = base64_decode($iv);
 
-        try {
-            $result = openssl_decrypt($aesCipher, 'AES-128-CBC', $aesKey, 1, $aesIV);
-        } catch (\Throwable $th) {
-            throw new \RuntimeException('Unable to decrypt value.');
-        }
-
+        $result = openssl_decrypt($aesCipher, 'AES-128-CBC', $aesKey, 1, $aesIV);
         if (false === $result) {
             throw new \RuntimeException('Unable to decrypt value.');
         }
 
         /** @var array */
-        $data = json_decode($result, true, flags: \JSON_THROW_ON_ERROR);
+        $data = json_decode($result, true);
+        if (\JSON_ERROR_NONE !== json_last_error()) {
+            throw new \RuntimeException('Unable to decrypt value.');
+        }
 
         return $data;
     }

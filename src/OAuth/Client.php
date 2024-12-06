@@ -12,22 +12,19 @@ use Siganushka\ApiFactory\Wechat\OptionSet;
 use Symfony\Component\OptionsResolver\OptionsResolver;
 use Symfony\Contracts\HttpClient\HttpClientInterface;
 
-/**
- * @see https://developers.weixin.qq.com/doc/offiaccount/OA_Web_Apps/Wechat_webpage_authorization.html
- */
 class Client implements ResolverInterface
 {
     use ResolverTrait;
 
     /**
-     * @var string
+     * @see https://developers.weixin.qq.com/doc/offiaccount/OA_Web_Apps/Wechat_webpage_authorization.html
      */
     public const URL = 'https://open.weixin.qq.com/connect/oauth2/authorize';
 
     private ?HttpClientInterface $httpClient = null;
     private ?CacheItemPoolInterface $cachePool = null;
 
-    public function __construct(HttpClientInterface $httpClient = null, CacheItemPoolInterface $cachePool = null)
+    public function __construct(?HttpClientInterface $httpClient = null, ?CacheItemPoolInterface $cachePool = null)
     {
         $this->httpClient = $httpClient;
         $this->cachePool = $cachePool;
@@ -49,9 +46,8 @@ class Client implements ResolverInterface
 
         ksort($query);
 
-        // impronent
-        // @see https://www.php.net/manual/en/language.oop5.late-static-bindings.php
-        return sprintf('%s?%s#wechat_redirect', static::URL, http_build_query($query));
+        // [important] Using static::URL (instead of self::URL) will ensure that the URL changes in subclasses
+        return \sprintf('%s?%s#wechat_redirect', static::URL, http_build_query($query));
     }
 
     public function getAccessToken(array $options = []): array

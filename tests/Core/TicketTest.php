@@ -15,16 +15,11 @@ use Symfony\Component\OptionsResolver\Exception\MissingOptionsException;
 
 class TicketTest extends TestCase
 {
-    protected ?Ticket $request = null;
+    protected Ticket $request;
 
     protected function setUp(): void
     {
         $this->request = new Ticket();
-    }
-
-    protected function tearDown(): void
-    {
-        $this->request = null;
     }
 
     public function testResolve(): void
@@ -69,7 +64,7 @@ class TicketTest extends TestCase
             'ticket' => 'test_ticket',
         ];
 
-        $body = json_encode($data);
+        $body = json_encode($data, \JSON_THROW_ON_ERROR);
 
         $mockResponse = new MockResponse($body);
         $client = new MockHttpClient($mockResponse);
@@ -89,7 +84,7 @@ class TicketTest extends TestCase
             'errmsg' => 'test error',
         ];
 
-        $body = json_encode($data);
+        $body = json_encode($data, \JSON_THROW_ON_ERROR);
 
         $mockResponse = new MockResponse($body);
         $client = new MockHttpClient($mockResponse);

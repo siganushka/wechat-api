@@ -15,16 +15,11 @@ use Symfony\Component\OptionsResolver\Exception\MissingOptionsException;
 
 class AccessTokenTest extends TestCase
 {
-    protected ?AccessToken $request = null;
+    protected AccessToken $request;
 
     protected function setUp(): void
     {
         $this->request = new AccessToken();
-    }
-
-    protected function tearDown(): void
-    {
-        $this->request = null;
     }
 
     public function testResolve(): void
@@ -62,7 +57,7 @@ class AccessTokenTest extends TestCase
             'scope' => 'test_scope',
         ];
 
-        $body = json_encode($data);
+        $body = json_encode($data, \JSON_THROW_ON_ERROR);
 
         $mockResponse = new MockResponse($body);
         $client = new MockHttpClient($mockResponse);
@@ -82,7 +77,7 @@ class AccessTokenTest extends TestCase
             'errmsg' => 'test error',
         ];
 
-        $body = json_encode($data);
+        $body = json_encode($data, \JSON_THROW_ON_ERROR);
 
         $mockResponse = new MockResponse($body);
         $client = new MockHttpClient($mockResponse);

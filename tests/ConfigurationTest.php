@@ -57,7 +57,7 @@ class ConfigurationTest extends TestCase
         ]);
     }
 
-    public static function create(array $configs = null): Configuration
+    public static function create(?array $configs = null): Configuration
     {
         if (null === $configs) {
             $configs = [

@@ -12,10 +12,13 @@ use Symfony\Component\OptionsResolver\OptionsResolver;
 use Symfony\Contracts\HttpClient\ResponseInterface;
 
 /**
- * @see https://developers.weixin.qq.com/doc/offiaccount/OA_Web_Apps/Wechat_webpage_authorization.html#2
+ * @extends AbstractRequest<array>
  */
 class RefreshToken extends AbstractRequest
 {
+    /**
+     * @see https://developers.weixin.qq.com/doc/offiaccount/OA_Web_Apps/Wechat_webpage_authorization.html#2
+     */
     public const URL = 'https://api.weixin.qq.com/sns/oauth2/refresh_token';
 
     protected function configureOptions(OptionsResolver $resolver): void
@@ -44,15 +47,6 @@ class RefreshToken extends AbstractRequest
         ;
     }
 
-    /**
-     * @return array{
-     *  openid: string,
-     *  access_token: string,
-     *  expires_in: int,
-     *  refresh_token: string,
-     *  scope: string
-     * }
-     */
     protected function parseResponse(ResponseInterface $response): array
     {
         $result = $response->toArray();

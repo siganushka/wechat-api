@@ -11,16 +11,11 @@ use Symfony\Component\OptionsResolver\Exception\MissingOptionsException;
 
 class ClientTest extends TestCase
 {
-    private ?Client $client = null;
+    protected Client $client;
 
     protected function setUp(): void
     {
         $this->client = new Client();
-    }
-
-    protected function tearDown(): void
-    {
-        $this->client = null;
     }
 
     public function testResolve(): void

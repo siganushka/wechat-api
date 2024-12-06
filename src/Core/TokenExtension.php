@@ -22,7 +22,7 @@ class TokenExtension implements ResolverExtensionInterface
     protected ?HttpClientInterface $httpClient = null;
     protected ?CacheItemPoolInterface $cachePool = null;
 
-    public function __construct(Configuration $configuration, HttpClientInterface $httpClient = null, CacheItemPoolInterface $cachePool = null)
+    public function __construct(Configuration $configuration, ?HttpClientInterface $httpClient = null, ?CacheItemPoolInterface $cachePool = null)
     {
         $this->configuration = $configuration;
         $this->httpClient = $httpClient;

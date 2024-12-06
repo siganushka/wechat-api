@@ -11,16 +11,11 @@ use Symfony\Component\OptionsResolver\Exception\MissingOptionsException;
 
 class QrcodeTest extends TestCase
 {
-    private ?Qrcode $client = null;
+    protected Qrcode $client;
 
     protected function setUp(): void
     {
         $this->client = new Qrcode();
-    }
-
-    protected function tearDown(): void
-    {
-        $this->client = null;
     }
 
     public function testResolve(): void

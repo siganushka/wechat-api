@@ -11,16 +11,11 @@ use Symfony\Component\OptionsResolver\Exception\MissingOptionsException;
 
 class ConfigUtilsTest extends TestCase
 {
-    private ?ConfigUtils $configUtils = null;
+    protected ConfigUtils $configUtils;
 
     protected function setUp(): void
     {
         $this->configUtils = new ConfigUtils();
-    }
-
-    protected function tearDown(): void
-    {
-        $this->configUtils = null;
     }
 
     public function testResolve(): void

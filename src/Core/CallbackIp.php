@@ -12,10 +12,13 @@ use Symfony\Component\OptionsResolver\OptionsResolver;
 use Symfony\Contracts\HttpClient\ResponseInterface;
 
 /**
- * @see https://developers.weixin.qq.com/doc/offiaccount/Basic_Information/Get_the_WeChat_server_IP_address.html
+ * @extends AbstractRequest<array>
  */
 class CallbackIp extends AbstractRequest
 {
+    /**
+     * @see https://developers.weixin.qq.com/doc/offiaccount/Basic_Information/Get_the_WeChat_server_IP_address.html
+     */
     public const URL = 'https://api.weixin.qq.com/cgi-bin/getcallbackip';
 
     protected function configureOptions(OptionsResolver $resolver): void

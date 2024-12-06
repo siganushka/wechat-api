@@ -14,16 +14,11 @@ use Symfony\Component\OptionsResolver\Exception\MissingOptionsException;
 
 class QrcodeTest extends TestCase
 {
-    protected ?Qrcode $request = null;
+    protected Qrcode $request;
 
     protected function setUp(): void
     {
         $this->request = new Qrcode();
-    }
-
-    protected function tearDown(): void
-    {
-        $this->request = null;
     }
 
     public function testResolve(): void
@@ -100,7 +95,7 @@ class QrcodeTest extends TestCase
             ],
         ];
 
-        $body = json_encode($data);
+        $body = json_encode($data, \JSON_THROW_ON_ERROR);
 
         $mockResponse = new MockResponse($body, $info);
         $client = new MockHttpClient($mockResponse);

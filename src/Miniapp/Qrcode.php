@@ -12,10 +12,13 @@ use Symfony\Component\OptionsResolver\OptionsResolver;
 use Symfony\Contracts\HttpClient\ResponseInterface;
 
 /**
- * @see https://developers.weixin.qq.com/miniprogram/dev/api-backend/open-api/qr-code/wxacode.createQRCode.html
+ * @extends AbstractRequest<string>
  */
 class Qrcode extends AbstractRequest
 {
+    /**
+     * @see https://developers.weixin.qq.com/miniprogram/dev/api-backend/open-api/qr-code/wxacode.createQRCode.html
+     */
     public const URL = 'https://api.weixin.qq.com/cgi-bin/wxaapp/createwxaqrcode';
 
     protected function configureOptions(OptionsResolver $resolver): void

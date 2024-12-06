@@ -6,13 +6,10 @@ namespace Siganushka\ApiFactory\Wechat\OAuth;
 
 use Symfony\Component\OptionsResolver\OptionsResolver;
 
-/**
- * @see https://developers.weixin.qq.com/doc/oplatform/Website_App/WeChat_Login/Wechat_Login.html
- */
 class Qrcode extends Client
 {
     /**
-     * @var string
+     * @see https://developers.weixin.qq.com/doc/oplatform/Website_App/WeChat_Login/Wechat_Login.html
      */
     public const URL = 'https://open.weixin.qq.com/connect/qrconnect';
 

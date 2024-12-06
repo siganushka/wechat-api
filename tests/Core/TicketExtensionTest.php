@@ -15,27 +15,22 @@ use Symfony\Component\OptionsResolver\OptionsResolver;
 
 class TicketExtensionTest extends TestCase
 {
-    protected ?TicketExtension $extension = null;
+    protected TicketExtension $extension;
 
     protected function setUp(): void
     {
         $configuration = ConfigurationTest::create();
 
         $client = new MockHttpClient([
-            new MockResponse(json_encode(['access_token' => 'test_token', 'expires_in' => 1024])),
-            new MockResponse(json_encode(['ticket' => 'test_ticket'])),
-            new MockResponse(json_encode(['access_token' => 'test_token_for_wx_card', 'expires_in' => 1024])),
-            new MockResponse(json_encode(['ticket' => 'test_ticket_for_wx_card'])),
+            new MockResponse(json_encode(['access_token' => 'test_token', 'expires_in' => 1024], \JSON_THROW_ON_ERROR)),
+            new MockResponse(json_encode(['ticket' => 'test_ticket'], \JSON_THROW_ON_ERROR)),
+            new MockResponse(json_encode(['access_token' => 'test_token_for_wx_card', 'expires_in' => 1024], \JSON_THROW_ON_ERROR)),
+            new MockResponse(json_encode(['ticket' => 'test_ticket_for_wx_card'], \JSON_THROW_ON_ERROR)),
         ]);
 
         $cache = new NullAdapter();
 
         $this->extension = new TicketExtension($configuration, $client, $cache);
-    }
-
-    protected function tearDown(): void
-    {
-        $this->extension = null;
     }
 
     public function testConfigureOptions(): void

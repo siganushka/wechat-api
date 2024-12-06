@@ -7,13 +7,10 @@ namespace Siganushka\ApiFactory\Wechat\Miniapp;
 use Siganushka\ApiFactory\RequestOptions;
 use Symfony\Component\OptionsResolver\OptionsResolver;
 
-/**
- * @see https://developers.weixin.qq.com/miniprogram/dev/api-backend/open-api/qr-code/wxacode.getUnlimited.html
- */
 class WxacodeUnlimited extends Wxacode
 {
     /**
-     * @var string
+     * @see https://developers.weixin.qq.com/miniprogram/dev/api-backend/open-api/qr-code/wxacode.getUnlimited.html
      */
     public const URL = 'https://api.weixin.qq.com/wxa/getwxacodeunlimit';
 

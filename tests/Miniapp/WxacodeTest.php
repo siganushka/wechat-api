@@ -14,16 +14,11 @@ use Symfony\Component\OptionsResolver\Exception\MissingOptionsException;
 
 class WxacodeTest extends TestCase
 {
-    protected ?Wxacode $request = null;
+    protected Wxacode $request;
 
     protected function setUp(): void
     {
         $this->request = new Wxacode();
-    }
-
-    protected function tearDown(): void
-    {
-        $this->request = null;
     }
 
     public function testResolve(): void
@@ -140,7 +135,7 @@ class WxacodeTest extends TestCase
             ],
         ];
 
-        $body = json_encode($data);
+        $body = json_encode($data, \JSON_THROW_ON_ERROR);
 
         $mockResponse = new MockResponse($body, $info);
         $client = new MockHttpClient($mockResponse);

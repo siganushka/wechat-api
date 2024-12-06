@@ -44,10 +44,8 @@ class CrypterUtils
             throw new \RuntimeException('Unable to decrypt value.');
         }
 
-        $data = json_decode($result, true);
-        if (\JSON_ERROR_NONE !== json_last_error()) {
-            throw new \RuntimeException('Unable to decrypt value.');
-        }
+        /** @var array */
+        $data = json_decode($result, true, flags: \JSON_THROW_ON_ERROR);
 
         return $data;
     }

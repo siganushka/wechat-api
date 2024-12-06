@@ -13,13 +13,14 @@ jobs:
         strategy:
             fail-fast: false
             matrix:
-                php-versions: [ '7.4', '8.0', '8.1', '8.2' ]
+                php-versions: ['7.4', '8.0', '8.1', '8.2', '8.3', '8.4']
         steps:
-            - { name: Checkout code,        uses: actions/checkout@v2 }
+            - { name: Checkout code,        uses: actions/checkout@v4 }
             - { name: Install PHP,          uses: shivammathur/setup-php@v2, with: { php-version: "${{ matrix.php-versions }}" } }
             - { name: OS Version,           run: uname -a }
             - { name: PHP Version,          run: php --version }
             - { name: Validate composer,    run: composer validate --strict }
             - { name: Install dependencies, run: composer install }
-            - { name: Run tests,            run: php vendor/bin/simple-phpunit --debug }
-            - { name: Run Psalm,            run: "php vendor/bin/psalm --show-info=true --php-version=${{ matrix.php-versions }}" }
+            - { name: Install tools,        run: composer install -d tools/ }
+            - { name: Run tests,            run: tools/vendor/bin/simple-phpunit --debug }
+            - { name: Run phpstan,          run: tools/vendor/bin/phpstan }

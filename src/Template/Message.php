@@ -12,10 +12,13 @@ use Symfony\Component\OptionsResolver\OptionsResolver;
 use Symfony\Contracts\HttpClient\ResponseInterface;
 
 /**
- * @see https://developers.weixin.qq.com/doc/offiaccount/Message_Management/Template_Message_Interface.html#5
+ * @extends AbstractRequest<array>
  */
 class Message extends AbstractRequest
 {
+    /**
+     * @see https://developers.weixin.qq.com/doc/offiaccount/Message_Management/Template_Message_Interface.html#5
+     */
     public const URL = 'https://api.weixin.qq.com/cgi-bin/message/template/send';
 
     protected function configureOptions(OptionsResolver $resolver): void

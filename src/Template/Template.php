@@ -24,7 +24,7 @@ class Template
         return $this->data;
     }
 
-    public function addData(string $key, string $value, string $color = null): self
+    public function addData(string $key, string $value, ?string $color = null): self
     {
         $this->data[$key] = null === $color
             ? ['value' => $value]

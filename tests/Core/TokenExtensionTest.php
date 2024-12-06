@@ -21,25 +21,20 @@ use Symfony\Component\OptionsResolver\OptionsResolver;
 
 class TokenExtensionTest extends TestCase
 {
-    protected ?TokenExtension $extension = null;
+    protected TokenExtension $extension;
 
     protected function setUp(): void
     {
         $configuration = ConfigurationTest::create();
 
         $client = new MockHttpClient([
-            new MockResponse(json_encode(['access_token' => 'test_token_1', 'expires_in' => 1024])),
-            new MockResponse(json_encode(['access_token' => 'test_token_2', 'expires_in' => 1024])),
+            new MockResponse(json_encode(['access_token' => 'test_token_1', 'expires_in' => 1024], \JSON_THROW_ON_ERROR)),
+            new MockResponse(json_encode(['access_token' => 'test_token_2', 'expires_in' => 1024], \JSON_THROW_ON_ERROR)),
         ]);
 
         $cache = new NullAdapter();
 
         $this->extension = new TokenExtension($configuration, $client, $cache);
-    }
-
-    protected function tearDown(): void
-    {
-        $this->extension = null;
     }
 
     public function testConfigureOptions(): void

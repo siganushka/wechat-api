@@ -15,16 +15,11 @@ use Symfony\Component\OptionsResolver\Exception\MissingOptionsException;
 
 class MessageTest extends TestCase
 {
-    protected ?Message $request = null;
+    protected Message $request;
 
     protected function setUp(): void
     {
         $this->request = new Message();
-    }
-
-    protected function tearDown(): void
-    {
-        $this->request = null;
     }
 
     public function testResolve(): void
@@ -131,7 +126,7 @@ class MessageTest extends TestCase
             'msgid' => 1024,
         ];
 
-        $body = json_encode($data);
+        $body = json_encode($data, \JSON_THROW_ON_ERROR);
 
         $mockResponse = new MockResponse($body);
         $client = new MockHttpClient($mockResponse);
@@ -156,7 +151,7 @@ class MessageTest extends TestCase
             'errmsg' => 'test error',
         ];
 
-        $body = json_encode($data);
+        $body = json_encode($data, \JSON_THROW_ON_ERROR);
 
         $mockResponse = new MockResponse($body);
         $client = new MockHttpClient($mockResponse);
@@ -204,7 +199,7 @@ class MessageTest extends TestCase
     public function testTemplateInvalidException(): void
     {
         $this->expectException(InvalidOptionsException::class);
-        $this->expectExceptionMessage(sprintf('The option "template" with value "baz" is expected to be of type "%s", but is of type "string"', Template::class));
+        $this->expectExceptionMessage(\sprintf('The option "template" with value "baz" is expected to be of type "%s", but is of type "string"', Template::class));
 
         $this->request->build(['token' => 'foo', 'touser' => 'bar', 'template' => 'baz']);
     }

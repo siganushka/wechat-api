@@ -13,12 +13,12 @@ use Symfony\Component\OptionsResolver\OptionsResolver;
 use Symfony\Contracts\HttpClient\ResponseInterface;
 
 /**
- * @see https://developers.weixin.qq.com/miniprogram/dev/api-backend/open-api/qr-code/wxacode.get.html
+ * @extends AbstractRequest<string>
  */
 class Wxacode extends AbstractRequest
 {
     /**
-     * @var string
+     * @see https://developers.weixin.qq.com/miniprogram/dev/api-backend/open-api/qr-code/wxacode.get.html
      */
     public const URL = 'https://api.weixin.qq.com/wxa/getwxacode';
 
@@ -60,14 +60,16 @@ class Wxacode extends AbstractRequest
         $resolver
             ->define('line_color_value')
             ->default(function (Options $options) {
-                if (null === $options['line_color']) {
+                /** @var string|null */
+                $lineColor = $options['line_color'];
+                if (null === $lineColor) {
                     return null;
                 }
 
                 return array_map('hexdec', [
-                    'r' => mb_substr($options['line_color'], 1, 2),
-                    'g' => mb_substr($options['line_color'], 3, 2),
-                    'b' => mb_substr($options['line_color'], 5, 2),
+                    'r' => mb_substr($lineColor, 1, 2),
+                    'g' => mb_substr($lineColor, 3, 2),
+                    'b' => mb_substr($lineColor, 5, 2),
                 ]);
             })
             ->allowedTypes('null', 'array')

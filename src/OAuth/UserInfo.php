@@ -11,10 +11,13 @@ use Symfony\Component\OptionsResolver\OptionsResolver;
 use Symfony\Contracts\HttpClient\ResponseInterface;
 
 /**
- * @see https://developers.weixin.qq.com/doc/offiaccount/OA_Web_Apps/Wechat_webpage_authorization.html#3
+ * @extends AbstractRequest<array>
  */
 class UserInfo extends AbstractRequest
 {
+    /**
+     * @see https://developers.weixin.qq.com/doc/offiaccount/OA_Web_Apps/Wechat_webpage_authorization.html#3
+     */
     public const URL = 'https://api.weixin.qq.com/sns/userinfo';
 
     protected function configureOptions(OptionsResolver $resolver): void
@@ -53,20 +56,6 @@ class UserInfo extends AbstractRequest
         ;
     }
 
-    /**
-     * @return array{
-     *  openid: string,
-     *  nickname: string,
-     *  sex: int,
-     *  language: string,
-     *  city: string,
-     *  province: string,
-     *  country: string,
-     *  headimgurl: string,
-     *  privilege: array,
-     *  unionid?: string
-     * }
-     */
     protected function parseResponse(ResponseInterface $response): array
     {
         $result = $response->toArray();

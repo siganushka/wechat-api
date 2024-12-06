@@ -8,7 +8,7 @@ use Psr\Cache\CacheItemPoolInterface;
 use Siganushka\ApiFactory\AbstractRequest;
 use Siganushka\ApiFactory\Exception\ParseResponseException;
 use Siganushka\ApiFactory\RequestOptions;
-use Siganushka\ApiFactory\Response\CachedResponse;
+use Siganushka\ApiFactory\Response\StaticResponse;
 use Siganushka\ApiFactory\Wechat\OptionSet;
 use Symfony\Component\Cache\Adapter\FilesystemAdapter;
 use Symfony\Component\OptionsResolver\OptionsResolver;
@@ -16,15 +16,18 @@ use Symfony\Contracts\HttpClient\HttpClientInterface;
 use Symfony\Contracts\HttpClient\ResponseInterface;
 
 /**
- * @see https://developers.weixin.qq.com/doc/offiaccount/OA_Web_Apps/JS-SDK.html#54
+ * @extends AbstractRequest<array>
  */
 class Ticket extends AbstractRequest
 {
+    /**
+     * @see https://developers.weixin.qq.com/doc/offiaccount/OA_Web_Apps/JS-SDK.html#54
+     */
     public const URL = 'https://api.weixin.qq.com/cgi-bin/ticket/getticket';
 
     private CacheItemPoolInterface $cachePool;
 
-    public function __construct(HttpClientInterface $httpClient = null, CacheItemPoolInterface $cachePool = null)
+    public function __construct(?HttpClientInterface $httpClient = null, ?CacheItemPoolInterface $cachePool = null)
     {
         $this->cachePool = $cachePool ?? new FilesystemAdapter();
 
@@ -60,7 +63,9 @@ class Ticket extends AbstractRequest
     {
         $cacheItem = $this->cachePool->getItem((string) $request);
         if ($cacheItem->isHit()) {
-            return CachedResponse::createFromJson($cacheItem->get());
+            if (\is_array($data = $cacheItem->get())) {
+                return StaticResponse::createFromArray($data);
+            }
         }
 
         $response = parent::sendRequest($request);

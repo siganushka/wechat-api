@@ -14,16 +14,11 @@ use Symfony\Component\OptionsResolver\Exception\MissingOptionsException;
 
 class RefreshTokenTest extends TestCase
 {
-    protected ?RefreshToken $request = null;
+    protected RefreshToken $request;
 
     protected function setUp(): void
     {
         $this->request = new RefreshToken();
-    }
-
-    protected function tearDown(): void
-    {
-        $this->request = null;
     }
 
     public function testResolve(): void
@@ -59,7 +54,7 @@ class RefreshTokenTest extends TestCase
             'scope' => 'test_scope',
         ];
 
-        $body = json_encode($data);
+        $body = json_encode($data, \JSON_THROW_ON_ERROR);
 
         $mockResponse = new MockResponse($body);
         $client = new MockHttpClient($mockResponse);
@@ -79,7 +74,7 @@ class RefreshTokenTest extends TestCase
             'errmsg' => 'test error',
         ];
 
-        $body = json_encode($data);
+        $body = json_encode($data, \JSON_THROW_ON_ERROR);
 
         $mockResponse = new MockResponse($body);
         $client = new MockHttpClient($mockResponse);

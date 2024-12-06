@@ -14,16 +14,11 @@ use Symfony\Component\OptionsResolver\Exception\MissingOptionsException;
 
 class CallbackIpTest extends TestCase
 {
-    protected ?CallbackIp $request = null;
+    protected CallbackIp $request;
 
     protected function setUp(): void
     {
         $this->request = new CallbackIp();
-    }
-
-    protected function tearDown(): void
-    {
-        $this->request = null;
     }
 
     public function testResolve(): void
@@ -48,7 +43,7 @@ class CallbackIpTest extends TestCase
     public function testSend(): void
     {
         $data = ['ip_list' => ['foo', 'bar', 'baz']];
-        $body = json_encode($data);
+        $body = json_encode($data, \JSON_THROW_ON_ERROR);
 
         $mockResponse = new MockResponse($body);
         $client = new MockHttpClient($mockResponse);
@@ -64,7 +59,7 @@ class CallbackIpTest extends TestCase
         $this->expectExceptionMessage('test error');
 
         $data = ['errcode' => 16, 'errmsg' => 'test error'];
-        $body = json_encode($data);
+        $body = json_encode($data, \JSON_THROW_ON_ERROR);
 
         $mockResponse = new MockResponse($body);
         $client = new MockHttpClient($mockResponse);

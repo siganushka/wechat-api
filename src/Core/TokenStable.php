@@ -54,7 +54,7 @@ class TokenStable extends AbstractRequest
 
     protected function configureRequest(RequestOptions $request, array $options): void
     {
-        $query = [
+        $json = [
             'appid' => $options['appid'],
             'secret' => $options['secret'],
             'grant_type' => $options['grant_type'],
@@ -64,7 +64,7 @@ class TokenStable extends AbstractRequest
         $request
             ->setMethod('POST')
             ->setUrl(static::URL)
-            ->setJson($query)
+            ->setJson($json)
         ;
     }
 

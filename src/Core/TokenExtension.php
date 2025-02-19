@@ -8,10 +8,11 @@ use Psr\Cache\CacheItemPoolInterface;
 use Siganushka\ApiFactory\ResolverExtensionInterface;
 use Siganushka\ApiFactory\Wechat\Configuration;
 use Siganushka\ApiFactory\Wechat\ConfigurationExtension;
+use Siganushka\ApiFactory\Wechat\Message\SubscribeMessage;
+use Siganushka\ApiFactory\Wechat\Message\TemplateMessage;
 use Siganushka\ApiFactory\Wechat\Miniapp\Qrcode;
 use Siganushka\ApiFactory\Wechat\Miniapp\Wxacode;
 use Siganushka\ApiFactory\Wechat\Miniapp\WxacodeUnlimited;
-use Siganushka\ApiFactory\Wechat\Template\Message;
 use Symfony\Component\OptionsResolver\Options;
 use Symfony\Component\OptionsResolver\OptionsResolver;
 use Symfony\Contracts\HttpClient\HttpClientInterface;
@@ -54,7 +55,8 @@ class TokenExtension implements ResolverExtensionInterface
             Qrcode::class,
             Wxacode::class,
             WxacodeUnlimited::class,
-            Message::class,
+            SubscribeMessage::class,
+            TemplateMessage::class,
             Ticket::class,
         ];
     }

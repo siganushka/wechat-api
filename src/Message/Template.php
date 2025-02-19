@@ -2,7 +2,7 @@
 
 declare(strict_types=1);
 
-namespace Siganushka\ApiFactory\Wechat\Template;
+namespace Siganushka\ApiFactory\Wechat\Message;
 
 class Template
 {
@@ -24,11 +24,9 @@ class Template
         return $this->data;
     }
 
-    public function addData(string $key, string $value, ?string $color = null): self
+    public function addData(string $key, string $value): self
     {
-        $this->data[$key] = null === $color
-            ? ['value' => $value]
-            : ['value' => $value, 'color' => $color];
+        $this->data[$key] = compact('value');
 
         return $this;
     }

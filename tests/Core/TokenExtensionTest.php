@@ -9,10 +9,11 @@ use Siganushka\ApiFactory\Wechat\Core\CallbackIp;
 use Siganushka\ApiFactory\Wechat\Core\ServerIp;
 use Siganushka\ApiFactory\Wechat\Core\Ticket;
 use Siganushka\ApiFactory\Wechat\Core\TokenExtension;
+use Siganushka\ApiFactory\Wechat\Message\SubscribeMessage;
+use Siganushka\ApiFactory\Wechat\Message\TemplateMessage;
 use Siganushka\ApiFactory\Wechat\Miniapp\Qrcode;
 use Siganushka\ApiFactory\Wechat\Miniapp\Wxacode;
 use Siganushka\ApiFactory\Wechat\Miniapp\WxacodeUnlimited;
-use Siganushka\ApiFactory\Wechat\Template\Message;
 use Siganushka\ApiFactory\Wechat\Tests\ConfigurationTest;
 use Symfony\Component\Cache\Adapter\NullAdapter;
 use Symfony\Component\HttpClient\MockHttpClient;
@@ -63,7 +64,8 @@ class TokenExtensionTest extends TestCase
             Qrcode::class,
             Wxacode::class,
             WxacodeUnlimited::class,
-            Message::class,
+            SubscribeMessage::class,
+            TemplateMessage::class,
             Ticket::class,
         ], TokenExtension::getExtendedClasses());
     }

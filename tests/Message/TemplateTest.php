@@ -2,10 +2,10 @@
 
 declare(strict_types=1);
 
-namespace Siganushka\ApiFactory\Wechat\Tests\Template;
+namespace Siganushka\ApiFactory\Wechat\Tests\Message;
 
 use PHPUnit\Framework\TestCase;
-use Siganushka\ApiFactory\Wechat\Template\Template;
+use Siganushka\ApiFactory\Wechat\Message\Template;
 
 class TemplateTest extends TestCase
 {
@@ -14,14 +14,14 @@ class TemplateTest extends TestCase
         $template = new Template('xyz');
         static::assertEquals([], $template->getData());
 
-        $template->addData('foo', 'value111', '#ff0000');
+        $template->addData('foo', 'value111');
         $template->addData('bar', 'value222');
 
         static::assertTrue($template->hasData('foo'));
         static::assertTrue($template->hasData('bar'));
         static::assertSame('xyz', $template->getId());
         static::assertEquals([
-            'foo' => ['value' => 'value111', 'color' => '#ff0000'],
+            'foo' => ['value' => 'value111'],
             'bar' => ['value' => 'value222'],
         ], $template->getData());
 

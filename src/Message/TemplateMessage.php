@@ -2,7 +2,7 @@
 
 declare(strict_types=1);
 
-namespace Siganushka\ApiFactory\Wechat\Template;
+namespace Siganushka\ApiFactory\Wechat\Message;
 
 use Siganushka\ApiFactory\AbstractRequest;
 use Siganushka\ApiFactory\Exception\ParseResponseException;
@@ -14,7 +14,7 @@ use Symfony\Contracts\HttpClient\ResponseInterface;
 /**
  * @extends AbstractRequest<array>
  */
-class Message extends AbstractRequest
+class TemplateMessage extends AbstractRequest
 {
     /**
      * @see https://developers.weixin.qq.com/doc/offiaccount/Message_Management/Template_Message_Interface.html#5

@@ -37,6 +37,7 @@ class UserInfo extends AbstractRequest
         $resolver
             ->define('lang')
             ->default('zh_CN')
+            ->allowedTypes('string')
             ->allowedValues('zh_CN', 'zh_TW', 'en')
         ;
     }

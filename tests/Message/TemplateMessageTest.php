@@ -2,24 +2,24 @@
 
 declare(strict_types=1);
 
-namespace Siganushka\ApiFactory\Wechat\Tests\Template;
+namespace Siganushka\ApiFactory\Wechat\Tests\Message;
 
 use PHPUnit\Framework\TestCase;
 use Siganushka\ApiFactory\Exception\ParseResponseException;
-use Siganushka\ApiFactory\Wechat\Template\Message;
-use Siganushka\ApiFactory\Wechat\Template\Template;
+use Siganushka\ApiFactory\Wechat\Message\Template;
+use Siganushka\ApiFactory\Wechat\Message\TemplateMessage;
 use Symfony\Component\HttpClient\MockHttpClient;
 use Symfony\Component\HttpClient\Response\MockResponse;
 use Symfony\Component\OptionsResolver\Exception\InvalidOptionsException;
 use Symfony\Component\OptionsResolver\Exception\MissingOptionsException;
 
-class MessageTest extends TestCase
+class TemplateMessageTest extends TestCase
 {
-    protected Message $request;
+    protected TemplateMessage $request;
 
     protected function setUp(): void
     {
-        $this->request = new Message();
+        $this->request = new TemplateMessage();
     }
 
     public function testResolve(): void
@@ -68,7 +68,7 @@ class MessageTest extends TestCase
         $requestOptions = $this->request->build(['token' => 'foo', 'touser' => 'bar', 'template' => $template]);
 
         static::assertSame('POST', $requestOptions->getMethod());
-        static::assertSame(Message::URL, $requestOptions->getUrl());
+        static::assertSame(TemplateMessage::URL, $requestOptions->getUrl());
         static::assertEquals([
             'query' => [
                 'access_token' => 'foo',
@@ -80,7 +80,7 @@ class MessageTest extends TestCase
         ], $requestOptions->toArray());
 
         $template->addData('key1', 'key1_value');
-        $template->addData('key2', 'key2_value', '#ff0000');
+        $template->addData('key2', 'key2_value');
 
         $requestOptions = $this->request->build([
             'token' => 'foo',
@@ -112,7 +112,6 @@ class MessageTest extends TestCase
                     ],
                     'key2' => [
                         'value' => 'key2_value',
-                        'color' => '#ff0000',
                     ],
                 ],
                 'client_msg_id' => 'test_client_msg_id',
@@ -132,7 +131,7 @@ class MessageTest extends TestCase
         $client = new MockHttpClient($mockResponse);
 
         $template = new Template('baz');
-        $result = (new Message($client))->send(['token' => 'foo', 'touser' => 'bar', 'template' => $template]);
+        $result = (new TemplateMessage($client))->send(['token' => 'foo', 'touser' => 'bar', 'template' => $template]);
         static::assertSame($data, $result);
     }
 
@@ -157,7 +156,7 @@ class MessageTest extends TestCase
         $client = new MockHttpClient($mockResponse);
 
         $template = new Template('baz');
-        (new Message($client))->send(['token' => 'foo', 'touser' => 'bar', 'template' => $template]);
+        (new TemplateMessage($client))->send(['token' => 'foo', 'touser' => 'bar', 'template' => $template]);
     }
 
     public function testTokenMissingOptionsException(): void

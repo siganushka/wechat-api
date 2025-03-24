@@ -41,6 +41,7 @@ class TokenExtensionTest extends TestCase
     public function testConfigureOptions(): void
     {
         $resolver = new OptionsResolver();
+        $resolver->setDefined(['appid', 'secret']);
         $this->extension->configureOptions($resolver);
 
         static::assertEquals([

@@ -25,8 +25,10 @@ class ConfigurationExtension implements ResolverExtensionInterface
 
     public function configureOptions(OptionsResolver $resolver): void
     {
+        $fn = fn ($value, string $key) => $resolver->isDefined($key) && null !== $value;
+
         $configs = $this->configuration->toArray();
-        $resolver->setDefaults(array_filter($configs, fn ($value) => null !== $value));
+        $resolver->setDefaults(array_filter($configs, $fn, \ARRAY_FILTER_USE_BOTH));
     }
 
     public static function getExtendedClasses(): iterable

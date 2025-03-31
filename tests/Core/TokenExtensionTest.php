@@ -41,20 +41,15 @@ class TokenExtensionTest extends TestCase
     public function testConfigureOptions(): void
     {
         $resolver = new OptionsResolver();
-        $resolver->setDefined(['appid', 'secret']);
         $this->extension->configureOptions($resolver);
 
         static::assertEquals([
-            'appid' => 'test_appid',
-            'secret' => 'test_secret',
             'token' => 'test_token_1',
         ], $resolver->resolve());
 
         static::assertEquals([
-            'appid' => 'foo',
-            'secret' => 'bar',
             'token' => 'test_token_2',
-        ], $resolver->resolve(['appid' => 'foo', 'secret' => 'bar']));
+        ], $resolver->resolve());
     }
 
     public function testGetExtendedClasses(): void

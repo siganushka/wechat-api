@@ -33,14 +33,11 @@ class TicketExtension implements ResolverExtensionInterface
             ->allowedValues('jsapi', 'wx_card')
         ;
 
-        $tokenExtension = new TokenExtension($this->configuration, $this->httpClient, $this->cachePool);
-        $tokenExtension->configureOptions($resolver);
-
         $resolver->setDefault('ticket', function (Options $options): string {
             $request = new Ticket($this->httpClient, $this->cachePool);
+            $request->extend(new TokenExtension($this->configuration, $this->httpClient, $this->cachePool));
 
             $result = $request->send([
-                'token' => $options['token'],
                 'type' => $options['type'],
             ]);
 

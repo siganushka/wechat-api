@@ -36,22 +36,15 @@ class TicketExtensionTest extends TestCase
     public function testConfigureOptions(): void
     {
         $resolver = new OptionsResolver();
-        $resolver->setDefined(['appid', 'secret']);
         $this->extension->configureOptions($resolver);
 
         static::assertEquals([
-            'appid' => 'test_appid',
-            'secret' => 'test_secret',
             'type' => 'jsapi',
-            'token' => 'test_token',
             'ticket' => 'test_ticket',
         ], $resolver->resolve());
 
         static::assertEquals([
-            'appid' => 'test_appid',
-            'secret' => 'test_secret',
             'type' => 'wx_card',
-            'token' => 'test_token_for_wx_card',
             'ticket' => 'test_ticket_for_wx_card',
         ], $resolver->resolve(['type' => 'wx_card']));
     }

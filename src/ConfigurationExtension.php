@@ -7,6 +7,7 @@ namespace Siganushka\ApiFactory\Wechat;
 use Siganushka\ApiFactory\ResolverExtensionInterface;
 use Siganushka\ApiFactory\Wechat\Core\Token;
 use Siganushka\ApiFactory\Wechat\Core\TokenStable;
+use Siganushka\ApiFactory\Wechat\Jsapi\ConfigUtils;
 use Siganushka\ApiFactory\Wechat\Miniapp\SessionKey;
 use Siganushka\ApiFactory\Wechat\OAuth\AccessToken;
 use Siganushka\ApiFactory\Wechat\OAuth\Client;
@@ -36,6 +37,7 @@ class ConfigurationExtension implements ResolverExtensionInterface
         return [
             Token::class,
             TokenStable::class,
+            ConfigUtils::class,
             SessionKey::class,
             Client::class,
             Qrcode::class,

@@ -32,18 +32,11 @@ class TokenExtension implements ResolverExtensionInterface
 
     public function configureOptions(OptionsResolver $resolver): void
     {
-        $configurationExtension = new ConfigurationExtension($this->configuration);
-        $configurationExtension->configureOptions($resolver);
-
         $resolver->setDefault('token', function (Options $options): string {
             $request = new TokenStable($this->httpClient, $this->cachePool);
+            $request->extend(new ConfigurationExtension($this->configuration));
 
-            $result = $request->send([
-                'appid' => $options['appid'],
-                'secret' => $options['secret'],
-            ]);
-
-            return $result['access_token'];
+            return $request->send()['access_token'];
         });
     }
 

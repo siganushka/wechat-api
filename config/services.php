@@ -18,6 +18,6 @@ return static function (ContainerConfigurator $configurator): void {
         ->exclude([
             '../src/{Configuration.php,OptionSet.php}',
             '../src/Miniapp/CrypterUtils.php',
-            '../src/Template/Template.php',
+            '../src/Message/Template.php',
         ]);
 };

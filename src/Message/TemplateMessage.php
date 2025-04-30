@@ -5,17 +5,18 @@ declare(strict_types=1);
 namespace Siganushka\ApiFactory\Wechat\Message;
 
 use Siganushka\ApiFactory\AbstractRequest;
-use Siganushka\ApiFactory\Exception\ParseResponseException;
 use Siganushka\ApiFactory\RequestOptions;
 use Siganushka\ApiFactory\Wechat\OptionSet;
+use Siganushka\ApiFactory\Wechat\ParseResponseTrait;
 use Symfony\Component\OptionsResolver\OptionsResolver;
-use Symfony\Contracts\HttpClient\ResponseInterface;
 
 /**
  * @extends AbstractRequest<array>
  */
 class TemplateMessage extends AbstractRequest
 {
+    use ParseResponseTrait { responseAsArray as parseResponse; }
+
     /**
      * @see https://developers.weixin.qq.com/doc/offiaccount/Message_Management/Template_Message_Interface.html#5
      */
@@ -80,19 +81,5 @@ class TemplateMessage extends AbstractRequest
             ->setQuery($query)
             ->setJson($body)
         ;
-    }
-
-    protected function parseResponse(ResponseInterface $response): array
-    {
-        $result = $response->toArray();
-
-        $errcode = (int) ($result['errcode'] ?? 0);
-        $errmsg = (string) ($result['errmsg'] ?? '');
-
-        if (0 === $errcode) {
-            return $result;
-        }
-
-        throw new ParseResponseException($response, $errmsg, $errcode);
     }
 }

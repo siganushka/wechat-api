@@ -5,18 +5,19 @@ declare(strict_types=1);
 namespace Siganushka\ApiFactory\Wechat\Miniapp;
 
 use Siganushka\ApiFactory\AbstractRequest;
-use Siganushka\ApiFactory\Exception\ParseResponseException;
 use Siganushka\ApiFactory\RequestOptions;
 use Siganushka\ApiFactory\Wechat\OptionSet;
+use Siganushka\ApiFactory\Wechat\ParseResponseTrait;
 use Symfony\Component\OptionsResolver\Options;
 use Symfony\Component\OptionsResolver\OptionsResolver;
-use Symfony\Contracts\HttpClient\ResponseInterface;
 
 /**
  * @extends AbstractRequest<string>
  */
 class Wxacode extends AbstractRequest
 {
+    use ParseResponseTrait { responseAsImageContent as parseResponse; }
+
     /**
      * @see https://developers.weixin.qq.com/miniprogram/dev/api-backend/open-api/qr-code/wxacode.get.html
      */
@@ -103,20 +104,5 @@ class Wxacode extends AbstractRequest
             ->setQuery($query)
             ->setJson($body)
         ;
-    }
-
-    protected function parseResponse(ResponseInterface $response): string
-    {
-        $headers = $response->getHeaders();
-        if (str_contains($headers['content-type'][0] ?? '', 'image')) {
-            return $response->getContent();
-        }
-
-        $result = $response->toArray();
-
-        $errcode = (int) ($result['errcode'] ?? 0);
-        $errmsg = (string) ($result['errmsg'] ?? '');
-
-        throw new ParseResponseException($response, $errmsg, $errcode);
     }
 }

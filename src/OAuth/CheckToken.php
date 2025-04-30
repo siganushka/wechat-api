@@ -5,16 +5,17 @@ declare(strict_types=1);
 namespace Siganushka\ApiFactory\Wechat\OAuth;
 
 use Siganushka\ApiFactory\AbstractRequest;
-use Siganushka\ApiFactory\Exception\ParseResponseException;
 use Siganushka\ApiFactory\RequestOptions;
+use Siganushka\ApiFactory\Wechat\ParseResponseTrait;
 use Symfony\Component\OptionsResolver\OptionsResolver;
-use Symfony\Contracts\HttpClient\ResponseInterface;
 
 /**
  * @extends AbstractRequest<array>
  */
 class CheckToken extends AbstractRequest
 {
+    use ParseResponseTrait { responseAsArray as parseResponse; }
+
     /**
      * @see https://developers.weixin.qq.com/doc/offiaccount/OA_Web_Apps/Wechat_webpage_authorization.html#4
      */
@@ -47,19 +48,5 @@ class CheckToken extends AbstractRequest
             ->setUrl(static::URL)
             ->setQuery($query)
         ;
-    }
-
-    protected function parseResponse(ResponseInterface $response): array
-    {
-        $result = $response->toArray();
-
-        $errcode = (int) ($result['errcode'] ?? 0);
-        $errmsg = (string) ($result['errmsg'] ?? '');
-
-        if (0 === $errcode) {
-            return $result;
-        }
-
-        throw new ParseResponseException($response, $errmsg, $errcode);
     }
 }

@@ -6,10 +6,10 @@ namespace Siganushka\ApiFactory\Wechat\Core;
 
 use Psr\Cache\CacheItemPoolInterface;
 use Siganushka\ApiFactory\AbstractRequest;
-use Siganushka\ApiFactory\Exception\ParseResponseException;
 use Siganushka\ApiFactory\RequestOptions;
 use Siganushka\ApiFactory\Response\StaticResponse;
 use Siganushka\ApiFactory\Wechat\OptionSet;
+use Siganushka\ApiFactory\Wechat\ParseResponseTrait;
 use Symfony\Component\Cache\Adapter\FilesystemAdapter;
 use Symfony\Component\OptionsResolver\OptionsResolver;
 use Symfony\Contracts\HttpClient\HttpClientInterface;
@@ -20,6 +20,8 @@ use Symfony\Contracts\HttpClient\ResponseInterface;
  */
 class TokenStable extends AbstractRequest
 {
+    use ParseResponseTrait { responseAsArray as parseResponse; }
+
     /**
      * @see https://developers.weixin.qq.com/doc/offiaccount/Basic_Information/getStableAccessToken.html
      */
@@ -85,19 +87,5 @@ class TokenStable extends AbstractRequest
         $this->cachePool->save($cacheItem);
 
         return $response;
-    }
-
-    protected function parseResponse(ResponseInterface $response): array
-    {
-        $result = $response->toArray();
-
-        $errcode = (int) ($result['errcode'] ?? 0);
-        $errmsg = (string) ($result['errmsg'] ?? 'error');
-
-        if (0 === $errcode && isset($result['access_token'])) {
-            return $result;
-        }
-
-        throw new ParseResponseException($response, $errmsg, $errcode);
     }
 }

@@ -38,7 +38,7 @@ $ composer require siganushka/wechat-api dev-main
 
 ### 框架集成
 
-项目已集成至 `siganushka/api-factory-bundle`，适用于 `Symfony` 框架，以上所有示例将以服务的形式在框架中提供服务。
+项目已集成至 [siganushka/api-factory-bundle](https://github.com/siganushka/api-factory-bundle)，适用于 [Symfony](https://symfony.com/) 框架，以上所有示例将以服务的形式在框架中提供服务。
 
 安装
 

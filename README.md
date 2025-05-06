@@ -21,7 +21,8 @@ $ composer require siganushka/wechat-api dev-main
 | example/core_callback_ip.php        | 获取微信 callback IP 地址          |
 | example/core_server_ip.php          | 获取微信服务器 IP 地址             |
 | example/core_ticket.php             | 获取微信临时票据，用于微信 JS API  |
-| example/core_token.php              | 获取微信全局 access_token          |
+| example/core_token.php              | 获取全局 access_token              |
+| example/core_token_stable.php       | 获取全局稳定版 access_token        |
 | example/jsapi_config_utils.php      | 生成微信 JS API 配置参数           |
 | example/miniapp_qrcode.php          | 获取小程序二维码                   |
 | example/miniapp_session_key.php     | 获取小程序 session_key             |
@@ -32,6 +33,7 @@ $ composer require siganushka/wechat-api dev-main
 | example/oauth_user_info.php         | 根据用户 access_token 获取用户信息 |
 | example/oauth_check_token.php       | 检验用户 access_token 是否有效     |
 | example/oauth_refresh_token.php     | 刷新用户 access_token              |
+| example/message_subscribe.php       | 发送小程序订阅消息                 |
 | example/template_message.php        | 发送模板消息                       |
 
 ### 框架集成

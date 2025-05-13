@@ -63,17 +63,17 @@ siganushka_api_factory:
 # config/packages/siganushka_api_factory.yaml
 
 siganushka_api_factory:
-  wechat:
-    default_configuration: foo
-    configurations:
-      # 将以 Siganushka\ApiFactory\Wechat\Configuration $fooConfiguration 被注入到服务
-      foo:
-        appid: your_appid
-        secret: your_secret
-      # 将以 Siganushka\ApiFactory\Wechat\Configuration $barConfiguration 被注入到服务
-      bar:
-        appid: your_appid
-        secret: your_secret
+    wechat:
+        default_configuration: foo
+        configurations:
+        # 将以 Siganushka\ApiFactory\Wechat\Configuration $fooConfiguration 被注入到服务
+        foo:
+            appid: your_appid
+            secret: your_secret
+        # 将以 Siganushka\ApiFactory\Wechat\Configuration $barConfiguration 被注入到服务
+        bar:
+            appid: your_appid
+            secret: your_secret
 ```
 
 使用

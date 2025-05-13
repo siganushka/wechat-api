@@ -13,7 +13,7 @@
     ],
     "require": {
         "php": ">=7.4",
-        "siganushka/api-factory": "dev-main",
+        "siganushka/api-factory": "^1.0",
         "symfony/cache": "^5.4|^6.0|^7.0"
     },
     "require-dev": {

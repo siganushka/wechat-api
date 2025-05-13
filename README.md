@@ -5,7 +5,7 @@
 ### 安装
 
 ```bash
-$ composer require siganushka/wechat-api dev-main
+$ composer require siganushka/wechat-api
 ```
 
 ### 使用
@@ -38,12 +38,12 @@ $ composer require siganushka/wechat-api dev-main
 
 ### 框架集成
 
-项目已集成至 [siganushka/api-factory-bundle](https://github.com/siganushka/api-factory-bundle)，适用于 [Symfony](https://symfony.com/) 框架，以上所有示例将以服务的形式在框架中提供服务。
+`Symfony` 项目已集成至 [siganushka/api-factory-bundle](https://github.com/siganushka/api-factory-bundle)，将以服务的形式使用。
 
 安装
 
 ```bash
-$ composer require siganushka/api-factory-bundle siganushka/wechat-api dev-main
+$ composer require siganushka/wechat-api siganushka/api-factory-bundle
 ```
 
 单个应用配置
@@ -52,9 +52,9 @@ $ composer require siganushka/api-factory-bundle siganushka/wechat-api dev-main
 # config/packages/siganushka_api_factory.yaml
 
 siganushka_api_factory:
-  wechat:
-    appid: your_appid
-    secret: your_secret
+    wechat:
+        appid: your_appid   # 微信公众号/小程序/开放平台帐号
+        secret: your_secret # 微信公众号/小程序/开放平台秘钥
 ```
 
 多个应用配置
@@ -105,7 +105,7 @@ class DefaultController extends AbstractController
 }
 ```
 
-查看所有可用服务
+查看所有服务
 
 ```bash
 $ php bin/console debug:container Siganushka\\ApiFactory\\Wechat

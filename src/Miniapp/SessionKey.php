@@ -22,12 +22,7 @@ class SessionKey extends AbstractRequest
 {
     use ParseResponseTrait { responseAsArray as parseResponse; }
 
-    /**
-     * @see https://developers.weixin.qq.com/miniprogram/dev/api-backend/open-api/login/auth.code2Session.html
-     */
-    public const URL = 'https://api.weixin.qq.com/sns/jscode2session';
-
-    private CacheItemPoolInterface $cachePool;
+    private readonly CacheItemPoolInterface $cachePool;
 
     public function __construct(?HttpClientInterface $httpClient = null, ?CacheItemPoolInterface $cachePool = null)
     {
@@ -48,6 +43,9 @@ class SessionKey extends AbstractRequest
         ;
     }
 
+    /**
+     * @see https://developers.weixin.qq.com/miniprogram/dev/api-backend/open-api/login/auth.code2Session.html
+     */
     protected function configureRequest(RequestOptions $request, array $options): void
     {
         $query = [
@@ -58,8 +56,7 @@ class SessionKey extends AbstractRequest
         ];
 
         $request
-            ->setMethod('GET')
-            ->setUrl(static::URL)
+            ->setUrl('https://api.weixin.qq.com/sns/jscode2session')
             ->setQuery($query)
         ;
     }

@@ -43,7 +43,7 @@ class TokenStableTest extends TestCase
     {
         $requestOptions = $this->request->build(['appid' => 'foo', 'secret' => 'bar']);
         static::assertSame('POST', $requestOptions->getMethod());
-        static::assertSame(TokenStable::URL, $requestOptions->getUrl());
+        static::assertSame('https://api.weixin.qq.com/cgi-bin/stable_token', $requestOptions->getUrl());
         static::assertEquals([
             'json' => [
                 'appid' => 'foo',

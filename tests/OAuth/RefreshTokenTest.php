@@ -34,7 +34,7 @@ class RefreshTokenTest extends TestCase
         $requestOptions = $this->request->build(['appid' => 'foo', 'refresh_token' => 'bar']);
 
         static::assertSame('GET', $requestOptions->getMethod());
-        static::assertSame(RefreshToken::URL, $requestOptions->getUrl());
+        static::assertSame('https://api.weixin.qq.com/sns/oauth2/refresh_token', $requestOptions->getUrl());
         static::assertEquals([
             'query' => [
                 'appid' => 'foo',

@@ -17,11 +17,6 @@ class Qrcode extends AbstractRequest
 {
     use ParseResponseTrait { responseAsImageContent as parseResponse; }
 
-    /**
-     * @see https://developers.weixin.qq.com/miniprogram/dev/api-backend/open-api/qr-code/wxacode.createQRCode.html
-     */
-    public const URL = 'https://api.weixin.qq.com/cgi-bin/wxaapp/createwxaqrcode';
-
     protected function configureOptions(OptionsResolver $resolver): void
     {
         OptionSet::token($resolver);
@@ -39,6 +34,9 @@ class Qrcode extends AbstractRequest
         ;
     }
 
+    /**
+     * @see https://developers.weixin.qq.com/miniprogram/dev/api-backend/open-api/qr-code/wxacode.createQRCode.html
+     */
     protected function configureRequest(RequestOptions $request, array $options): void
     {
         $query = [
@@ -52,7 +50,7 @@ class Qrcode extends AbstractRequest
 
         $request
             ->setMethod('POST')
-            ->setUrl(static::URL)
+            ->setUrl('https://api.weixin.qq.com/cgi-bin/wxaapp/createwxaqrcode')
             ->setQuery($query)
             ->setJson($body)
         ;

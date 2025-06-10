@@ -22,12 +22,7 @@ class TokenStable extends AbstractRequest
 {
     use ParseResponseTrait { responseAsArray as parseResponse; }
 
-    /**
-     * @see https://developers.weixin.qq.com/doc/offiaccount/Basic_Information/getStableAccessToken.html
-     */
-    public const URL = 'https://api.weixin.qq.com/cgi-bin/stable_token';
-
-    private CacheItemPoolInterface $cachePool;
+    private readonly CacheItemPoolInterface $cachePool;
 
     public function __construct(?HttpClientInterface $httpClient = null, ?CacheItemPoolInterface $cachePool = null)
     {
@@ -54,6 +49,9 @@ class TokenStable extends AbstractRequest
         ;
     }
 
+    /**
+     * @see https://developers.weixin.qq.com/doc/offiaccount/Basic_Information/getStableAccessToken.html
+     */
     protected function configureRequest(RequestOptions $request, array $options): void
     {
         $json = [
@@ -65,7 +63,7 @@ class TokenStable extends AbstractRequest
 
         $request
             ->setMethod('POST')
-            ->setUrl(static::URL)
+            ->setUrl('https://api.weixin.qq.com/cgi-bin/stable_token')
             ->setJson($json)
         ;
     }

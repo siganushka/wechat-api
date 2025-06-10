@@ -22,12 +22,7 @@ class Token extends AbstractRequest
 {
     use ParseResponseTrait { responseAsArray as parseResponse; }
 
-    /**
-     * @see https://developers.weixin.qq.com/doc/offiaccount/Basic_Information/Get_access_token.html
-     */
-    public const URL = 'https://api.weixin.qq.com/cgi-bin/token';
-
-    private CacheItemPoolInterface $cachePool;
+    private readonly CacheItemPoolInterface $cachePool;
 
     public function __construct(?HttpClientInterface $httpClient = null, ?CacheItemPoolInterface $cachePool = null)
     {
@@ -42,6 +37,9 @@ class Token extends AbstractRequest
         OptionSet::secret($resolver);
     }
 
+    /**
+     * @see https://developers.weixin.qq.com/doc/offiaccount/Basic_Information/Get_access_token.html
+     */
     protected function configureRequest(RequestOptions $request, array $options): void
     {
         $query = [
@@ -51,8 +49,7 @@ class Token extends AbstractRequest
         ];
 
         $request
-            ->setMethod('GET')
-            ->setUrl(static::URL)
+            ->setUrl('https://api.weixin.qq.com/cgi-bin/token')
             ->setQuery($query)
         ;
     }

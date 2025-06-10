@@ -18,16 +18,14 @@ class CallbackIp extends AbstractRequest
 {
     use ParseResponseTrait;
 
-    /**
-     * @see https://developers.weixin.qq.com/doc/offiaccount/Basic_Information/Get_the_WeChat_server_IP_address.html
-     */
-    public const URL = 'https://api.weixin.qq.com/cgi-bin/getcallbackip';
-
     protected function configureOptions(OptionsResolver $resolver): void
     {
         OptionSet::token($resolver);
     }
 
+    /**
+     * @see https://developers.weixin.qq.com/doc/offiaccount/Basic_Information/Get_the_WeChat_server_IP_address.html
+     */
     protected function configureRequest(RequestOptions $request, array $options): void
     {
         $query = [
@@ -35,8 +33,7 @@ class CallbackIp extends AbstractRequest
         ];
 
         $request
-            ->setMethod('GET')
-            ->setUrl(static::URL)
+            ->setUrl('https://api.weixin.qq.com/cgi-bin/getcallbackip')
             ->setQuery($query)
         ;
     }

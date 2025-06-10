@@ -34,7 +34,7 @@ class UserInfoTest extends TestCase
     {
         $requestOptions = $this->request->build(['openid' => 'test_openid', 'token' => 'foo']);
         static::assertSame('GET', $requestOptions->getMethod());
-        static::assertSame(UserInfo::URL, $requestOptions->getUrl());
+        static::assertSame('https://api.weixin.qq.com/cgi-bin/user/info', $requestOptions->getUrl());
         static::assertEquals([
             'query' => [
                 'access_token' => 'foo',

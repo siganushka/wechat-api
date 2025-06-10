@@ -18,16 +18,14 @@ class User extends AbstractRequest
 {
     use ParseResponseTrait;
 
-    /**
-     * @see https://developers.weixin.qq.com/doc/offiaccount/User_Management/Getting_a_User_List.html
-     */
-    public const URL = 'https://api.weixin.qq.com/cgi-bin/user/get';
-
     protected function configureOptions(OptionsResolver $resolver): void
     {
         OptionSet::token($resolver);
     }
 
+    /**
+     * @see https://developers.weixin.qq.com/doc/offiaccount/User_Management/Getting_a_User_List.html
+     */
     protected function configureRequest(RequestOptions $request, array $options): void
     {
         $query = [
@@ -35,8 +33,7 @@ class User extends AbstractRequest
         ];
 
         $request
-            ->setMethod('GET')
-            ->setUrl(static::URL)
+            ->setUrl('https://api.weixin.qq.com/cgi-bin/user/get')
             ->setQuery($query)
         ;
     }

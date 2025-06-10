@@ -6,12 +6,8 @@ namespace Siganushka\ApiFactory\Wechat\Message;
 
 class Template
 {
-    private string $id;
-    private array $data = [];
-
-    public function __construct(string $id)
+    public function __construct(private readonly string $id, private array $data = [])
     {
-        $this->id = $id;
     }
 
     public function getId(): string

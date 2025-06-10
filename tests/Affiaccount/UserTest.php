@@ -32,7 +32,7 @@ class UserTest extends TestCase
     {
         $requestOptions = $this->request->build(['token' => 'foo']);
         static::assertSame('GET', $requestOptions->getMethod());
-        static::assertSame(User::URL, $requestOptions->getUrl());
+        static::assertSame('https://api.weixin.qq.com/cgi-bin/user/get', $requestOptions->getUrl());
         static::assertEquals([
             'query' => [
                 'access_token' => 'foo',

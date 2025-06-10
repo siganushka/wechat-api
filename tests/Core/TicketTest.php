@@ -39,7 +39,7 @@ class TicketTest extends TestCase
     {
         $requestOptions = $this->request->build(['token' => 'foo']);
         static::assertSame('GET', $requestOptions->getMethod());
-        static::assertSame(Ticket::URL, $requestOptions->getUrl());
+        static::assertSame('https://api.weixin.qq.com/cgi-bin/ticket/getticket', $requestOptions->getUrl());
         static::assertEquals([
             'query' => [
                 'access_token' => 'foo',
@@ -49,7 +49,7 @@ class TicketTest extends TestCase
 
         $requestOptions = $this->request->build(['token' => 'foo', 'type' => 'wx_card']);
         static::assertSame('GET', $requestOptions->getMethod());
-        static::assertSame(Ticket::URL, $requestOptions->getUrl());
+        static::assertSame('https://api.weixin.qq.com/cgi-bin/ticket/getticket', $requestOptions->getUrl());
         static::assertEquals([
             'query' => [
                 'access_token' => 'foo',

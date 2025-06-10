@@ -21,7 +21,7 @@ return (new PhpCsFixer\Config())
         'native_constant_invocation' => ['strict' => false],
         'no_superfluous_phpdoc_tags' => ['allow_mixed' => true, 'remove_inheritdoc' => true],
         'modernize_strpos' => true,
-        'get_class_to_class_keyword' => false,
+        'get_class_to_class_keyword' => true,
         'declare_strict_types' => true,
         'phpdoc_separation' => false,
     ])

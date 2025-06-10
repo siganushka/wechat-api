@@ -17,11 +17,8 @@ use Symfony\Component\OptionsResolver\OptionsResolver;
 
 class ConfigurationExtension implements ResolverExtensionInterface
 {
-    private Configuration $configuration;
-
-    public function __construct(Configuration $configuration)
+    public function __construct(private readonly Configuration $configuration)
     {
-        $this->configuration = $configuration;
     }
 
     public function configureOptions(OptionsResolver $resolver): void

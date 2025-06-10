@@ -32,7 +32,7 @@ class ServerIpTest extends TestCase
     {
         $requestOptions = $this->request->build(['token' => 'foo']);
         static::assertSame('GET', $requestOptions->getMethod());
-        static::assertSame(ServerIp::URL, $requestOptions->getUrl());
+        static::assertSame('https://api.weixin.qq.com/cgi-bin/get_api_domain_ip', $requestOptions->getUrl());
         static::assertEquals([
             'query' => [
                 'access_token' => 'foo',

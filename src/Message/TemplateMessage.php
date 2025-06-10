@@ -17,11 +17,6 @@ class TemplateMessage extends AbstractRequest
 {
     use ParseResponseTrait { responseAsArray as parseResponse; }
 
-    /**
-     * @see https://developers.weixin.qq.com/doc/offiaccount/Message_Management/Template_Message_Interface.html#5
-     */
-    public const URL = 'https://api.weixin.qq.com/cgi-bin/message/template/send';
-
     protected function configureOptions(OptionsResolver $resolver): void
     {
         OptionSet::token($resolver);
@@ -46,7 +41,7 @@ class TemplateMessage extends AbstractRequest
 
         $resolver
             ->define('miniprogram')
-            ->default(function (OptionsResolver $miniprogramResolver): void {
+            ->options(function (OptionsResolver $miniprogramResolver): void {
                 $miniprogramResolver->define('appid')->allowedTypes('string');
                 $miniprogramResolver->define('pagepath')->allowedTypes('string');
             })
@@ -60,6 +55,9 @@ class TemplateMessage extends AbstractRequest
         ;
     }
 
+    /**
+     * @see https://developers.weixin.qq.com/doc/offiaccount/Message_Management/Template_Message_Interface.html#5
+     */
     protected function configureRequest(RequestOptions $request, array $options): void
     {
         $query = [
@@ -77,7 +75,7 @@ class TemplateMessage extends AbstractRequest
 
         $request
             ->setMethod('POST')
-            ->setUrl(static::URL)
+            ->setUrl('https://api.weixin.qq.com/cgi-bin/message/template/send')
             ->setQuery($query)
             ->setJson($body)
         ;

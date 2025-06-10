@@ -22,12 +22,7 @@ class AccessToken extends AbstractRequest
 {
     use ParseResponseTrait { responseAsArray as parseResponse; }
 
-    /**
-     * @see https://developers.weixin.qq.com/doc/offiaccount/OA_Web_Apps/Wechat_webpage_authorization.html#1
-     */
-    public const URL = 'https://api.weixin.qq.com/sns/oauth2/access_token';
-
-    private CacheItemPoolInterface $cachePool;
+    private readonly CacheItemPoolInterface $cachePool;
 
     public function __construct(?HttpClientInterface $httpClient = null, ?CacheItemPoolInterface $cachePool = null)
     {
@@ -48,6 +43,9 @@ class AccessToken extends AbstractRequest
         ;
     }
 
+    /**
+     * @see https://developers.weixin.qq.com/doc/offiaccount/OA_Web_Apps/Wechat_webpage_authorization.html#1
+     */
     protected function configureRequest(RequestOptions $request, array $options): void
     {
         $query = [
@@ -58,8 +56,7 @@ class AccessToken extends AbstractRequest
         ];
 
         $request
-            ->setMethod('GET')
-            ->setUrl(static::URL)
+            ->setUrl('https://api.weixin.qq.com/sns/oauth2/access_token')
             ->setQuery($query)
         ;
     }

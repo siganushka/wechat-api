@@ -17,11 +17,6 @@ class SubscribeMessage extends AbstractRequest
 {
     use ParseResponseTrait { responseAsArray as parseResponse; }
 
-    /**
-     * @see https://developers.weixin.qq.com/miniprogram/dev/OpenApiDoc/mp-message-management/subscribe-message/sendMessage.html
-     */
-    public const URL = 'https://api.weixin.qq.com/cgi-bin/message/subscribe/send';
-
     protected function configureOptions(OptionsResolver $resolver): void
     {
         OptionSet::token($resolver);
@@ -59,6 +54,9 @@ class SubscribeMessage extends AbstractRequest
         ;
     }
 
+    /**
+     * @see https://developers.weixin.qq.com/miniprogram/dev/OpenApiDoc/mp-message-management/subscribe-message/sendMessage.html
+     */
     protected function configureRequest(RequestOptions $request, array $options): void
     {
         $query = [
@@ -78,7 +76,7 @@ class SubscribeMessage extends AbstractRequest
 
         $request
             ->setMethod('POST')
-            ->setUrl(static::URL)
+            ->setUrl('https://api.weixin.qq.com/cgi-bin/message/subscribe/send')
             ->setQuery($query)
             ->setJson($body)
         ;

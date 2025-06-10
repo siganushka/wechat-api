@@ -40,7 +40,7 @@ class QrcodeTest extends TestCase
     {
         $requestOptions = $this->request->build(['token' => 'foo', 'path' => '/bar']);
         static::assertSame('POST', $requestOptions->getMethod());
-        static::assertSame(Qrcode::URL, $requestOptions->getUrl());
+        static::assertSame('https://api.weixin.qq.com/cgi-bin/wxaapp/createwxaqrcode', $requestOptions->getUrl());
         static::assertEquals([
             'query' => [
                 'access_token' => 'foo',

@@ -68,7 +68,7 @@ class TemplateMessageTest extends TestCase
         $requestOptions = $this->request->build(['token' => 'foo', 'touser' => 'bar', 'template' => $template]);
 
         static::assertSame('POST', $requestOptions->getMethod());
-        static::assertSame(TemplateMessage::URL, $requestOptions->getUrl());
+        static::assertSame('https://api.weixin.qq.com/cgi-bin/message/template/send', $requestOptions->getUrl());
         static::assertEquals([
             'query' => [
                 'access_token' => 'foo',

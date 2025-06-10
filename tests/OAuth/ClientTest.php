@@ -38,7 +38,7 @@ class ClientTest extends TestCase
     public function testGetRedirectUrl(): void
     {
         $redirectUrl = $this->client->getRedirectUrl(['appid' => 'foo', 'redirect_uri' => '/bar']);
-        static::assertStringStartsWith(Client::URL, $redirectUrl);
+        static::assertStringStartsWith('https://open.weixin.qq.com/connect/oauth2/authorize', $redirectUrl);
         static::assertStringEndsWith('#wechat_redirect', $redirectUrl);
         static::assertStringContainsString('appid=foo', $redirectUrl);
         static::assertStringContainsString(urlencode('/bar'), $redirectUrl);

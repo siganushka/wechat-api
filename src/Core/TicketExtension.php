@@ -14,9 +14,9 @@ use Symfony\Contracts\HttpClient\HttpClientInterface;
 
 class TicketExtension implements ResolverExtensionInterface
 {
-    protected Configuration $configuration;
-    protected ?HttpClientInterface $httpClient = null;
-    protected ?CacheItemPoolInterface $cachePool = null;
+    protected readonly Configuration $configuration;
+    protected readonly ?HttpClientInterface $httpClient;
+    protected readonly ?CacheItemPoolInterface $cachePool;
 
     public function __construct(Configuration $configuration, ?HttpClientInterface $httpClient = null, ?CacheItemPoolInterface $cachePool = null)
     {

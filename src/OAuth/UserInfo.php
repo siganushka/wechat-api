@@ -16,11 +16,6 @@ class UserInfo extends AbstractRequest
 {
     use ParseResponseTrait { responseAsArray as parseResponse; }
 
-    /**
-     * @see https://developers.weixin.qq.com/doc/offiaccount/OA_Web_Apps/Wechat_webpage_authorization.html#3
-     */
-    public const URL = 'https://api.weixin.qq.com/sns/userinfo';
-
     protected function configureOptions(OptionsResolver $resolver): void
     {
         $resolver
@@ -43,6 +38,9 @@ class UserInfo extends AbstractRequest
         ;
     }
 
+    /**
+     * @see https://developers.weixin.qq.com/doc/offiaccount/OA_Web_Apps/Wechat_webpage_authorization.html#3
+     */
     protected function configureRequest(RequestOptions $request, array $options): void
     {
         $query = [
@@ -52,8 +50,7 @@ class UserInfo extends AbstractRequest
         ];
 
         $request
-            ->setMethod('GET')
-            ->setUrl(static::URL)
+            ->setUrl('https://api.weixin.qq.com/sns/userinfo')
             ->setQuery($query)
         ;
     }

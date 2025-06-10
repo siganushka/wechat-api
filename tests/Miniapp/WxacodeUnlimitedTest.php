@@ -74,7 +74,7 @@ class WxacodeUnlimitedTest extends TestCase
         $requestOptions = $this->request->build(['token' => 'foo', 'scene' => 'bar']);
 
         static::assertSame('POST', $requestOptions->getMethod());
-        static::assertSame(WxacodeUnlimited::URL, $requestOptions->getUrl());
+        static::assertSame('https://api.weixin.qq.com/wxa/getwxacodeunlimit', $requestOptions->getUrl());
         static::assertEquals([
             'query' => [
                 'access_token' => 'foo',

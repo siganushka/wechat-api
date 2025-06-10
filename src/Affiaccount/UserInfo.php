@@ -17,11 +17,6 @@ class UserInfo extends AbstractRequest
 {
     use ParseResponseTrait { responseAsArray as parseResponse; }
 
-    /**
-     * @see https://developers.weixin.qq.com/doc/offiaccount/User_Management/Get_users_basic_information_UnionID.html#UinonId
-     */
-    public const URL = 'https://api.weixin.qq.com/cgi-bin/user/info';
-
     protected function configureOptions(OptionsResolver $resolver): void
     {
         OptionSet::token($resolver);
@@ -40,6 +35,9 @@ class UserInfo extends AbstractRequest
         ;
     }
 
+    /**
+     * @see https://developers.weixin.qq.com/doc/offiaccount/User_Management/Get_users_basic_information_UnionID.html#UinonId
+     */
     protected function configureRequest(RequestOptions $request, array $options): void
     {
         $query = [
@@ -49,8 +47,7 @@ class UserInfo extends AbstractRequest
         ];
 
         $request
-            ->setMethod('GET')
-            ->setUrl(static::URL)
+            ->setUrl('https://api.weixin.qq.com/cgi-bin/user/info')
             ->setQuery($query)
         ;
     }

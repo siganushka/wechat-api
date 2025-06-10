@@ -68,7 +68,7 @@ class WxacodeTest extends TestCase
         $requestOptions = $this->request->build(['token' => 'foo', 'path' => '/bar']);
 
         static::assertSame('POST', $requestOptions->getMethod());
-        static::assertSame(Wxacode::URL, $requestOptions->getUrl());
+        static::assertSame('https://api.weixin.qq.com/wxa/getwxacode', $requestOptions->getUrl());
         static::assertEquals([
             'query' => [
                 'access_token' => 'foo',

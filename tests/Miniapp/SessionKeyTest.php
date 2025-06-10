@@ -35,7 +35,7 @@ class SessionKeyTest extends TestCase
     {
         $requestOptions = $this->request->build(['appid' => 'foo', 'secret' => 'bar', 'code' => 'baz']);
         static::assertSame('GET', $requestOptions->getMethod());
-        static::assertSame(SessionKey::URL, $requestOptions->getUrl());
+        static::assertSame('https://api.weixin.qq.com/sns/jscode2session', $requestOptions->getUrl());
         static::assertEquals([
             'query' => [
                 'appid' => 'foo',

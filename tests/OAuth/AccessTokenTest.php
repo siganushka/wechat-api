@@ -36,7 +36,7 @@ class AccessTokenTest extends TestCase
         $requestOptions = $this->request->build(['appid' => 'foo', 'secret' => 'bar', 'code' => 'baz']);
 
         static::assertSame('GET', $requestOptions->getMethod());
-        static::assertSame(AccessToken::URL, $requestOptions->getUrl());
+        static::assertSame('https://api.weixin.qq.com/sns/oauth2/access_token', $requestOptions->getUrl());
         static::assertEquals([
             'query' => [
                 'appid' => 'foo',

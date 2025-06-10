@@ -32,7 +32,7 @@ class CallbackIpTest extends TestCase
     {
         $requestOptions = $this->request->build(['token' => 'foo']);
         static::assertSame('GET', $requestOptions->getMethod());
-        static::assertSame(CallbackIp::URL, $requestOptions->getUrl());
+        static::assertSame('https://api.weixin.qq.com/cgi-bin/getcallbackip', $requestOptions->getUrl());
         static::assertEquals([
             'query' => [
                 'access_token' => 'foo',

@@ -9,11 +9,6 @@ use Symfony\Component\OptionsResolver\OptionsResolver;
 
 class WxacodeUnlimited extends Wxacode
 {
-    /**
-     * @see https://developers.weixin.qq.com/miniprogram/dev/api-backend/open-api/qr-code/wxacode.getUnlimited.html
-     */
-    public const URL = 'https://api.weixin.qq.com/wxa/getwxacodeunlimit';
-
     protected function configureOptions(OptionsResolver $resolver): void
     {
         parent::configureOptions($resolver);
@@ -39,6 +34,9 @@ class WxacodeUnlimited extends Wxacode
         ;
     }
 
+    /**
+     * @see https://developers.weixin.qq.com/miniprogram/dev/api-backend/open-api/qr-code/wxacode.getUnlimited.html
+     */
     protected function configureRequest(RequestOptions $request, array $options): void
     {
         $query = [
@@ -58,7 +56,7 @@ class WxacodeUnlimited extends Wxacode
 
         $request
             ->setMethod('POST')
-            ->setUrl(static::URL)
+            ->setUrl('https://api.weixin.qq.com/wxa/getwxacodeunlimit')
             ->setQuery($query)
             ->setJson($body)
         ;

@@ -39,7 +39,7 @@ class QrcodeTest extends TestCase
     {
         $redirectUrl = $this->client->getRedirectUrl(['appid' => 'foo', 'redirect_uri' => '/bar']);
 
-        static::assertStringStartsWith(Qrcode::URL, $redirectUrl);
+        static::assertStringStartsWith('https://open.weixin.qq.com/connect/qrconnect', $redirectUrl);
         static::assertStringEndsWith('#wechat_redirect', $redirectUrl);
         static::assertStringContainsString('appid=foo', $redirectUrl);
         static::assertStringContainsString(urlencode('/bar'), $redirectUrl);

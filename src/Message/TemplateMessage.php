@@ -39,14 +39,22 @@ class TemplateMessage extends AbstractRequest
             ->allowedTypes('null', 'string')
         ;
 
-        $resolver
+        $miniprogram = $resolver
             ->define('miniprogram')
-            ->options(function (OptionsResolver $miniprogramResolver): void {
-                $miniprogramResolver->define('appid')->allowedTypes('string');
-                $miniprogramResolver->define('pagepath')->allowedTypes('string');
-            })
             ->allowedTypes('array')
         ;
+
+        $miniprogramDefaults = function (OptionsResolver $miniprogramResolver): void {
+            $miniprogramResolver->define('appid')->allowedTypes('string');
+            $miniprogramResolver->define('pagepath')->allowedTypes('string');
+        };
+
+        // Since symfony/options-resolver 7.3: Defining nested options use "setOptions()" method instead
+        if (method_exists($miniprogram, 'options')) {
+            $miniprogram->options($miniprogramDefaults);
+        } else {
+            $miniprogram->default($miniprogramDefaults);
+        }
 
         $resolver
             ->define('client_msg_id')

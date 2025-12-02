@@ -8,5 +8,4 @@ parameters:
     ignoreErrors:
         - '#no value type specified in iterable type array#'
         - '#no value type specified in iterable type iterable#'
-        - { message: '#Call to function method_exists#', path: src/Message/TemplateMessage.php }
-        - { message: '#Binary operation "." between#', path: src/Jsapi/ConfigUtils.php }
+        - { message: '#will always evaluate to true#', path: src/Message/TemplateMessage.php }

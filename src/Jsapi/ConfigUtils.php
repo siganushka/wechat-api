@@ -57,9 +57,11 @@ class ConfigUtils implements ResolverInterface
         OptionSet::timestamp($resolver);
         OptionSet::noncestr($resolver);
 
-        $currentUrl = (isset($_SERVER['HTTPS']) ? 'https://' : 'http://').
-            ($_SERVER['HTTP_HOST'] ?? 'localhost').
-            ($_SERVER['REQUEST_URI'] ?? '');
+        /** @var array{ HTTPS?: string, HTTP_HOST?: string, REQUEST_URI?: string } */
+        $server = $_SERVER;
+        $currentUrl = (isset($server['HTTPS']) ? 'https://' : 'http://').
+            ($server['HTTP_HOST'] ?? 'localhost').
+            ($server['REQUEST_URI'] ?? '');
 
         $resolver
             ->define('url')

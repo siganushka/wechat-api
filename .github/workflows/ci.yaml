@@ -34,4 +34,4 @@ jobs:
                 echo "Selected PHPStan config: $CONFIG_FILE"
                 echo "phpstan_config=$CONFIG_FILE" >> $GITHUB_OUTPUT
             - name: Run phpstan
-              run: tools/vendor/bin/phpstan analyse -vvv --xdebug --configuration="${{ steps.phpstan_config_file.outputs.phpstan_config }}"
+              run: tools/vendor/bin/phpstan analyse -vvv --configuration="${{ steps.phpstan_config_file.outputs.phpstan_config }}"

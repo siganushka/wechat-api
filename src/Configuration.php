@@ -7,6 +7,9 @@ namespace Siganushka\ApiFactory\Wechat;
 use Siganushka\ApiFactory\AbstractConfiguration;
 use Symfony\Component\OptionsResolver\OptionsResolver;
 
+/**
+ * @extends AbstractConfiguration<array{ appid: string, secret: string }>
+ */
 class Configuration extends AbstractConfiguration
 {
     public static function configureOptions(OptionsResolver $resolver): void

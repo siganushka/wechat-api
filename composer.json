@@ -35,8 +35,8 @@
     "scripts": {
         "tools:run": [
             "tools/vendor/bin/php-cs-fixer fix",
-            "tools/vendor/bin/simple-phpunit --debug",
-            "tools/vendor/bin/phpstan"
+            "tools/vendor/bin/simple-phpunit -v",
+            "tools/vendor/bin/phpstan -v"
         ]
     }
 }

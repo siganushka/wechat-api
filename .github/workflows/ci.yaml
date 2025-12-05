@@ -21,7 +21,7 @@ jobs:
             - { name: Validate composer,    run: composer validate --strict }
             - { name: Install dependencies, run: composer install }
             - { name: Install tools,        run: composer install -d tools/ }
-            - { name: Run tests,            run: tools/vendor/bin/simple-phpunit -vvv }
+            - { name: Run tests,            run: tools/vendor/bin/simple-phpunit --debug -vvv }
             - name: Determine PHPStan Config based on PHP Version
               id: phpstan_config_file
               run: |
@@ -34,4 +34,4 @@ jobs:
                 echo "Selected PHPStan config: $CONFIG_FILE"
                 echo "phpstan_config=$CONFIG_FILE" >> $GITHUB_OUTPUT
             - name: Run phpstan
-              run: tools/vendor/bin/phpstan analyse -vvv --configuration="${{ steps.phpstan_config_file.outputs.phpstan_config }}"
+              run: tools/vendor/bin/phpstan --debug -vvv --configuration="${{ steps.phpstan_config_file.outputs.phpstan_config }}"

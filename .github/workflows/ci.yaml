@@ -13,7 +13,7 @@ jobs:
         strategy:
             fail-fast: false
             matrix:
-                php-versions: ['8.1', '8.2', '8.3', '8.4', '8.5']
+                php-versions: ['8.2', '8.3', '8.4', '8.5']
         steps:
             - { name: Checkout code,        uses: actions/checkout@v6 }
             - { name: Install PHP,          uses: shivammathur/setup-php@v2, with: { php-version: "${{ matrix.php-versions }}" }}
@@ -21,17 +21,5 @@ jobs:
             - { name: Validate composer,    run: composer validate --strict }
             - { name: Install dependencies, run: composer install }
             - { name: Install tools,        run: composer install -d tools/ }
-            - { name: Run tests,            run: tools/vendor/bin/simple-phpunit --debug -vvv }
-            - name: Determine PHPStan Config based on PHP Version
-              id: phpstan_config_file
-              run: |
-                PHP_VERSION_MAJOR_MINOR="${{ matrix.php-versions }}"
-                if [[ $(echo "$PHP_VERSION_MAJOR_MINOR >= 8.2" | bc -l) -eq 1 ]]; then
-                    CONFIG_FILE="phpstan.neon.dist"
-                else
-                    CONFIG_FILE="phpstan-legacy.neon.dist"
-                fi
-                echo "Selected PHPStan config: $CONFIG_FILE"
-                echo "phpstan_config=$CONFIG_FILE" >> $GITHUB_OUTPUT
-            - name: Run phpstan
-              run: tools/vendor/bin/phpstan --debug -vvv --configuration="${{ steps.phpstan_config_file.outputs.phpstan_config }}"
+            - { name: Run tests,            run: tools/vendor/bin/simple-phpunit --debug }
+            - { name: Run phpstan,          run: tools/vendor/bin/phpstan --debug -vvv }

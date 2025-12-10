@@ -8,4 +8,3 @@ parameters:
     ignoreErrors:
         - '#no value type specified in iterable type array#'
         - '#no value type specified in iterable type iterable#'
-        - { message: '#will always evaluate to true#', path: src/Message/TemplateMessage.php }

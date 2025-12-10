@@ -8,7 +8,6 @@ use Siganushka\ApiFactory\AbstractRequest;
 use Siganushka\ApiFactory\RequestOptions;
 use Siganushka\ApiFactory\Wechat\OptionSet;
 use Siganushka\ApiFactory\Wechat\ParseResponseTrait;
-use Symfony\Component\OptionsResolver\OptionConfigurator;
 use Symfony\Component\OptionsResolver\OptionsResolver;
 
 /**
@@ -42,7 +41,7 @@ class TemplateMessage extends AbstractRequest
 
         $resolver
             ->define('miniprogram')
-            ->{method_exists(OptionConfigurator::class, 'options') ? 'options' : 'default'}(function (OptionsResolver $miniprogramResolver): void {
+            ->options(function (OptionsResolver $miniprogramResolver): void {
                 $miniprogramResolver->define('appid')->allowedTypes('string');
                 $miniprogramResolver->define('pagepath')->allowedTypes('string');
             })

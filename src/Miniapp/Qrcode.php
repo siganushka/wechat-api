@@ -46,7 +46,7 @@ class Qrcode extends AbstractRequest
         $body = array_filter([
             'path' => $options['path'],
             'width' => $options['width'],
-        ], fn ($value) => null !== $value);
+        ], static fn ($value) => null !== $value);
 
         $request
             ->setMethod('POST')

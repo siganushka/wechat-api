@@ -72,7 +72,7 @@ class SubscribeMessage extends AbstractRequest
             'page' => $options['page'],
             'miniprogram_state' => $options['miniprogram_state'],
             'lang' => $options['lang'],
-        ], fn ($value) => null !== $value && [] !== $value);
+        ], static fn ($value) => null !== $value && [] !== $value);
 
         $request
             ->setMethod('POST')

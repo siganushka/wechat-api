@@ -41,7 +41,7 @@ class TemplateMessage extends AbstractRequest
 
         $resolver
             ->define('miniprogram')
-            ->options(function (OptionsResolver $miniprogramResolver): void {
+            ->options(static function (OptionsResolver $miniprogramResolver): void {
                 $miniprogramResolver->define('appid')->allowedTypes('string');
                 $miniprogramResolver->define('pagepath')->allowedTypes('string');
             })
@@ -71,7 +71,7 @@ class TemplateMessage extends AbstractRequest
             'miniprogram' => $options['miniprogram'],
             'data' => $options['template']->getData(),
             'client_msg_id' => $options['client_msg_id'],
-        ], fn ($value) => null !== $value && [] !== $value);
+        ], static fn ($value) => null !== $value && [] !== $value);
 
         $request
             ->setMethod('POST')

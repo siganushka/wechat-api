@@ -52,7 +52,7 @@ class WxacodeUnlimited extends Wxacode
             'auto_color' => $options['auto_color'],
             'is_hyaline' => $options['is_hyaline'],
             'line_color' => $options['line_color_value'],
-        ], fn ($value) => null !== $value);
+        ], static fn ($value) => null !== $value);
 
         $request
             ->setMethod('POST')

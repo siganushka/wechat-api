@@ -50,12 +50,12 @@ class Wxacode extends AbstractRequest
             ->define('line_color')
             ->default(null)
             ->allowedTypes('null', 'string')
-            ->allowedValues(fn (?string $value) => null === $value || preg_match('/^#[0-9a-f]{6}$/i', $value))
+            ->allowedValues(static fn (?string $value) => null === $value || preg_match('/^#[0-9a-f]{6}$/i', $value))
         ;
 
         $resolver
             ->define('line_color_value')
-            ->default(function (Options $options) {
+            ->default(static function (Options $options) {
                 /** @var string|null */
                 $lineColor = $options['line_color'];
                 if (null === $lineColor) {
@@ -73,7 +73,7 @@ class Wxacode extends AbstractRequest
 
         $resolver
             ->define('auto_color')
-            ->default(fn (Options $options) => null === $options['line_color'] && null === $options['line_color_value'] ? null : false)
+            ->default(static fn (Options $options) => null === $options['line_color'] && null === $options['line_color_value'] ? null : false)
             ->allowedTypes('null', 'bool')
         ;
     }
@@ -94,7 +94,7 @@ class Wxacode extends AbstractRequest
             'auto_color' => $options['auto_color'],
             'is_hyaline' => $options['is_hyaline'],
             'line_color' => $options['line_color_value'],
-        ], fn ($value) => null !== $value);
+        ], static fn ($value) => null !== $value);
 
         $request
             ->setMethod('POST')
